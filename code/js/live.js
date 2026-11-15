@@ -44,7 +44,7 @@ export function renderLive(view, arg) {
   if (!AI.hasKey()) {
     view.innerHTML = `<div class="row-between"><h1>⚡ 本物のAIで体験</h1><a class="small" href="#/lab">← AIラボ</a></div>
       <div class="card"><p>ここでは<b>本物の AI（OpenAI のモデル）</b>が、ブラウザ内の仮想プロジェクトのファイルを読み・編集し・テストを実行します。許可ダイアログ・プランモード・差分の確認など、Claude Code と同じ流れを体験できます。</p>
-      <p class="small">利用には OpenAI の API キーが必要です（TOEIC アプリと同じキーを使えます。従量課金）。</p>
+      <p class="small">利用には OpenAI の API キーが必要です（従量課金）。</p>
       <a class="btn primary" href="#/settings">設定で API キーを登録</a></div>`;
     return null;
   }

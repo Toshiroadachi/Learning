@@ -76,16 +76,6 @@ export function importData(text) {
 }
 export function resetAll() { state = fresh(); save(); }
 
-// 同じサイトの TOEIC アプリに保存されている OpenAI の設定（キー・モデル・単価）を読み込む
-export function openaiFromToeicApp() {
-  try {
-    const raw = localStorage.getItem('toeic900:v1');
-    const s = raw ? JSON.parse(raw).settings || {} : {};
-    if (!s.openaiKey) return null;
-    return { openaiKey: s.openaiKey, openaiModel: s.openaiModel || '', openaiModels: s.openaiModels || [], openaiPriceIn: s.openaiPriceIn ?? '', openaiPriceOut: s.openaiPriceOut ?? '' };
-  } catch { return null; }
-}
-
 // 連続学習日数
 export function streak() {
   const days = new Set(getState().log.map(l => new Date(l.ts).toDateString()));

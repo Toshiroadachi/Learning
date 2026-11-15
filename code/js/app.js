@@ -1,4 +1,4 @@
-import { getState, save, logActivity, exportData, importData, resetAll, openaiFromToeicApp, streak } from './store.js';
+import { getState, save, logActivity, exportData, importData, resetAll, streak } from './store.js';
 import { SimPlayer } from './sim.js';
 import { CODEX_SCENARIOS } from '../data/scen-codex.js';
 import { CODEX_CLI_MORE } from '../data/scen-codex-cli2.js';
@@ -350,7 +350,7 @@ function day(arg) {
       <p>${esc(road?.topics)}</p>
       <p class="small muted">${{ ok: 'ブラウザ版 Python でそのまま練習できる内容です。', sim: 'ネットワーク等を使う内容なので、データを用意して疑似体験する形で学びます。', pc: 'PC での実践が前提の内容です。ここでは仕組みを理解する演習を行い、PC で Claude Code や Codex と一緒に本番の開発をしてみましょう。' }[road?.browser]}</p>
       ${AI.hasKey() ? `<button class="btn primary" id="gen">🤖 AI でこの日のレッスンと演習を作成</button><p class="tiny muted">${esc(AI.currentModel())} を使用。作成後は端末に保存されます。</p>`
-        : `<p class="small">設定で OpenAI の API キーを登録すると（TOEIC アプリと同じキーでOK）、AI がこの日のレッスンと採点付き演習をその場で作成します。</p><a class="btn" href="#/settings">設定へ</a> <a class="btn" href="#/play">練習帳で自習</a>`}
+        : `<p class="small">設定で OpenAI の API キーを登録すると、AI がこの日のレッスンと採点付き演習をその場で作成します。</p><a class="btn" href="#/settings">設定へ</a> <a class="btn" href="#/play">練習帳で自習</a>`}
       <div id="genout"></div></div>`;
     const g = $('#gen');
     if (g) g.onclick = async () => {
@@ -572,14 +572,12 @@ function settings() {
   const st = getState();
   const s = st.settings;
   const u = AI.usageSummary();
-  const toeic = openaiFromToeicApp();
   const models = (s.openaiModels?.length ? s.openaiModels.map(m => typeof m === 'string' ? m : m.id) : AI.OPENAI_SUGGESTED);
   const cur = AI.currentModel();
   const opts = [...new Set([cur, ...models])];
   view.innerHTML = `
     <div class="card"><h2>🤖 AI 機能（任意・OpenAI）</h2>
       <p class="small">OpenAI の API キーを登録すると、①本物の AI によるエージェント体験 ②Python の AI 先生 ③Day 31〜100 のレッスン自動作成 が使えます。キーはこの端末にだけ保存され、OpenAI の API へ直接送信されます。API の利用料は従量課金で、ChatGPT の月額プランとは別です。</p>
-      ${toeic && toeic.openaiKey !== s.openaiKey ? '<button class="btn primary" id="fromtoeic" style="margin-bottom:10px">TOEIC アプリの OpenAI 設定をそのまま使う</button>' : ''}
       <div class="form">
         <label>OpenAI API キー<input type="password" id="key" value="${esc(s.openaiKey)}" placeholder="sk-..." autocomplete="off"></label>
         <label>モデル<select id="model">${opts.map(m => `<option value="${esc(m)}" ${m === cur ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
@@ -601,12 +599,9 @@ function settings() {
       <div class="btn-row"><button class="btn" id="exp">書き出し</button><label class="btn">読み込み<input type="file" id="imp" accept="application/json" hidden></label><button class="btn danger" id="reset" style="color:var(--ng)">すべてリセット</button></div>
     </div>
     <div class="card small muted">ホーム画面に追加するとアプリのように使えます（iPhone: 共有 → ホーム画面に追加 / Android: メニュー → アプリをインストール）。<br>
-    シナリオの画面は実際の Claude Code / Codex を元にした再現で、バージョンにより表示や機能が異なる場合があります。最新情報は公式ドキュメントを確認してください。<br>
-    <a href="../">TOEIC 900 Trainer へ</a></div>`;
+    シナリオの画面は実際の Claude Code / Codex を元にした再現で、バージョンにより表示や機能が異なる場合があります。最新情報は公式ドキュメントを確認してください。</div>`;
   const upd = (k, v) => { st.settings[k] = v; save(); };
   $('#key').onchange = e => { upd('openaiKey', e.target.value.trim()); toast('保存しました'); };
-  const ft = $('#fromtoeic');
-  if (ft) ft.onclick = () => { Object.assign(st.settings, toeic); save(); settings(); toast('TOEIC アプリの OpenAI 設定を使います'); };
   $('#model').onchange = e => upd('openaiModel', e.target.value);
   $('#listm').onclick = async () => {
     const b = $('#listm'); b.disabled = true; b.textContent = '取得中…';
