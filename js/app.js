@@ -9,7 +9,7 @@ import P5 from '../data/p5.js';
 import P6 from '../data/p6.js';
 import P7 from '../data/p7.js';
 import VOCAB from '../data/vocab.js';
-import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED } from './ai.js';
+import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT } from './ai.js';
 
 const BUILTIN = { 1: P1, 2: P2, 3: P3, 4: P4, 5: P5, 6: P6, 7: P7 };
 const SET_PARTS = new Set([3, 4, 6, 7]);
@@ -901,10 +901,10 @@ function renderSettings() {
       <div id="provOpenAI" class="form">
         <label>OpenAI API キー<input type="password" id="okey" value="${esc(s.openaiKey)}" placeholder="sk-..." autocomplete="off"></label>
         <label>モデル（一覧から選択、または直接入力）
-          <input id="omodel" list="omodels" value="${esc(s.openaiModel)}" autocomplete="off">
+          <input id="omodel" list="omodels" value="${esc(s.openaiModel)}" placeholder="${OPENAI_DEFAULT}" autocomplete="off">
           <datalist id="omodels">${OPENAI_SUGGESTED.map(m => `<option value="${m}">`).join('')}</datalist></label>
         <div class="btn-row"><button class="btn sm" id="fetchModels">このキーで使えるモデル一覧を取得</button><span id="modelsStatus" class="small muted"></span></div>
-        <p class="small muted">目安：gpt-5-mini は安価で十分な品質、gpt-5 は高品質（料金高め）、nano 系は最安。</p>
+        <p class="small muted">OpenAI のモデルは頻繁に更新されます。キーを入れたら必ず「一覧を取得」を押してください（使えない名前は自動で最新モデルに置き換わります）。目安：名前に mini / nano / luna が付くものは安価、無印や上位名は高品質・高価格。</p>
       </div>
     </div>
     <p class="small muted">キーはこの端末のブラウザ内にのみ保存され、選んだ会社の API への直接リクエストにだけ使われます。共有端末では入力しないでください。利用料金は各社 API の従量課金です（ChatGPT や Claude の月額サブスクとは別）。</p>
@@ -942,6 +942,7 @@ function renderSettings() {
     $('#provOpenAI').classList.toggle('hidden-block', $('#prov').value !== 'openai');
   };
   $('#prov').addEventListener('change', showProv);
+  $('#okey').addEventListener('change', () => $('#okey').value.trim() && $('#fetchModels').click());
   showProv();
   $('#fetchModels').addEventListener('click', async () => {
     const key = $('#okey').value.trim();
@@ -950,8 +951,10 @@ function renderSettings() {
     try {
       const { listOpenAIModels } = await import('./ai.js');
       const ids = await listOpenAIModels(key);
-      $('#omodels').innerHTML = ids.map(m => `<option value="${esc(m)}">`).join('');
-      $('#modelsStatus').textContent = `${ids.length}件取得しました。モデル欄をタップして選択できます。`;
+      $('#omodels').innerHTML = ids.map(m => `<option value="${esc(m.id)}" label="${esc(m.date)}">`).join('');
+      const cur = $('#omodel').value.trim();
+      if (ids.length && !ids.some(m => m.id === cur)) $('#omodel').value = ids[0].id;  // 使えないモデルなら最新に置き換え
+      $('#modelsStatus').textContent = `${ids.length}件取得（新しい順）。最新: ${ids.slice(0, 3).map(m => m.id).join(', ')}。モデル欄をタップして変更できます。`;
     } catch (e) { $('#modelsStatus').textContent = e.message; }
   });
   $('#rate').addEventListener('input', e => { $('#rateV').textContent = e.target.value + 'x'; });
@@ -961,7 +964,7 @@ function renderSettings() {
       currentScore: +$('#cur').value || 600, targetScore: +$('#tgt').value || 900, examDate: $('#exam').value,
       speechRate: +$('#rate').value, p5TimeLimit: +$('#p5t').value || 20, apiKey: $('#key').value.trim(),
       aiProvider: $('#prov').value, claudeModel: $('#claudeModel').value,
-      openaiKey: $('#okey').value.trim(), openaiModel: $('#omodel').value.trim() || 'gpt-5-mini',
+      openaiKey: $('#okey').value.trim(), openaiModel: $('#omodel').value.trim() || OPENAI_DEFAULT,
     });
     S().schedule = sched;
     save();

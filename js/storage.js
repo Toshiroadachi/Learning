@@ -22,7 +22,7 @@ function fresh() {
       apiKey: '',          // Anthropic
       claudeModel: 'claude-opus-5-5',
       openaiKey: '',
-      openaiModel: 'gpt-5-mini',
+      openaiModel: '',
       p5TimeLimit: 20,     // Part5 1問あたりの目標秒数
     },
     answers: [],           // {qid, part, tag, correct, ts, ms}

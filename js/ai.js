@@ -10,8 +10,9 @@ export const CLAUDE_MODELS = [
   { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5（約半額）' },
   { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5（最安・高速）' },
 ];
-// OpenAI の候補（設定画面の「一覧を取得」でキーに応じた実際のモデル一覧に置き換え可能）
-export const OPENAI_SUGGESTED = ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o-mini'];
+// OpenAI の候補（参考）。実際に使えるモデルは設定画面の「一覧を取得」で、キーに応じた最新一覧に置き換わる
+export const OPENAI_SUGGESTED = ['gpt-6.1-sol', 'gpt-6-luna', 'gpt-6-astra', 'gpt-5.6-terra', 'gpt-5.6-luna'];
+export const OPENAI_DEFAULT = 'gpt-6.1-sol';
 
 export function aiProvider(settings = getState().settings) {
   if (settings.aiProvider === 'none') return null;
@@ -88,23 +89,52 @@ async function callClaude({ system, prompt, schema, effort }) {
   return JSON.parse(text);
 }
 
-async function callOpenAI({ system, prompt, schema }) {
+async function openaiFetch(path, body) {
   const st = getState().settings;
-  const model = (st.openaiModel || 'gpt-5-mini').trim();
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('https://api.openai.com/v1/' + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${st.openaiKey}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
-      response_format: { type: 'json_schema', json_schema: { name: 'result', strict: true, schema } },
-    }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`OpenAI API エラー (${res.status}): ${data.error?.message || res.statusText}`);
+  return { res, data };
+}
+
+function openaiError(res, data, model) {
+  const msg = data.error?.message || res.statusText;
+  const hint = /model/i.test(msg) && /(not exist|not found|does not have access|invalid)/i.test(msg)
+    ? `\nモデル「${model}」が使えません。設定画面の「このキーで使えるモデル一覧を取得」から選び直してください。` : '';
+  return new Error(`OpenAI API エラー (${res.status}): ${msg}${hint}`);
+}
+
+async function callOpenAI({ system, prompt, schema }) {
+  const model = (getState().settings.openaiModel || OPENAI_DEFAULT).trim();
+  // 1) Responses API（新しいモデル向けの推奨エンドポイント）
+  let { res, data } = await openaiFetch('responses', {
+    model,
+    instructions: system,
+    input: prompt,
+    text: { format: { type: 'json_schema', name: 'result', strict: true, schema } },
+  });
+  if (res.ok) {
+    if (data.status === 'incomplete') throw new Error('出力が途中で切れました。数を減らして再試行してください。');
+    const parts = (data.output || []).flatMap(o => o.content || []);
+    const refusal = parts.find(c => c.type === 'refusal');
+    if (refusal) throw new Error('リクエストが拒否されました: ' + refusal.refusal);
+    const text = parts.filter(c => c.type === 'output_text').map(c => c.text).join('');
+    return JSON.parse(text || '{}');
+  }
+  // 2) Responses API が使えない場合は Chat Completions で再試行
+  if (res.status !== 404 && !/responses|not supported|unsupported/i.test(data.error?.message || '')) throw openaiError(res, data, model);
+  ({ res, data } = await openaiFetch('chat/completions', {
+    model,
+    messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+    response_format: { type: 'json_schema', json_schema: { name: 'result', strict: true, schema } },
+  }));
+  if (!res.ok) throw openaiError(res, data, model);
   const msg = data.choices?.[0]?.message;
   if (msg?.refusal) throw new Error('リクエストが拒否されました: ' + msg.refusal);
-  if (data.choices?.[0]?.finish_reason === 'length') throw new Error('出力が長すぎて途中で切れました。数を減らして再試行してください。');
+  if (data.choices?.[0]?.finish_reason === 'length') throw new Error('出力が途中で切れました。数を減らして再試行してください。');
   return JSON.parse(msg?.content || '{}');
 }
 
@@ -114,14 +144,15 @@ async function call({ system, prompt, schema, effort = 'medium' }) {
   return p === 'openai' ? callOpenAI({ system, prompt, schema }) : callClaude({ system, prompt, schema, effort });
 }
 
-// OpenAI: このキーで使えるモデル一覧を取得（テキスト生成向けのものだけ）
+// OpenAI: このキーで使えるテキスト生成モデルの一覧（新しい順）
 export async function listOpenAIModels(key) {
   const res = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${key}` } });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`取得に失敗しました (${res.status}): ${data.error?.message || ''}`);
-  return (data.data || []).map(m => m.id)
-    .filter(id => /^(gpt|o\d|chatgpt)/.test(id) && !/(audio|realtime|tts|transcribe|image|search|embedding|instruct)/.test(id))
-    .sort();
+  return (data.data || [])
+    .filter(m => /^(gpt|o\d|chatgpt)/.test(m.id) && !/(audio|realtime|tts|transcribe|image|search|embedding|instruct|codex|computer)/.test(m.id))
+    .sort((a, b) => (b.created || 0) - (a.created || 0))
+    .map(m => ({ id: m.id, date: m.created ? new Date(m.created * 1000).toISOString().slice(0, 10) : '' }));
 }
 
 // 弱点・レベルに合わせた問題を生成し、アプリ内部の形式に変換して返す
