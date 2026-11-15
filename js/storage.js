@@ -15,6 +15,8 @@ function fresh() {
   return {
     settings: {
       currentScore: 700,   // 自己申告の現在スコア（予想得点の事前分布に使う）
+      currentL: 0,         // 任意：リスニング点（0=未入力）
+      currentR: 0,         // 任意：リーディング点（0=未入力）
       targetScore: 900,
       examDate: '',
       speechRate: 0.95,

@@ -41,8 +41,13 @@ export function splitLR(total) {
 }
 
 // 自己申告スコアからパートごとの事前正答率を作る
+export function currentLR(settings) {
+  if (settings.currentL > 0 && settings.currentR > 0) return { L: settings.currentL, R: settings.currentR };
+  return splitLR(settings.currentScore || 600);
+}
+
 function priorRate(sec, settings) {
-  const sp = splitLR(settings.currentScore || 600);
+  const sp = currentLR(settings);
   return Math.min(0.995, Math.max(0.2, scaledToRate(sec, sec === 'L' ? sp.L : sp.R)));
 }
 

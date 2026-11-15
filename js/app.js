@@ -873,7 +873,12 @@ function renderSettings() {
   view().innerHTML = `
   <section class="card"><h2>目標と現在の実力</h2>
     <div class="form">
-      <label>現在のスコア（自己申告・最新の公式スコア）<input type="number" id="cur" min="10" max="990" step="5" value="${s.currentScore}"></label>
+      <label>現在のスコア（最新の公式スコア・合計）<input type="number" id="cur" min="10" max="990" step="5" value="${s.currentScore}"></label>
+      <div class="two">
+        <label>リスニング（任意）<input type="number" id="curL" min="5" max="495" step="5" value="${s.currentL || ''}" placeholder="例 470"></label>
+        <label>リーディング（任意）<input type="number" id="curR" min="5" max="495" step="5" value="${s.currentR || ''}" placeholder="例 415"></label>
+      </div>
+      <div class="small muted" id="lrNote"></div>
       <label>目標スコア<input type="number" id="tgt" min="10" max="990" step="5" value="${s.targetScore}"></label>
       <label>次の試験日<input type="date" id="exam" value="${esc(s.examDate)}"></label>
       <label>音声の速さ <input type="range" id="rate" min="0.6" max="1.4" step="0.05" value="${s.speechRate}"> <span id="rateV">${s.speechRate}x</span></label>
@@ -969,11 +974,25 @@ function renderSettings() {
       $('#modelsStatus').textContent = `${ids.length}件取得しました（新しい順）。上の「モデル」から選んで「保存」を押してください。`;
     } catch (e) { $('#modelsStatus').textContent = e.message; }
   });
+  // L・R を両方入れたら合計を自動計算
+  const syncLR = () => {
+    const L = +$('#curL').value, R = +$('#curR').value;
+    const ok = L >= 5 && L <= 495 && R >= 5 && R <= 495;
+    if (ok) $('#cur').value = L + R;
+    $('#cur').readOnly = ok;
+    $('#lrNote').textContent = ok ? `合計 ${L + R} 点（L・R の内訳から予想スコアを計算します）`
+      : (L || R) ? 'リスニングとリーディングの両方を入力すると内訳が使われます（各5〜495点）' : '内訳を入れると予想スコアの初期値がより正確になります';
+  };
+  $('#curL').addEventListener('input', syncLR);
+  $('#curR').addEventListener('input', syncLR);
+  syncLR();
   $('#rate').addEventListener('input', e => { $('#rateV').textContent = e.target.value + 'x'; });
   $('#saveS').addEventListener('click', () => {
     collect();
     Object.assign(s, {
-      currentScore: +$('#cur').value || 600, targetScore: +$('#tgt').value || 900, examDate: $('#exam').value,
+      currentScore: +$('#cur').value || 600,
+      currentL: (+$('#curL').value >= 5 && +$('#curR').value >= 5) ? Math.min(495, +$('#curL').value) : 0,
+      currentR: (+$('#curL').value >= 5 && +$('#curR').value >= 5) ? Math.min(495, +$('#curR').value) : 0, targetScore: +$('#tgt').value || 900, examDate: $('#exam').value,
       speechRate: +$('#rate').value, p5TimeLimit: +$('#p5t').value || 20, apiKey: $('#key').value.trim(),
       aiProvider: $('#prov').value, claudeModel: $('#claudeModel').value,
       openaiKey: $('#okey').value.trim(), openaiModel: ($('#omodel').value === '__custom' ? $('#omodelCustom').value.trim() : $('#omodel').value) || OPENAI_DEFAULT,

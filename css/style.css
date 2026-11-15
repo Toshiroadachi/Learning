@@ -186,6 +186,7 @@ select, input[type=number], input[type=date], input[type=password], input:not([t
 
 /* settings */
 .form { display: grid; gap: 10px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .form label { display: flex; flex-direction: column; gap: 3px; font-size: .88rem; }
 .sched-row { display: grid; grid-template-columns: 1fr 120px 56px 60px 52px 34px; gap: 6px; margin-bottom: 6px; align-items: center; }
 .sched-row [hidden] { visibility: hidden; display: block; }
