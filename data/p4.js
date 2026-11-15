@@ -1,0 +1,60 @@
+// Part 4 説明文問題（1人のトーク）
+export default [
+  { id: 'p4-01', diff: 2, tag: 'アナウンス', voice: 'W',
+    script: 'Attention, shoppers. Our store will be closing in thirty minutes. Please bring your final purchases to the registers at the front of the store. Also, don\'t forget that our annual spring sale begins tomorrow morning at eight. All garden furniture will be forty percent off, and the first fifty customers will receive a free plant. Thank you for shopping at Hillside Home Center.',
+    questions: [
+      { q: 'Where is the announcement being made?', options: ['At a restaurant', 'At a home improvement store', 'At a train station', 'At a museum'], answer: 1, expl: 'Hillside Home Center、garden furniture → ホームセンター。' },
+      { q: 'What will happen tomorrow?', options: ['A store will open late.', 'A sale will begin.', 'A new branch will open.', 'A garden show will be held.'], answer: 1, expl: 'annual spring sale begins tomorrow。' },
+      { q: 'What will the first fifty customers receive?', options: ['A discount coupon', 'A shopping bag', 'A free plant', 'A gift card'], answer: 2, expl: 'receive a free plant。' },
+    ] },
+  { id: 'p4-02', diff: 3, tag: '電話メッセージ', voice: 'M',
+    script: 'Hello, Ms. Rivera. This is Paul Chen from Westbrook Dental Clinic, calling about your appointment on Thursday at ten. Unfortunately, Dr. Adams will be attending a conference that day. We can offer you the same time on Friday, or Thursday afternoon with Dr. Kim. Please call us back at 555-0182 to let us know which option you prefer. If we don\'t hear from you by Wednesday, we\'ll move your appointment to Friday.',
+    questions: [
+      { q: 'What is the purpose of the call?', options: ['To confirm a payment', 'To reschedule an appointment', 'To introduce a new dentist', 'To advertise a service'], answer: 1, expl: '予約変更の連絡。' },
+      { q: 'Why is Dr. Adams unavailable?', options: ['She is on vacation.', 'She will attend a conference.', 'She is ill.', 'She has moved to another clinic.'], answer: 1, expl: 'attending a conference。' },
+      { q: 'What will happen if Ms. Rivera does not call back?', options: ['Her appointment will be canceled.', 'She will be charged a fee.', 'Her appointment will be moved to Friday.', 'She will see Dr. Kim.'], answer: 2, expl: '最後の文。' },
+    ] },
+  { id: 'p4-03', diff: 3, tag: '会議・社内', voice: 'M',
+    script: 'Good morning, everyone. Before we start, I\'d like to share some good news. Our online sales increased by twelve percent last quarter, mostly thanks to the new mobile app. However, we\'ve received feedback that the checkout process is too slow. So, starting next week, a team of developers will be working to simplify it. I\'d like each of you to collect any customer comments about the app and send them to Maria by Friday.',
+    questions: [
+      { q: 'What does the speaker say contributed to increased sales?', options: ['A new mobile app', 'A television ad', 'Lower prices', 'A new store location'], answer: 0, expl: 'thanks to the new mobile app。' },
+      { q: 'What problem does the speaker mention?', options: ['A slow checkout process', 'Delayed deliveries', 'A shortage of staff', 'High shipping costs'], answer: 0, expl: 'checkout process is too slow。' },
+      { q: 'What are the listeners asked to do?', options: ['Test new software', 'Gather customer feedback', 'Meet with developers', 'Update a price list'], answer: 1, expl: 'collect any customer comments → フィードバックの収集。' },
+    ] },
+  { id: 'p4-04', diff: 4, tag: 'ラジオ・ニュース', voice: 'W',
+    script: 'And now for the local business news. Kessler Motors announced yesterday that it will build a new electric vehicle plant just outside Brookfield. Construction is scheduled to begin in June, and the facility is expected to create around eight hundred jobs. City officials welcomed the news, although some residents have expressed concern about increased traffic on Route 9. The company says it will hold a public meeting next month to address these concerns. Stay tuned for the weather after this short break.',
+    questions: [
+      { q: 'What did Kessler Motors announce?', options: ['A merger', 'A new factory', 'A product recall', 'A change in leadership'], answer: 1, expl: 'build a new electric vehicle plant。plant = factory。' },
+      { q: 'What are some residents concerned about?', options: ['Noise', 'Pollution', 'Traffic', 'Taxes'], answer: 2, expl: 'increased traffic on Route 9。' },
+      { q: 'What will the company do next month?', options: ['Begin construction', 'Hire new employees', 'Hold a public meeting', 'Release a new car'], answer: 2, expl: 'hold a public meeting next month。' },
+    ] },
+  { id: 'p4-05', diff: 4, tag: 'ツアー・案内', voice: 'M',
+    script: 'Welcome to the Old Town walking tour. My name is Henry, and I\'ll be your guide this afternoon. The tour lasts about ninety minutes, and we\'ll be visiting the cathedral, the historic market, and the former city hall. Now, I know the forecast mentioned rain, but the tour will go ahead as planned. If you didn\'t bring an umbrella, you can borrow one from the basket next to me. Oh, and photography is welcome everywhere except inside the cathedral.',
+    questions: [
+      { q: 'How long will the tour take?', options: ['30 minutes', '60 minutes', '90 minutes', '2 hours'], answer: 2, expl: 'about ninety minutes。' },
+      { q: 'What does the speaker imply when he says, "the tour will go ahead as planned"?', options: ['The schedule has changed.', 'The tour will not be canceled despite the weather.', 'Some sites are closed.', 'The tour will start late.'], answer: 1, expl: '雨予報でも中止しない、ということ。' },
+      { q: 'What are listeners told about the cathedral?', options: ['It is closed today.', 'Taking photos is not allowed inside.', 'Tickets must be purchased.', 'It was recently renovated.'], answer: 1, expl: 'photography is welcome everywhere except inside the cathedral。' },
+    ] },
+  { id: 'p4-06', diff: 5, tag: '図表問題', voice: 'W',
+    graphic: 'Conference Program — Hall A\n 10:00  Keynote: Future of Retail\n 11:00  Panel: Supply Chains\n 13:00  Workshop: Data Analytics\n 14:30  Talk: Customer Loyalty',
+    script: 'Good morning and welcome to the Retail Innovation Conference. Before we begin, I have an announcement regarding the program. Unfortunately, our data analytics workshop leader, Dr. Novak, missed her connecting flight and won\'t arrive until this evening. So her session will be replaced by the talk on customer loyalty, which will move to that earlier slot. Dr. Novak will instead lead her workshop tomorrow morning. Lunch will be served in the main lobby at noon.',
+    questions: [
+      { q: 'Why is there a change to the program?', options: ['A room is unavailable.', 'A speaker was delayed while traveling.', 'A session was poorly attended.', 'Equipment is not working.'], answer: 1, expl: 'missed her connecting flight。' },
+      { q: 'Look at the graphic. What time will the customer loyalty talk begin today?', options: ['10:00', '11:00', '13:00', '14:30'], answer: 2, expl: 'データ分析ワークショップ（13:00）の枠に移動。' },
+      { q: 'Where will lunch be served?', options: ['In Hall A', 'In the main lobby', 'On the rooftop', 'In a nearby restaurant'], answer: 1, expl: 'in the main lobby at noon。' },
+    ] },
+  { id: 'p4-07', diff: 5, tag: '広告', voice: 'M',
+    script: 'Are you tired of spending hours on spreadsheets? With TaskFlow, you can automate your team\'s routine reports in minutes. TaskFlow connects to the tools you already use, from e-mail to accounting software, and it requires no programming knowledge. Over two thousand companies have already made the switch. And for a limited time, new customers can try every premium feature free for sixty days. Visit taskflow-demo.com to schedule a personal demonstration with one of our specialists.',
+    questions: [
+      { q: 'What is being advertised?', options: ['An accounting firm', 'A software product', 'A training course', 'An e-mail service'], answer: 1, expl: 'TaskFlow = 業務自動化ソフト。' },
+      { q: 'What does the speaker emphasize about the product?', options: ['It is easy to use without coding skills.', 'It is the cheapest option.', 'It was developed recently.', 'It works offline.'], answer: 0, expl: 'requires no programming knowledge。' },
+      { q: 'What can listeners do on the Web site?', options: ['Download a manual', 'Read customer reviews', 'Book a demonstration', 'Apply for a job'], answer: 2, expl: 'schedule a personal demonstration。' },
+    ] },
+  { id: 'p4-08', diff: 4, tag: '会議・社内', voice: 'W',
+    script: 'Hi, team. This is Karen. I\'m calling from the airport because my flight to Denver has been delayed by three hours, so I won\'t make it to this afternoon\'s product review. Jason, could you lead the meeting in my place? The agenda and the latest prototype photos are in the shared folder. Please focus on the battery life issue, since the engineers need our decision by Wednesday. I\'ll check my e-mail once I land.',
+    questions: [
+      { q: 'Why is the speaker unable to attend the meeting?', options: ['She is sick.', 'Her flight is delayed.', 'She has another meeting.', 'She is on vacation.'], answer: 1, expl: 'flight to Denver has been delayed。' },
+      { q: 'What does the speaker ask Jason to do?', options: ['Pick her up at the airport', 'Lead a meeting', 'Contact the engineers', 'Take photos of a prototype'], answer: 1, expl: 'lead the meeting in my place。' },
+      { q: 'Why does the speaker mention Wednesday?', options: ['It is a deadline for a decision.', 'It is when she will return.', 'A product will launch then.', 'A new engineer will start.'], answer: 0, expl: 'need our decision by Wednesday。' },
+    ] },
+];

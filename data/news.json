@@ -1,0 +1,17 @@
+{
+ "updated": "2026-11-15T00:00:00.000Z",
+ "sources": ["Sample"],
+ "items": [
+  {
+   "id": "sample1",
+   "source": "Sample",
+   "category": "Guide",
+   "title": "Daily world news will appear here after the first automatic update",
+   "summary": "This is a sample entry. Once the GitHub Actions workflow runs, headlines and summaries from major international outlets will be added every morning. Tap any word to check its meaning, and words that frequently appear on the TOEIC test, such as revenue, merger, and implement, are highlighted.",
+   "link": "https://docs.github.com/actions",
+   "thumb": "",
+   "published": "2026-11-15T00:00:00.000Z",
+   "fetchedAt": "2026-11-15T00:00:00.000Z"
+  }
+ ]
+}
