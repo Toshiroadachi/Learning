@@ -320,3 +320,8 @@ table.cmp th { font-size: .75rem; color: var(--muted); }
 .appwin.ui-codex-app .g, .appwin.ui-codex-vscode .g { color: #6ee7a0; } .appwin.ui-codex-app .r, .appwin.ui-codex-vscode .r { color: #ff8b8b; }
 .appwin.ui-codex-app .y, .appwin.ui-codex-vscode .y { color: #ffd479; } .appwin.ui-codex-app .c, .appwin.ui-codex-vscode .c { color: #7dd3fc; }
 .appwin b, .appwin .b { font-weight: 700; }
+details.guide summary { cursor: pointer; list-style: none; }
+details.guide summary::-webkit-details-marker { display: none; }
+details.guide summary b::before { content: "▸ "; color: var(--primary); }
+details.guide[open] summary b::before { content: "▾ "; }
+details.guide .lesson { margin-top: 8px; }
