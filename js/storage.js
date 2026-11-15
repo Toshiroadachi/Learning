@@ -18,6 +18,8 @@ function fresh() {
       currentL: 0,         // 任意：リスニング点（0=未入力）
       currentR: 0,         // 任意：リーディング点（0=未入力）
       targetScore: 900,
+      targetL: 0,          // 任意：目標リスニング点（0=自動配分）
+      targetR: 0,          // 任意：目標リーディング点
       examDate: '',
       speechRate: 0.95,
       aiProvider: '',      // '' | 'anthropic' | 'openai'
@@ -26,6 +28,8 @@ function fresh() {
       openaiKey: '',
       openaiModel: '',
       openaiModels: [],    // 取得したモデル一覧のキャッシュ
+      openaiPriceIn: '',   // 任意：OpenAI 単価（USD / 100万入力トークン）
+      openaiPriceOut: '',  // 任意：OpenAI 単価（USD / 100万出力トークン）
       p5TimeLimit: 20,     // Part5 1問あたりの目標秒数
     },
     answers: [],           // {qid, part, tag, correct, ts, ms}
@@ -37,6 +41,7 @@ function fresh() {
     newsRead: {},          // articleId -> ts
     aiBank: [],            // AI生成問題
     mocks: [],             // {ts, listening, reading, total}
+    aiUsage: [],           // AI利用記録 {ts, provider, model, in, out}
   };
 }
 
@@ -115,9 +120,11 @@ export function importJSON(text) {
 }
 
 export function resetAll() {
-  const { aiProvider, apiKey, claudeModel, openaiKey, openaiModel, openaiModels } = state.settings;
+  const { aiProvider, apiKey, claudeModel, openaiKey, openaiModel, openaiModels, openaiPriceIn, openaiPriceOut } = state.settings;
+  const aiUsage = state.aiUsage;
   state = fresh();
-  Object.assign(state.settings, { aiProvider, apiKey, claudeModel, openaiKey, openaiModel, openaiModels });
+  Object.assign(state.settings, { aiProvider, apiKey, claudeModel, openaiKey, openaiModel, openaiModels, openaiPriceIn, openaiPriceOut });
+  state.aiUsage = aiUsage || [];
   save();
 }
 
