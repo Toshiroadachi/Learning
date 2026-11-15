@@ -66,7 +66,7 @@ export const GUIDES = [
     steps: ['新しいセッション（Cmd+N）を始める前に **Worktree** をオン', 'セッションは Ctrl+Tab で切替、Option+クリックで Split view', '終わったら各ブランチを PR に'],
     examples: ['「タグ機能」と「README 整備」を同時に'],
     tips: ['`.worktreeinclude` で .env など Git 管理外のファイルもコピーできる', '使用量はアカウント全体で共有'] },
-  { tool: 'claude', id: 'g-hooks', name: 'フック・権限ルール', scenario: 'cc-hooks',
+  { tool: 'claude', id: 'g-hooks', name: 'フック・権限ルール', scenario: 'cd-customize',
     what: 'フックは「必ず実行したい処理」を決まったタイミングで実行する仕組み。権限ルールは許可・禁止する操作の一覧。',
     when: '編集後の自動整形、危険なコマンドのブロック、.env の読み取り禁止',
     steps: ['`.claude/settings.json` の `hooks` に PreToolUse / PostToolUse などを書く', '`permissions.allow` / `deny` に `Bash(npm test:*)` や `Read(./.env)` を書く', 'デスクトップ・ターミナル・VS Code で同じ設定ファイルが使われる'],
