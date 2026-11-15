@@ -52,6 +52,30 @@ function nextPythonDay() {
   for (let d = start; d <= 100; d++) if (!st.days[d]?.done) return d;
   return 100;
 }
+// AI の利用状況（このアプリ内での利用記録から集計）
+function aiUsageCard() {
+  const st = getState();
+  const usage = st.aiUsage || [];
+  if (!AI.hasKey() && !usage.length) return '';
+  const ym = d => `${d.getFullYear()}-${d.getMonth() + 1}`;   // 端末の現地時間で月を判定
+  const month = ym(new Date());
+  const all = AI.usageSummary(usage);
+  const mon = AI.usageSummary(usage.filter(u => ym(new Date(u.ts)) === month));
+  const k = v => v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(v);
+  const money = v => `$${v.toFixed(v < 1 ? 3 : 2)}（約${Math.round(v * 150).toLocaleString()}円）`;
+  const costTxt = x => x.n === 0 ? '—' : x.usd == null ? '単価未設定' : money(x.usd);
+  return `<div class="card">
+    <div class="row-between"><h2 style="margin:0">AIの利用状況</h2><span class="pill">${AI.hasKey() ? 'OpenAI：' + esc(AI.currentModel()) : 'AI未設定'}</span></div>
+    <table class="cmp" style="margin-top:6px">
+      <tr><th></th><th>回数</th><th>トークン<br><small>入力/出力</small></th><th>推定金額</th></tr>
+      <tr><td>今月</td><td>${mon.n}</td><td>${k(mon.in)} / ${k(mon.out)}</td><td>${costTxt(mon)}</td></tr>
+      <tr><td>累計</td><td>${all.n}</td><td>${k(all.in)} / ${k(all.out)}</td><td>${costTxt(all)}</td></tr>
+    </table>
+    <p class="small muted" style="margin-bottom:0">このアプリで使った分の記録です（1ドル=150円で概算）。${st.settings.openaiPriceIn === '' || st.settings.openaiPriceIn == null ? '金額を出すには「設定」でモデルの単価を入力してください。' : ''}
+    残高・正確な請求額は <a href="https://platform.openai.com/usage" target="_blank" rel="noopener">OpenAI の利用状況ページ ↗</a> で確認できます。</p>
+  </div>`;
+}
+
 function home() {
   const st = getState();
   const simDone = SCENARIOS.filter(s => st.sims[s.id]?.done).length;
@@ -79,6 +103,7 @@ function home() {
       <div><span class="pill ${nextSim.tool}">${toolName(nextSim)} · ${SURFACE[nextSim.ui || '']}</span> <b>${esc(nextSim.title)}</b></div>
       <div class="small muted">${esc(nextSim.summary)}</div>
     </a>` : '<div class="card">🎉 すべてのシナリオを完了しました！ 次は「本物のAIで体験」に挑戦しよう。</div>'}
+    ${aiUsageCard()}
     <div class="grid2">
       <a class="tile" href="#/live"><div class="t">⚡ 本物のAIで体験</div><div class="small muted">OpenAI の API キーを設定すると、AI が実際にファイルを読み書き・テスト実行するエージェント体験ができます</div></a>
       <a class="tile" href="#/lab/adv"><div class="t">⭐ 上級機能・使い方ガイド</div><div class="small muted">/goal・/loop・スケジュール・コンピューター操作・プラグイン・スキル・コネクタ・Dispatch</div></a>
@@ -571,21 +596,23 @@ function play() {
 function settings() {
   const st = getState();
   const s = st.settings;
-  const u = AI.usageSummary();
-  const models = (s.openaiModels?.length ? s.openaiModels.map(m => typeof m === 'string' ? m : m.id) : AI.OPENAI_SUGGESTED);
-  const cur = AI.currentModel();
-  const opts = [...new Set([cur, ...models])];
   view.innerHTML = `
     <div class="card"><h2>🤖 AI 機能（任意・OpenAI）</h2>
-      <p class="small">OpenAI の API キーを登録すると、①本物の AI によるエージェント体験 ②Python の AI 先生 ③Day 31〜100 のレッスン自動作成 が使えます。キーはこの端末にだけ保存され、OpenAI の API へ直接送信されます。API の利用料は従量課金で、ChatGPT の月額プランとは別です。</p>
+      <p class="small">OpenAI の API キーを登録すると、①本物の AI によるエージェント体験 ②Python の AI 先生 ③Day 31〜100 のレッスン自動作成 が使えます。</p>
       <div class="form">
         <label>OpenAI API キー<input type="password" id="key" value="${esc(s.openaiKey)}" placeholder="sk-..." autocomplete="off"></label>
-        <label>モデル<select id="model">${opts.map(m => `<option value="${esc(m)}" ${m === cur ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
-        <button class="btn sm" id="listm">このキーで使えるモデル一覧を取得</button>
-        <div class="row"><label class="grow">単価：入力（$/100万トークン）<input type="number" id="pin" min="0" step="0.01" value="${esc(s.openaiPriceIn)}" placeholder="任意"></label>
-        <label class="grow">単価：出力<input type="number" id="pout" min="0" step="0.01" value="${esc(s.openaiPriceOut)}" placeholder="任意"></label></div>
+        <label>モデル<select id="model"></select></label>
+        <label id="modelCustomWrap" class="hide">モデル名を直接入力<input id="modelCustom" value="${esc(s.openaiModel)}" placeholder="${AI.OPENAI_DEFAULT}" autocomplete="off" autocapitalize="off"></label>
+        <div class="btn-row" style="margin-top:0"><button class="btn sm" id="listm">このキーで使えるモデル一覧を取得</button><span id="modelsStatus" class="small muted"></span></div>
+        <div class="two">
+          <label>単価：入力（$/100万トークン）<input type="number" id="pin" min="0" step="0.01" value="${esc(s.openaiPriceIn)}" placeholder="例 2"></label>
+          <label>単価：出力（$/100万トークン）<input type="number" id="pout" min="0" step="0.01" value="${esc(s.openaiPriceOut)}" placeholder="例 10"></label>
+        </div>
       </div>
-      <p class="small muted">これまでの利用: ${u.n} 回 / 入力 ${u.in.toLocaleString()} / 出力 ${u.out.toLocaleString()} トークン${u.usd != null ? ` / 推定 $${u.usd.toFixed(3)}（約 ${Math.round(u.usd * 150)} 円）` : '（単価を入れると金額も表示）'}</p>
+      <p class="small muted">単価は任意。入れるとホームに推定金額が出ます（選んだモデルの単価は <a href="https://platform.openai.com/docs/pricing" target="_blank" rel="noopener">OpenAI の料金ページ ↗</a> で確認）。</p>
+      <p class="small muted">OpenAI のモデルは頻繁に更新されます。キーを入れたら「一覧を取得」を押してください（使えない名前は自動で最新モデルに置き換わります）。目安：名前に mini / nano / luna が付くものは安価、無印や上位名は高品質・高価格。</p>
+      <p class="small muted">キーはこの端末のブラウザ内にのみ保存され、OpenAI の API への直接リクエストにだけ使われます。共有端末では入力しないでください。利用料金は API の従量課金です（ChatGPT の月額プランとは別）。</p>
+      <div class="btn-row"><button class="btn primary" id="saveAI">保存</button></div>
     </div>
     <div class="card"><h2>学習の設定</h2>
       <div class="form">
@@ -601,15 +628,38 @@ function settings() {
     <div class="card small muted">ホーム画面に追加するとアプリのように使えます（iPhone: 共有 → ホーム画面に追加 / Android: メニュー → アプリをインストール）。<br>
     シナリオの画面は実際の Claude Code / Codex を元にした再現で、バージョンにより表示や機能が異なる場合があります。最新情報は公式ドキュメントを確認してください。</div>`;
   const upd = (k, v) => { st.settings[k] = v; save(); };
-  $('#key').onchange = e => { upd('openaiKey', e.target.value.trim()); toast('保存しました'); };
-  $('#model').onchange = e => upd('openaiModel', e.target.value);
-  $('#listm').onclick = async () => {
-    const b = $('#listm'); b.disabled = true; b.textContent = '取得中…';
-    try { upd('openaiModels', await AI.listModels(st.settings.openaiKey)); settings(); toast('モデル一覧を更新しました'); }
-    catch (e) { toast(e.message, 4000); b.disabled = false; b.textContent = 'このキーで使えるモデル一覧を取得'; }
+  // モデルのプルダウン（取得済み一覧があればそれを、なければ参考候補を表示）
+  const drawModels = (list, selected) => {
+    const ids = list.map(m => m.id);
+    const sel = selected || ids[0] || AI.OPENAI_DEFAULT;
+    const known = ids.includes(sel);
+    $('#model').innerHTML = list.map((m, i) => `<option value="${esc(m.id)}" ${m.id === sel ? 'selected' : ''}>${esc(m.id)}${m.date ? `（${esc(m.date)}）` : ''}${i === 0 && m.date ? ' ★最新' : ''}</option>`).join('')
+      + `<option value="__custom" ${known ? '' : 'selected'}>その他（直接入力）</option>`;
+    if (!known) $('#modelCustom').value = sel;
+    $('#modelCustomWrap').classList.toggle('hide', known);
   };
-  $('#pin').onchange = e => upd('openaiPriceIn', e.target.value);
-  $('#pout').onchange = e => upd('openaiPriceOut', e.target.value);
+  const saved = (s.openaiModels || []).map(m => typeof m === 'string' ? { id: m, date: '' } : m);
+  drawModels(saved.length ? saved : AI.OPENAI_SUGGESTED.map(id => ({ id, date: '' })), s.openaiModel || AI.OPENAI_DEFAULT);
+  $('#model').onchange = () => $('#modelCustomWrap').classList.toggle('hide', $('#model').value !== '__custom');
+  $('#listm').onclick = async () => {
+    const key = $('#key').value.trim();
+    if (!key) { $('#modelsStatus').textContent = '先にキーを入力してください'; return; }
+    $('#modelsStatus').textContent = '取得中…';
+    try {
+      const list = await AI.listModels(key);
+      if (!list.length) throw new Error('使えるモデルが見つかりませんでした');
+      st.settings.openaiModels = list; save();
+      const cur = $('#model').value === '__custom' ? $('#modelCustom').value.trim() : $('#model').value;
+      drawModels(list, list.some(m => m.id === cur) ? cur : list[0].id);  // 使えないモデルなら最新に置き換え
+      $('#modelsStatus').textContent = `${list.length}件取得しました（新しい順）。上の「モデル」から選んで「保存」を押してください。`;
+    } catch (e) { $('#modelsStatus').textContent = e.message; }
+  };
+  $('#key').onchange = () => { if ($('#key').value.trim()) $('#listm').click(); };
+  $('#saveAI').onclick = () => {
+    const m = $('#model').value === '__custom' ? $('#modelCustom').value.trim() : $('#model').value;
+    Object.assign(st.settings, { openaiKey: $('#key').value.trim(), openaiModel: m || AI.OPENAI_DEFAULT, openaiPriceIn: $('#pin').value, openaiPriceOut: $('#pout').value });
+    save(); toast('保存しました');
+  };
   $('#startDay').onchange = e => upd('startDay', Math.max(1, Math.min(100, +e.target.value || 1)));
   $('#speed').onchange = e => upd('typeSpeed', +e.target.value);
   $('#theme').onchange = e => { upd('theme', e.target.value); applyTheme(); };

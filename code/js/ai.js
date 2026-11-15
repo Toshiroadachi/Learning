@@ -14,8 +14,7 @@ export function costOf(u) {
   if (s.openaiPriceIn === '' || s.openaiPriceOut === '' || s.openaiPriceIn == null || s.openaiPriceOut == null) return null;
   return (u.in * +s.openaiPriceIn + u.out * +s.openaiPriceOut) / 1e6;
 }
-export function usageSummary() {
-  const list = getState().aiUsage || [];
+export function usageSummary(list = getState().aiUsage || []) {
   let usd = 0, unknown = false;
   const sum = list.reduce((a, u) => ({ n: a.n + 1, in: a.in + u.in, out: a.out + u.out }), { n: 0, in: 0, out: 0 });
   for (const u of list) { const c = costOf(u); if (c == null) unknown = true; else usd += c; }
@@ -36,7 +35,7 @@ export async function listModels(key) {
   return (data.data || [])
     .filter(m => /^(gpt|o\d|chatgpt)/.test(m.id) && !/(audio|realtime|tts|transcribe|image|search|embedding|instruct|computer)/.test(m.id))
     .sort((a, b) => (b.created || 0) - (a.created || 0))
-    .map(m => m.id);
+    .map(m => ({ id: m.id, date: m.created ? new Date(m.created * 1000).toISOString().slice(0, 10) : '' }));
 }
 
 // Responses API を呼ぶ
