@@ -1,9 +1,24 @@
-// （任意機能）Claude API による問題生成・ニュース解説
-// APIキーはこの端末の localStorage にのみ保存され、Anthropic API へ直接送信されます。
+// （任意機能）AI による問題生成・ニュース解説
+// Claude（Anthropic）または OpenAI を設定画面で選択。APIキーはこの端末の localStorage にのみ保存され、
+// 各社の API へ直接送信されます。
 import { getState } from './storage.js';
 
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.2.0/+esm';
-const MODEL = 'claude-opus-5-5';
+
+export const CLAUDE_MODELS = [
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5（高品質・推奨）' },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5（約半額）' },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5（最安・高速）' },
+];
+// OpenAI の候補（設定画面の「一覧を取得」でキーに応じた実際のモデル一覧に置き換え可能）
+export const OPENAI_SUGGESTED = ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4o-mini'];
+
+export function aiProvider(settings = getState().settings) {
+  if (settings.aiProvider === 'none') return null;
+  if (settings.aiProvider === 'openai') return settings.openaiKey ? 'openai' : null;
+  if (settings.aiProvider === 'anthropic' || (!settings.aiProvider && settings.apiKey)) return settings.apiKey ? 'anthropic' : null;
+  return null;
+}
 
 let clientPromise = null;
 async function client() {
@@ -53,24 +68,60 @@ const SYSTEM = `あなたはTOEIC L&Rの問題作成の専門家です。本番�
 - expl は日本語で、正解の根拠・ひっかけのポイント・覚えるべき語彙や文法を簡潔に（80〜200字）。
 - 既存の公式問題集の問題を複製しない。`;
 
-function extractJSON(resp) {
+async function callClaude({ system, prompt, schema, effort }) {
+  const c = await client();
+  const model = getState().settings.claudeModel || 'claude-opus-5-5';
+  const params = {
+    model,
+    max_tokens: 16000,
+    output_config: { effort, format: { type: 'json_schema', schema } },
+    system,
+    messages: [{ role: 'user', content: prompt }],
+  };
+  // 安全性判定で断られた場合に別モデルで自動再試行（Haiku は非対応）
+  const resp = model.includes('haiku')
+    ? await c.messages.create(params)
+    : await c.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
   if (resp.stop_reason === 'refusal') throw new Error('リクエストが拒否されました。条件を変えて再試行してください。');
+  if (resp.stop_reason === 'max_tokens') throw new Error('出力が長すぎて途中で切れました。数を減らして再試行してください。');
   const text = resp.content.filter(b => b.type === 'text').map(b => b.text).join('');
   return JSON.parse(text);
 }
 
-async function call({ system, prompt, schema, effort = 'medium' }) {
-  const c = await client();
-  const resp = await c.beta.messages.create({
-    model: MODEL,
-    max_tokens: 16000,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort, format: { type: 'json_schema', schema } },
-    system,
-    messages: [{ role: 'user', content: prompt }],
+async function callOpenAI({ system, prompt, schema }) {
+  const st = getState().settings;
+  const model = (st.openaiModel || 'gpt-5-mini').trim();
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${st.openaiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+      response_format: { type: 'json_schema', json_schema: { name: 'result', strict: true, schema } },
+    }),
   });
-  return extractJSON(resp);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`OpenAI API エラー (${res.status}): ${data.error?.message || res.statusText}`);
+  const msg = data.choices?.[0]?.message;
+  if (msg?.refusal) throw new Error('リクエストが拒否されました: ' + msg.refusal);
+  if (data.choices?.[0]?.finish_reason === 'length') throw new Error('出力が長すぎて途中で切れました。数を減らして再試行してください。');
+  return JSON.parse(msg?.content || '{}');
+}
+
+async function call({ system, prompt, schema, effort = 'medium' }) {
+  const p = aiProvider();
+  if (!p) throw new Error('設定画面で AI の種類と API キーを設定してください。');
+  return p === 'openai' ? callOpenAI({ system, prompt, schema }) : callClaude({ system, prompt, schema, effort });
+}
+
+// OpenAI: このキーで使えるモデル一覧を取得（テキスト生成向けのものだけ）
+export async function listOpenAIModels(key) {
+  const res = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${key}` } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`取得に失敗しました (${res.status}): ${data.error?.message || ''}`);
+  return (data.data || []).map(m => m.id)
+    .filter(id => /^(gpt|o\d|chatgpt)/.test(id) && !/(audio|realtime|tts|transcribe|image|search|embedding|instruct)/.test(id))
+    .sort();
 }
 
 // 弱点・レベルに合わせた問題を生成し、アプリ内部の形式に変換して返す

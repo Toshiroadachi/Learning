@@ -9,6 +9,7 @@ import P5 from '../data/p5.js';
 import P6 from '../data/p6.js';
 import P7 from '../data/p7.js';
 import VOCAB from '../data/vocab.js';
+import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED } from './ai.js';
 
 const BUILTIN = { 1: P1, 2: P2, 3: P3, 4: P4, 5: P5, 6: P6, 7: P7 };
 const SET_PARTS = new Set([3, 4, 6, 7]);
@@ -293,10 +294,10 @@ function renderPractice() {
 }
 
 function aiCard() {
-  const has = !!S().settings.apiKey;
+  const has = !!aiProvider(S().settings);
   return `<section class="card">
     <h2>AIで新しい問題を作る <span class="pill">任意</span></h2>
-    <p class="small muted">Claude API を使い、あなたの弱点・レベルに合わせたオリジナル問題を無制限に生成できます。${has ? '' : '利用するには「設定」で API キーを入力してください。'}</p>
+    <p class="small muted">AI（Claude または OpenAI）を使い、あなたの弱点・レベルに合わせたオリジナル問題を無制限に生成できます。${has ? '' : '利用するには「設定」で API キーを入力してください。'}</p>
     ${has ? `<div class="opts">
       <label>パート <select id="aiPart">${Object.keys(PART_INFO).map(p => `<option value="${p}">Part ${p}</option>`).join('')}</select></label>
       <label>数 <select id="aiCount"><option>3</option><option selected>5</option><option>10</option></select></label>
@@ -771,7 +772,7 @@ function renderArticle(it) {
     <div id="wordpop" class="wordpop hidden-block"></div>
     <p class="small muted">単語をタップすると意味の確認・単語帳への保存ができます。全文は元記事のサイトでお読みください。</p>
   </article>
-  ${S().settings.apiKey ? `<section class="card"><button class="btn" id="aiExplain">🤖 AIで日本語解説＋理解度クイズ</button><div id="aiOut"></div></section>` : ''}`;
+  ${aiProvider(S().settings) ? `<section class="card"><button class="btn" id="aiExplain">🤖 AIで日本語解説＋理解度クイズ</button><div id="aiOut"></div></section>` : ''}`;
   $('#tts').addEventListener('click', () => speakSequence([{ text: it.title, gender: 'W' }, { text: it.summary, gender: 'W' }], 1));
   $('#done').addEventListener('click', () => {
     if (!S().newsRead[it.id]) { S().newsRead[it.id] = Date.now(); bump('news'); save(); }
@@ -886,8 +887,27 @@ function renderSettings() {
     <div class="btn-row"><button class="btn" id="addTask">＋ 項目を追加</button><button class="btn" id="resetSched">初期設定に戻す</button></div>
   </section>
   <section class="card"><h2>AI問題生成（任意）</h2>
-    <label class="form">Anthropic API キー<input type="password" id="key" value="${esc(s.apiKey)}" placeholder="sk-ant-..." autocomplete="off"></label>
-    <p class="small muted">キーはこの端末のブラウザ内にのみ保存され、Anthropic API への直接リクエストにだけ使われます。共有端末では入力しないでください。利用料金は API の従量課金です。</p>
+    <div class="form">
+      <label>使用するAI
+        <select id="prov">
+          <option value="none" ${s.aiProvider === 'none' || (!s.aiProvider && !s.apiKey) ? 'selected' : ''}>使わない</option>
+          <option value="anthropic" ${s.aiProvider === 'anthropic' || (!s.aiProvider && s.apiKey) ? 'selected' : ''}>Claude（Anthropic）</option>
+          <option value="openai" ${s.aiProvider === 'openai' ? 'selected' : ''}>OpenAI（ChatGPT）</option>
+        </select></label>
+      <div id="provAnthropic" class="form">
+        <label>Anthropic API キー<input type="password" id="key" value="${esc(s.apiKey)}" placeholder="sk-ant-..." autocomplete="off"></label>
+        <label>モデル<select id="claudeModel">${CLAUDE_MODELS.map(m => `<option value="${m.id}" ${s.claudeModel === m.id ? 'selected' : ''}>${esc(m.label)}</option>`).join('')}</select></label>
+      </div>
+      <div id="provOpenAI" class="form">
+        <label>OpenAI API キー<input type="password" id="okey" value="${esc(s.openaiKey)}" placeholder="sk-..." autocomplete="off"></label>
+        <label>モデル（一覧から選択、または直接入力）
+          <input id="omodel" list="omodels" value="${esc(s.openaiModel)}" autocomplete="off">
+          <datalist id="omodels">${OPENAI_SUGGESTED.map(m => `<option value="${m}">`).join('')}</datalist></label>
+        <div class="btn-row"><button class="btn sm" id="fetchModels">このキーで使えるモデル一覧を取得</button><span id="modelsStatus" class="small muted"></span></div>
+        <p class="small muted">目安：gpt-5-mini は安価で十分な品質、gpt-5 は高品質（料金高め）、nano 系は最安。</p>
+      </div>
+    </div>
+    <p class="small muted">キーはこの端末のブラウザ内にのみ保存され、選んだ会社の API への直接リクエストにだけ使われます。共有端末では入力しないでください。利用料金は各社 API の従量課金です（ChatGPT や Claude の月額サブスクとは別）。</p>
   </section>
   <section class="card"><h2>データ</h2>
     <p class="small muted">学習データはこのブラウザに保存されています。機種変更や別端末で使うときはバックアップを書き出してください。</p>
@@ -917,12 +937,31 @@ function renderSettings() {
   drawSched();
   $('#addTask').addEventListener('click', () => { collect(); sched.push({ id: 't' + Date.now().toString(36), label: '新しい項目', kind: 'manual', target: 1, unit: '回' }); drawSched(); });
   $('#resetSched').addEventListener('click', () => { sched = DEFAULT_SCHEDULE.map(t => ({ ...t })); drawSched(); });
+  const showProv = () => {
+    $('#provAnthropic').classList.toggle('hidden-block', $('#prov').value !== 'anthropic');
+    $('#provOpenAI').classList.toggle('hidden-block', $('#prov').value !== 'openai');
+  };
+  $('#prov').addEventListener('change', showProv);
+  showProv();
+  $('#fetchModels').addEventListener('click', async () => {
+    const key = $('#okey').value.trim();
+    if (!key) { $('#modelsStatus').textContent = '先にキーを入力してください'; return; }
+    $('#modelsStatus').textContent = '取得中…';
+    try {
+      const { listOpenAIModels } = await import('./ai.js');
+      const ids = await listOpenAIModels(key);
+      $('#omodels').innerHTML = ids.map(m => `<option value="${esc(m)}">`).join('');
+      $('#modelsStatus').textContent = `${ids.length}件取得しました。モデル欄をタップして選択できます。`;
+    } catch (e) { $('#modelsStatus').textContent = e.message; }
+  });
   $('#rate').addEventListener('input', e => { $('#rateV').textContent = e.target.value + 'x'; });
   $('#saveS').addEventListener('click', () => {
     collect();
     Object.assign(s, {
       currentScore: +$('#cur').value || 600, targetScore: +$('#tgt').value || 900, examDate: $('#exam').value,
       speechRate: +$('#rate').value, p5TimeLimit: +$('#p5t').value || 20, apiKey: $('#key').value.trim(),
+      aiProvider: $('#prov').value, claudeModel: $('#claudeModel').value,
+      openaiKey: $('#okey').value.trim(), openaiModel: $('#omodel').value.trim() || 'gpt-5-mini',
     });
     S().schedule = sched;
     save();
