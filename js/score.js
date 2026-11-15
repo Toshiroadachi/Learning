@@ -24,18 +24,26 @@ function interp(table, x) {
   return table[table.length - 1][1];
 }
 const round5 = v => Math.max(5, Math.min(495, Math.round(v / 5) * 5));
-export const rawToScaled = (sec, raw) => round5(interp(sec === 'L' ? L_TABLE : R_TABLE, raw));
+const scaledExact = (sec, raw) => interp(sec === 'L' ? L_TABLE : R_TABLE, raw);  // 丸めなし
+export const rawToScaled = (sec, raw) => round5(scaledExact(sec, raw));
 
-// 換算点 → 必要正答率（逆引き）
+// 換算点 → 必要正答率（逆引き・二分探索で連続値）
 function scaledToRate(sec, scaled) {
-  for (let raw = 0; raw <= 100; raw += 0.5) if (rawToScaled(sec, raw) >= scaled) return raw / 100;
-  return 1;
+  let lo = 0, hi = 100;
+  for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (scaledExact(sec, mid) >= scaled) hi = mid; else lo = mid; }
+  return hi / 100;
+}
+
+// L/R の配分（一般にリスニングの方が高得点になりやすい）
+export function splitLR(total) {
+  const L = Math.min(495, Math.max(5, Math.round(total * 0.53 / 5) * 5));
+  return { L, R: Math.min(495, Math.max(5, total - L)) };
 }
 
 // 自己申告スコアからパートごとの事前正答率を作る
 function priorRate(sec, settings) {
-  const half = (settings.currentScore || 600) / 2;
-  return Math.min(0.97, Math.max(0.3, scaledToRate(sec, half)));
+  const sp = splitLR(settings.currentScore || 600);
+  return Math.min(0.995, Math.max(0.2, scaledToRate(sec, sec === 'L' ? sp.L : sp.R)));
 }
 
 const PRIOR_WEIGHT = 4;   // 事前分布の強さ（=解答4問分）
@@ -77,13 +85,16 @@ export function predict(state = getState()) {
     const v = s.rate * (1 - s.rate) / (s.effN + PRIOR_WEIGHT + 1) * info.n * info.n;
     if (info.sec === 'L') { lRaw += raw; lVar += v; } else { rRaw += raw; rVar += v; }
   }
-  const L = rawToScaled('L', lRaw), R = rawToScaled('R', rRaw);
+  // 丸めは合計してから行う（L・R別々に丸めると合計が最大±5点ずれるため）
+  const lx = scaledExact('L', lRaw), rx = scaledExact('R', rRaw);
+  const total = Math.max(10, Math.min(990, Math.round((lx + rx) / 5) * 5));
+  const L = Math.min(total - 5, rawToScaled('L', lRaw));
+  const R = total - L;
   const sd = Math.sqrt(lVar) * 5 + Math.sqrt(rVar) * 5.5; // 1素点 ≒ 5点
-  const total = L + R;
   const answered = state.answers.length;
   return {
     listening: L, reading: R, total,
-    low: Math.max(10, round5(total - sd)), high: Math.min(990, round5(total + sd)),
+    low: Math.max(10, Math.round((total - sd) / 5) * 5), high: Math.min(990, Math.round((total + sd) / 5) * 5),
     lRaw, rRaw, stats: st, answered,
     confidence: answered < 30 ? '低（もっと解くと精度が上がります）' : answered < 150 ? '中' : '高',
   };
@@ -92,8 +103,7 @@ export function predict(state = getState()) {
 // 目標スコアに必要な各パート目標正答率
 export function targetRates(target) {
   // 900点なら L 475 / R 425 前後が一般的な配分（リスニングの方が高得点を取りやすい）
-  const L = Math.min(495, Math.round(target * 0.53 / 5) * 5);
-  const R = Math.min(495, target - L);
+  const { L, R } = splitLR(target);
   const lr = scaledToRate('L', L), rr = scaledToRate('R', R);
   return { L, R, lr, rr };
 }
