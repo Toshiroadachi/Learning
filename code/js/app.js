@@ -1,7 +1,7 @@
 import { getState, save, logActivity, exportData, importData, resetAll, openaiFromToeicApp, streak } from './store.js';
 import { SimPlayer } from './sim.js';
-import { CLAUDE_SCENARIOS } from '../data/scen-claude.js';
 import { CODEX_SCENARIOS } from '../data/scen-codex.js';
+import { CODEX_CLI_MORE } from '../data/scen-codex-cli2.js';
 import { CLAUDE_APP_SCENARIOS } from '../data/scen-claude-app.js';
 import { CODEX_APP_SCENARIOS } from '../data/scen-codex-app.js';
 import { ADVANCED_SCENARIOS } from '../data/scen-advanced.js';
@@ -19,7 +19,10 @@ import { esc, md, toast } from './util.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const view = $('#view');
-export const SCENARIOS = [...CLAUDE_APP_SCENARIOS, ...CODEX_APP_SCENARIOS, ...ADVANCED_SCENARIOS, ...CLAUDE_SCENARIOS, ...CODEX_SCENARIOS];
+// ターミナル版は Codex CLI のみ（学習順に並べる）
+const CLI_ORDER = ['cx-setup', 'cx-start', 'cx-tui', 'cx-approvals', 'cx-perm2', 'cx-fix', 'cx-review', 'cx-workspace', 'cx-chats', 'cx-session', 'cx-plan-goal', 'cx-config', 'cx-models', 'cx-ext', 'cx-agents', 'cx-custom', 'cx-exec', 'cx-exec2', 'cx-cloud', 'cx-cloudcli'];
+const CODEX_CLI = [...CODEX_SCENARIOS, ...CODEX_CLI_MORE].sort((a, b) => CLI_ORDER.indexOf(a.id) - CLI_ORDER.indexOf(b.id));
+export const SCENARIOS = [...CLAUDE_APP_SCENARIOS, ...CODEX_APP_SCENARIOS, ...ADVANCED_SCENARIOS, ...CODEX_CLI];
 const SURFACE = { 'claude-desktop': 'デスクトップアプリ', 'claude-mobile': 'スマホアプリ', 'codex-vscode': 'VS Code', 'codex-app': 'Codex アプリ', '': 'ターミナル' };
 const groupOf = s => s.adv ? 'adv' : s.ui ? s.tool : 'cli';
 const toolName = s => s.tool === 'claude' ? 'Claude Code' : 'Codex';
@@ -102,7 +105,7 @@ function lab(arg) {
       <a class="chip ${tab === 'codex' ? 'on' : ''}" href="#/lab/codex">Codex</a>
       <a class="chip ${tab === 'adv' ? 'on' : ''}" href="#/lab/adv">⭐ 上級機能・使い方</a>
       <a class="chip ${tab === 'compare' ? 'on' : ''}" href="#/lab/compare">比較・使い分け</a>
-      <a class="chip ${tab === 'cli' ? 'on' : ''}" href="#/lab/cli">ターミナル版（参考）</a>
+      <a class="chip ${tab === 'cli' ? 'on' : ''}" href="#/lab/cli">Codex CLI（ターミナル）</a>
       <a class="chip" href="#/live">⚡ 本物のAI</a>
     </div>
     <div id="labbody"></div>`;
@@ -134,9 +137,9 @@ function lab(arg) {
       <h3>💙 Codex の上級機能</h3><div class="grid2">${list('adv', 'codex')}</div>
       <h3>使い方ガイド（Codex）</h3>${guideHtml('codex')}`;
   }
-  else body.innerHTML = `<p class="small muted">ターミナル（CLI）版のシナリオです。アプリ版と考え方・設定ファイル（CLAUDE.md / AGENTS.md、権限、フック、MCP、サブエージェントなど）は共通なので、仕組みを深く知りたいときに。</p>${note}
-    <h3>Claude Code（ターミナル）</h3><div class="grid2">${list('cli', 'claude')}</div>
-    <h3>Codex CLI</h3><div class="grid2">${list('cli', 'codex')}</div>`;
+  else body.innerHTML = `<p class="small muted"><b>Codex CLI</b>（ターミナル版）のシナリオ ${CODEX_CLI.length} 本です。インストールから TUI の操作、権限、会話の管理、拡張、自動化、クラウドまで、上から順に進めると一通り身につきます。設定ファイル（AGENTS.md・config.toml）やスキル・MCP は VS Code 拡張・Codex アプリと共通です。</p>${note}
+    <div class="grid2">${list('cli', 'codex')}</div>
+    <p class="small"><a href="#/cmds/codex">⌨️ Codex の全コマンド一覧（コマンド大全）</a></p>`;
 }
 function sessionTab(key, def, set) {
   try { if (set) sessionStorage.setItem('tab:' + key, def); return sessionStorage.getItem('tab:' + key) || def; } catch { return def; }
