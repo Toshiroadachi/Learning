@@ -1,8 +1,8 @@
 // オフライン対応：アプリ本体はネットワーク優先（更新をすぐ反映）、Pyodide 等の CDN はバージョン固定なのでキャッシュ優先
-const CACHE = 'codedojo-v2';
+const CACHE = 'codedojo-v3';
 const CDN = 'codedojo-cdn-v1';
 const SHELL = ['./', 'index.html', 'css/style.css', 'js/app.js', 'js/util.js', 'js/store.js', 'js/sim.js', 'js/py.js', 'js/py-worker.js', 'js/ai.js', 'js/live.js',
-  'data/scen-claude.js', 'data/scen-codex.js', 'data/scen-claude-app.js', 'data/scen-codex-app.js', 'data/py-days-0.js', 'data/reference.js', 'data/py-days-1.js', 'data/py-days-2.js', 'data/py-roadmap.js', 'data/live-projects.js',
+  'data/scen-claude.js', 'data/scen-codex.js', 'data/scen-claude-app.js', 'data/scen-codex-app.js', 'data/py-days-0.js', 'data/scen-advanced.js', 'data/guides.js', 'data/reference.js', 'data/py-days-1.js', 'data/py-days-2.js', 'data/py-roadmap.js', 'data/live-projects.js',
   'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', e => {

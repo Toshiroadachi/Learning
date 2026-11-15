@@ -4,6 +4,8 @@ import { CLAUDE_SCENARIOS } from '../data/scen-claude.js';
 import { CODEX_SCENARIOS } from '../data/scen-codex.js';
 import { CLAUDE_APP_SCENARIOS } from '../data/scen-claude-app.js';
 import { CODEX_APP_SCENARIOS } from '../data/scen-codex-app.js';
+import { ADVANCED_SCENARIOS } from '../data/scen-advanced.js';
+import { GUIDES } from '../data/guides.js';
 import { REFERENCE, COMPARE } from '../data/reference.js';
 import { DAYS_0 } from '../data/py-days-0.js';
 import { DAYS_1 } from '../data/py-days-1.js';
@@ -16,9 +18,9 @@ import { esc, md, toast } from './util.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const view = $('#view');
-export const SCENARIOS = [...CLAUDE_APP_SCENARIOS, ...CODEX_APP_SCENARIOS, ...CLAUDE_SCENARIOS, ...CODEX_SCENARIOS];
+export const SCENARIOS = [...CLAUDE_APP_SCENARIOS, ...CODEX_APP_SCENARIOS, ...ADVANCED_SCENARIOS, ...CLAUDE_SCENARIOS, ...CODEX_SCENARIOS];
 const SURFACE = { 'claude-desktop': 'デスクトップアプリ', 'claude-mobile': 'スマホアプリ', 'codex-vscode': 'VS Code', 'codex-app': 'Codex アプリ', '': 'ターミナル' };
-const groupOf = s => s.ui ? s.tool : 'cli';
+const groupOf = s => s.adv ? 'adv' : s.ui ? s.tool : 'cli';
 const toolName = s => s.tool === 'claude' ? 'Claude Code' : 'Codex';
 const DAYS = [...DAYS_0, ...DAYS_1, ...DAYS_2];
 
@@ -75,6 +77,7 @@ function home() {
     </a>` : '<div class="card">🎉 すべてのシナリオを完了しました！ 次は「本物のAIで体験」に挑戦しよう。</div>'}
     <div class="grid2">
       <a class="tile" href="#/live"><div class="t">⚡ 本物のAIで体験</div><div class="small muted">OpenAI の API キーを設定すると、AI が実際にファイルを読み書き・テスト実行するエージェント体験ができます</div></a>
+      <a class="tile" href="#/lab/adv"><div class="t">⭐ 上級機能・使い方ガイド</div><div class="small muted">/goal・/loop・スケジュール・コンピューター操作・プラグイン・スキル・コネクタ・Dispatch</div></a>
       <a class="tile" href="#/refquiz"><div class="t">🎯 コマンド早押しクイズ</div><div class="small muted">スラッシュコマンド・ショートカットを覚えよう</div></a>
       <a class="tile" href="#/play"><div class="t">📝 Python 練習帳</div><div class="small muted">自由にコードを書いて実行</div></a>
       <a class="tile" href="#/ref"><div class="t">📖 機能辞典</div><div class="small muted">Claude Code / Codex の全コマンド・設定・比較表</div></a>
@@ -85,7 +88,7 @@ function home() {
 function lab(arg) {
   const st = getState();
   const tab = arg || sessionTab('lab', 'claude');
-  const list = (group, ui) => SCENARIOS.filter(s => groupOf(s) === group && (ui == null || (s.ui || '') === ui || (group === 'cli' && s.tool === ui))).map(s => {
+  const list = (group, ui) => SCENARIOS.filter(s => groupOf(s) === group && (ui == null || (s.ui || '') === ui || ((group === 'cli' || group === 'adv') && s.tool === ui))).map(s => {
     const r = st.sims[s.id];
     return `<a class="tile ${s.tool} ${r?.done ? 'done' : ''}" href="#/sim/${s.id}">
       <div class="row-between"><span class="pill">${s.level}${group === 'cli' ? ' · ' + toolName(s) : ''}</span>${r?.done ? `<span class="pill done">✓ ${r.total ? `${r.score}/${r.total}` : '完了'}</span>` : ''}</div>
@@ -95,6 +98,7 @@ function lab(arg) {
     <div class="chips" style="margin-bottom:10px">
       <a class="chip ${tab === 'claude' ? 'on' : ''}" href="#/lab/claude">Claude Code</a>
       <a class="chip ${tab === 'codex' ? 'on' : ''}" href="#/lab/codex">Codex</a>
+      <a class="chip ${tab === 'adv' ? 'on' : ''}" href="#/lab/adv">⭐ 上級機能・使い方</a>
       <a class="chip ${tab === 'compare' ? 'on' : ''}" href="#/lab/compare">比較・使い分け</a>
       <a class="chip ${tab === 'cli' ? 'on' : ''}" href="#/lab/cli">ターミナル版（参考）</a>
       <a class="chip" href="#/live">⚡ 本物のAI</a>
@@ -115,6 +119,19 @@ function lab(arg) {
   else if (tab === 'codex') body.innerHTML = `<p class="small muted">OpenAI の Codex を、<b>VS Code の拡張機能</b>と<b>Codex デスクトップアプリ</b>で使う想定です。</p>${note}
     <h3>🧩 VS Code 拡張</h3><div class="grid2">${list('codex', 'codex-vscode')}</div>
     <h3>🖥 Codex アプリ</h3><div class="grid2">${list('codex', 'codex-app')}</div>`;
+  else if (tab === 'adv') {
+    const guideHtml = tool => GUIDES.filter(g => g.tool === tool).map(g => `<details class="card guide"><summary><b>${esc(g.name)}</b><div class="small muted">${esc(g.what)}</div></summary>
+      <div class="lesson"><h3>使いどころ</h3><p>${esc(g.when)}</p>
+      <h3>使い方</h3><ol>${g.steps.map(x => `<li>${md(x).replace(/^<p>|<\/p>$/g, '')}</li>`).join('')}</ol>
+      ${g.examples?.length ? `<h3>例</h3><ul>${g.examples.map(x => `<li>${md(x).replace(/^<p>|<\/p>$/g, '')}</li>`).join('')}</ul>` : ''}
+      ${g.tips?.length ? `<h3>注意・コツ</h3><ul>${g.tips.map(x => `<li>${md(x).replace(/^<p>|<\/p>$/g, '')}</li>`).join('')}</ul>` : ''}
+      ${g.scenario ? `<a class="btn primary sm" href="#/sim/${g.scenario}">▶ シナリオで体験</a>` : ''}</div></details>`).join('');
+    body.innerHTML = `<p class="small muted">/goal・/loop・スケジュール・コンピューター操作・プラグイン・スキル・コネクタ・Dispatch など、上級機能の<b>使い方ガイド</b>と<b>体験シナリオ</b>です。ガイドをタップすると手順が開きます。</p>${note}
+      <h3>🧡 Claude Code の上級機能</h3><div class="grid2">${list('adv', 'claude')}</div>
+      <h3>使い方ガイド（Claude Code）</h3>${guideHtml('claude')}
+      <h3>💙 Codex の上級機能</h3><div class="grid2">${list('adv', 'codex')}</div>
+      <h3>使い方ガイド（Codex）</h3>${guideHtml('codex')}`;
+  }
   else body.innerHTML = `<p class="small muted">ターミナル（CLI）版のシナリオです。アプリ版と考え方・設定ファイル（CLAUDE.md / AGENTS.md、権限、フック、MCP、サブエージェントなど）は共通なので、仕組みを深く知りたいときに。</p>${note}
     <h3>Claude Code（ターミナル）</h3><div class="grid2">${list('cli', 'claude')}</div>
     <h3>Codex CLI</h3><div class="grid2">${list('cli', 'codex')}</div>`;

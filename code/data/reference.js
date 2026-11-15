@@ -1,6 +1,21 @@
 // 機能辞典。k=コマンド/キー, d=説明, ex=例
 export const REFERENCE = {
   claude: [
+    { cat: '上級機能', items: [
+      { k: '/goal <条件>', d: '条件を満たすまで自動で作業を続ける（別の AI が毎ターン判定）', ex: '/goal npm test が 0 で終了し、テストファイルは変更しない' },
+      { k: '/goal clear', d: '目標を取り消す（/goal だけなら状況表示）' },
+      { k: '/loop 10m <指示>', d: '10分ごとに繰り返し実行（セッション中のみ、7日で終了）', ex: '/loop 10m CI を確認してレビューコメントに対応' },
+      { k: 'Scheduled → New task', d: 'デスクトップのスケジュールタスク（毎日・平日など）' },
+      { k: 'Enable computer use', d: 'Settings → Capabilities。Claude が画面を見て操作' },
+      { k: 'Allow for this session', d: 'コンピューター操作でアプリを使う初回の許可' },
+      { k: 'Cmd+; / /btw', d: 'サイドチャット（メインの作業を止めずに質問）' },
+      { k: '/plugin', d: 'プラグインの一覧・インストール・マーケットプレイス管理' },
+      { k: '/plugin marketplace add', d: 'マーケットプレイスを追加', ex: '/plugin marketplace add anthropics/claude-plugins-community' },
+      { k: '/reload-plugins', d: 'プラグインの変更を反映' },
+      { k: '/remote-control', d: 'PC のセッションをスマホから操作できるようにする' },
+      { k: 'Dispatch', d: 'スマホから PC に新しい作業を頼む' },
+      { k: 'Add SSH connection', d: 'リモートマシンで Claude Code を動かす環境を追加' },
+    ] },
     { cat: 'デスクトップアプリ（Code タブ）', items: [
       { k: '環境（Local / Cloud / SSH）', d: '入力欄の下の最初のボタン。どこで動かすか。最初のメッセージ前に選ぶ' },
       { k: 'フォルダ / Open folder…', d: '作業するプロジェクトのフォルダ（Cloud ではリポジトリ）' },
@@ -127,6 +142,16 @@ export const REFERENCE = {
     ] },
   ],
   codex: [
+    { cat: '上級機能', items: [
+      { k: '/goal <目標>', d: '目標を満たすまで作業を続ける（目標文＝完了条件）', ex: '/goal 全関数に型ヒント、mypy --strict がエラー0 を出力で確認' },
+      { k: '/goal pause / resume', d: '目標を一時停止 / 再開' },
+      { k: '/goal clear', d: '目標を取り消す（/goal だけなら状況表示）' },
+      { k: 'goals = true', d: '版によって必要な有効化（config.toml の [features]）' },
+      { k: 'Plugins タブ', d: 'プラグイン（スキル＋コネクタ＋MCP）を ＋ でインストール' },
+      { k: '/plugins', d: 'CLI でプラグインの一覧・インストール' },
+      { k: 'codex plugin marketplace add', d: 'プラグインのマーケットプレイスを追加' },
+      { k: 'オートメーション', d: '指示を定期実行。結果はレビュー待ちに' },
+    ] },
     { cat: 'VS Code 拡張', items: [
       { k: 'インストール', d: '拡張機能ビューで「Codex」（OpenAI）。Cursor・Windsurf でも可' },
       { k: 'Sign in with ChatGPT', d: 'Plus / Pro / Business などに含まれる。API キーだとクラウド機能が使えない' },
@@ -224,7 +249,10 @@ export const COMPARE = [
   ['差分の確認', 'Changes カード・行コメント', 'レビューペイン・行コメント'],
   ['PR 作成', 'Create PR（スマホ）／「PR を作って」', 'レビューペインから PR'],
   ['CI の自動対応', 'Auto-fix', '@codex fix the CI failure'],
-  ['定期実行', 'スケジュールタスク', 'オートメーション'],
+  ['定期実行', 'スケジュールタスク・/loop', 'オートメーション'],
+  ['目標までやり切る', '/goal（別の AI が判定）', '/goal（pause / resume あり）'],
+  ['プラグイン', '+ → Add plugins、/plugin', 'Plugins タブ、/plugins（IDE 拡張は不可）'],
+  ['画面操作', 'コンピューター操作（computer use）', '—'],
   ['スマホから', 'Claude アプリの Code タブ', 'ChatGPT アプリ（Codex Cloud）'],
   ['起動（ターミナル）', 'claude', 'codex'],
   ['非対話実行', 'claude -p', 'codex exec'],
