@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AI Code Dojo</title>
+  <meta name="description" content="Claude Code / Codex の全機能をスマホで疑似体験＋スマホでできる100日Python学習">
+  <meta name="theme-color" content="#c2410c">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/home" class="brand">AI Code <b>Dojo</b></a>
+    <span id="topinfo" class="small muted"></span>
+  </header>
+  <main id="view" class="container"></main>
+  <nav class="tabbar">
+    <a href="#/home" data-route="home"><span>🏠</span>ホーム</a>
+    <a href="#/lab" data-route="lab"><span>🤖</span>AIラボ</a>
+    <a href="#/python" data-route="python"><span>🐍</span>Python</a>
+    <a href="#/ref" data-route="ref"><span>📖</span>辞典</a>
+    <a href="#/settings" data-route="settings"><span>⚙️</span>設定</a>
+  </nav>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
