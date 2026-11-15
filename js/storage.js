@@ -18,7 +18,11 @@ function fresh() {
       targetScore: 900,
       examDate: '',
       speechRate: 0.95,
-      apiKey: '',
+      aiProvider: '',      // '' | 'anthropic' | 'openai'
+      apiKey: '',          // Anthropic
+      claudeModel: 'claude-opus-5-5',
+      openaiKey: '',
+      openaiModel: 'gpt-5-mini',
       p5TimeLimit: 20,     // Part5 1問あたりの目標秒数
     },
     answers: [],           // {qid, part, tag, correct, ts, ms}
@@ -108,9 +112,9 @@ export function importJSON(text) {
 }
 
 export function resetAll() {
-  const key = state.settings.apiKey;
+  const { aiProvider, apiKey, claudeModel, openaiKey, openaiModel } = state.settings;
   state = fresh();
-  state.settings.apiKey = key;
+  Object.assign(state.settings, { aiProvider, apiKey, claudeModel, openaiKey, openaiModel });
   save();
 }
 
