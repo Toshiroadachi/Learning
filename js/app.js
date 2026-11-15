@@ -10,7 +10,7 @@ import P6 from '../data/p6.js';
 import P7 from '../data/p7.js';
 import VOCAB from '../data/vocab.js';
 import IDIOMS from '../data/idioms.js';
-import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT, currentModel, costOf, explainMistake, askFollowUp, generateVocab, coachAdvice } from './ai.js';
+import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT, currentModel, costOf, explainMistake, askFollowUp, generateVocab, coachAdvice, generateQuestions } from './ai.js';
 
 const BUILTIN = { 1: P1, 2: P2, 3: P3, 4: P4, 5: P5, 6: P6, 7: P7 };
 const SET_PARTS = new Set([3, 4, 6, 7]);
@@ -375,9 +375,11 @@ function renderPractice() {
   ${aiCard()}`;
 
   const opts = () => ({ n: +$('#n').value, diff: $('#diff').value, mode: $('#mode').value });
-  view().querySelectorAll('[data-part]').forEach(b => b.addEventListener('click', () => {
+  view().querySelectorAll('[data-part]').forEach(b => b.addEventListener('click', async () => {
     const o = opts();
-    startQuiz({ title: PART_INFO[b.dataset.part].ja, units: pickUnits(+b.dataset.part, o.n, o) });
+    const p = +b.dataset.part;
+    const f = o.mode === 'random' ? null : await autoFill([{ part: p, n: o.n }]);
+    startQuiz({ title: PART_INFO[p].ja, units: pickUnits(p, o.n, o), notice: fillNotice(f) });
   }));
   bindAI();
 }
@@ -420,17 +422,56 @@ function bindAI() {
 }
 
 // ---------- クイズ ----------
-function buildQuiz(arg) {
+// ---- 未解答が足りないとき AI で問題を自動補充 ----
+function unseenCount(part) {
+  const answered = answeredSet();
+  return bank(part).reduce((a, u) => a + (qids(u).every(id => !answered.has(id)) ? qids(u).length : 0), 0);
+}
+
+async function autoFill(plan) {   // plan: [{part, n}]
+  if (!S().settings.aiAutoFill || !aiProvider(S().settings)) return null;
+  const need = plan.filter(x => unseenCount(x.part) < x.n);
+  if (!need.length) return null;
+  view().innerHTML = `<section class="card center">
+    <h2>🤖 AIが新しい問題を作成中…</h2>
+    <p class="muted">未解答の問題が少なくなったため、弱点に合わせた新作問題を補充しています（${need.map(x => 'Part ' + x.part).join('・')}）。</p>
+    <p class="small muted">数十秒かかることがあります。</p>
+    <div class="spinner"></div></section>`;
+  const results = await Promise.allSettled(need.map(x => {
+    const count = SET_PARTS.has(x.part) ? Math.min(3, Math.max(1, Math.ceil(x.n / 3))) : Math.min(10, Math.max(5, x.n));
+    const focus = weakTags(S(), x.part).slice(0, 2).map(t => t.tag).join('、');
+    return generateQuestions(x.part, { count, level: levelFor(x.part), focus });
+  }));
+  let added = 0;
+  const failed = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') { S().aiBank.push(...r.value); added += r.value.reduce((a, u) => a + qids(u).length, 0); }
+    else failed.push(`Part ${need[i].part}: ${r.reason?.message || r.reason}`);
+  });
+  save();
+  return { added, failed };
+}
+
+function fillNotice(f) {
+  if (!f) return '';
+  return (f.added ? `🤖 AIで新しい問題を${f.added}問追加しました。` : '') + (f.failed.length ? `（一部生成できませんでした: ${f.failed.join(' / ')}）` : '');
+}
+
+async function buildQuiz(arg) {
   if (!arg) return null;
   if (arg.startsWith('part-')) {
     const p = +arg.slice(5);
     const task = S().schedule.find(t => t.kind === 'part' && t.part === p);
-    return { title: PART_INFO[p].ja, units: pickUnits(p, task ? Math.min(task.target, 20) : 10) };
+    const n = task ? Math.min(task.target, 20) : 10;
+    const f = await autoFill([{ part: p, n }]);
+    return { title: PART_INFO[p].ja, units: pickUnits(p, n), notice: fillNotice(f) };
   }
   if (arg === 'smart') {
     const recs = recommend().recs.slice(0, 3);
-    const units = recs.flatMap((r, i) => pickUnits(r.part, [5, 3, 2][i]));
-    return { title: 'おすすめ問題', units };
+    const plan = recs.map((r, i) => ({ part: r.part, n: [5, 3, 2][i] }));
+    const f = await autoFill(plan);
+    const units = plan.flatMap(x => pickUnits(x.part, x.n));
+    return { title: 'おすすめ問題', units, notice: fillNotice(f) };
   }
   if (arg === 'listening') {
     return { title: 'リスニング Part 2〜4', units: [...pickUnits(2, 6), ...pickUnits(3, 6), ...pickUnits(4, 3)] };
@@ -446,6 +487,7 @@ function buildQuiz(arg) {
 
 function startQuiz(cfg) {
   if (!cfg.units.length) { alert('出題できる問題がありません。'); return; }
+  if (cfg.notice) setTimeout(() => toast(cfg.notice, 4500), 300);
   quiz = {
     ...cfg, i: 0, results: [], started: Date.now(),
     perms: cfg.units.map(u => SET_PARTS.has(u.part) ? u.questions.map(q => perm(q.options)) : [perm(u.options)]),
@@ -455,9 +497,11 @@ function startQuiz(cfg) {
 
 function renderQuiz(arg) {
   if (arg) {
-    const cfg = buildQuiz(arg);
-    history.replaceState(null, '', '#/quiz');
-    if (cfg) return startQuiz(cfg);
+    buildQuiz(arg).then(cfg => {
+      history.replaceState(null, '', '#/quiz');
+      if (cfg) startQuiz(cfg); else go('#/practice');
+    });
+    return;
   }
   if (!quiz) return go('#/practice');
   if (quiz.i >= quiz.units.length) return renderResult();
@@ -1115,6 +1159,8 @@ function renderSettings() {
         <p class="small muted">OpenAI のモデルは頻繁に更新されます。キーを入れたら「一覧を取得」を押してください（使えない名前は自動で最新モデルに置き換わります）。目安：名前に mini / nano / luna が付くものは安価、無印や上位名は高品質・高価格。</p>
       </div>
     </div>
+    <label class="check"><input type="checkbox" id="autoFill" ${s.aiAutoFill ? 'checked' : ''}>
+      <span><b>未解答の問題が足りないとき、AIで自動補充する</b><br><small class="muted">「おすすめ問題」やパート練習で未解答が出題数より少なくなったら、弱点に合わせた新作問題を自動で作ってから出題します（その都度料金がかかります。1回あたり数円〜十数円程度）。</small></span></label>
     <p class="small muted">キーはこの端末のブラウザ内にのみ保存され、選んだ会社の API への直接リクエストにだけ使われます。共有端末では入力しないでください。利用料金は各社 API の従量課金です（ChatGPT や Claude の月額サブスクとは別）。</p>
   </section>
   <section class="card"><h2>データ</h2>
@@ -1210,7 +1256,7 @@ function renderSettings() {
       currentR: (+$('#curL').value >= 5 && +$('#curR').value >= 5) ? Math.min(495, +$('#curR').value) : 0, targetScore: +$('#tgt').value || 900,
       targetL: (+$('#tgtL').value >= 5 && +$('#tgtR').value >= 5) ? Math.min(495, +$('#tgtL').value) : 0,
       targetR: (+$('#tgtL').value >= 5 && +$('#tgtR').value >= 5) ? Math.min(495, +$('#tgtR').value) : 0,
-      openaiPriceIn: $('#opIn').value, openaiPriceOut: $('#opOut').value, examDate: $('#exam').value,
+      aiAutoFill: $('#autoFill').checked, openaiPriceIn: $('#opIn').value, openaiPriceOut: $('#opOut').value, examDate: $('#exam').value,
       speechRate: +$('#rate').value, p5TimeLimit: +$('#p5t').value || 20, apiKey: $('#key').value.trim(),
       aiProvider: $('#prov').value, claudeModel: $('#claudeModel').value,
       openaiKey: $('#okey').value.trim(), openaiModel: ($('#omodel').value === '__custom' ? $('#omodelCustom').value.trim() : $('#omodel').value) || OPENAI_DEFAULT,
@@ -1235,11 +1281,11 @@ function renderSettings() {
   });
 }
 
-function toast(msg) {
+function toast(msg, ms = 1800) {
   const t = document.createElement('div');
   t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 1800);
+  setTimeout(() => t.remove(), ms);
 }
 
 // ---------- 起動 ----------

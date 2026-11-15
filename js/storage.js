@@ -28,6 +28,7 @@ function fresh() {
       openaiKey: '',
       openaiModel: '',
       openaiModels: [],    // 取得したモデル一覧のキャッシュ
+      aiAutoFill: false,   // 未解答が足りないとき AI で問題を自動補充
       openaiPriceIn: '',   // 任意：OpenAI 単価（USD / 100万入力トークン）
       openaiPriceOut: '',  // 任意：OpenAI 単価（USD / 100万出力トークン）
       p5TimeLimit: 20,     // Part5 1問あたりの目標秒数
