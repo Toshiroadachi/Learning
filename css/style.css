@@ -216,3 +216,17 @@ select, input[type=number], input[type=date], input[type=password], input:not([t
 @media (max-width: 520px) {
   input, select, textarea { font-size: 16px !important; }
 }
+
+/* AI 解説・アドバイス */
+.aihelp { margin: 8px 0; }
+.aiout .ai-sec { background: var(--bg); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: .9rem; }
+.aiout .ai-sec p { margin: 4px 0; }
+.aiout .ex-en { font-family: Georgia, serif; }
+.aiout .ask { display: flex; gap: 6px; margin-top: 8px; }
+.aiout .ask input { flex: 1; }
+.q-me { background: var(--bg); padding: 6px 10px; border-radius: 8px; margin: 6px 0 2px; font-size: .9rem; }
+.a-ai { border-left: 3px solid var(--primary); padding: 4px 10px; margin: 2px 0 8px; font-size: .9rem; }
+.advice { background: var(--bg); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: .9rem; }
+.advice ol, .advice ul { padding-left: 1.2em; margin: 4px 0 8px; }
+.vtabs { margin: 0 0 10px; }
+.vtabs .chip { text-decoration: none; }

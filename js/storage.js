@@ -42,6 +42,8 @@ function fresh() {
     aiBank: [],            // AI生成問題
     mocks: [],             // {ts, listening, reading, total}
     aiUsage: [],           // AI利用記録 {ts, provider, model, in, out}
+    aiVocab: [],           // AIで追加した単語・熟語 {word, pos, ja, ex, kind}
+    aiAdvice: null,        // 最新のAI学習アドバイス {ts, data}
   };
 }
 

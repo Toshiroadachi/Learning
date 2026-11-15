@@ -213,3 +213,87 @@ Title: ${article.title}
 Summary: ${article.summary}`;
   return call({ system: 'あなたは英語ニュースを使って英語を教える講師です。', prompt, schema, effort: 'low' });
 }
+
+// ---------- 間違えた問題の詳しい解説 ----------
+const TUTOR = `あなたはTOEIC 900点以上の指導経験が豊富な日本人向け英語講師です。
+学習者が間違えた問題について、なぜその選択肢を選んでしまったのかに寄り添いながら、日本語でわかりやすく解説します。
+問題文・選択肢・正解は与えられたものを正として扱い、別の答えを正解と主張しないでください。`;
+
+function mistakeText(ctx) {
+  const L = 'ABCD';
+  return `【Part ${ctx.part}】
+${ctx.context ? `本文/スクリプト:\n${ctx.context}\n` : ''}設問: ${ctx.question}
+選択肢:
+${ctx.options.map((o, i) => `(${L[i]}) ${o}`).join('\n')}
+正解: (${L[ctx.answer]}) ${ctx.options[ctx.answer]}
+学習者の解答: (${L[ctx.chosen]}) ${ctx.options[ctx.chosen]}
+${ctx.expl ? `既存の簡単な解説: ${ctx.expl}` : ''}`;
+}
+
+export async function explainMistake(ctx) {
+  const schema = obj({
+    why_wrong: str,      // 選んだ選択肢がなぜ誤りか
+    why_right: str,      // 正解の根拠
+    point: str,          // 押さえるべき文法・語彙・解法のポイント
+    examples: arr(obj({ en: str, ja: str })),  // 同じポイントの例文
+    tip: str,            // 次に同じタイプで間違えないためのコツ
+  });
+  const prompt = `${mistakeText(ctx)}
+
+次を日本語で作成してください（英文の引用は可）。
+- why_wrong: 学習者の選んだ選択肢がなぜ誤りか、選んでしまいがちな理由も含めて（100〜200字）
+- why_right: 正解の根拠を本文や文法から具体的に（100〜200字）
+- point: この問題で押さえるべき文法・語彙・解き方のポイント（80〜150字）
+- examples: 同じポイントを使った英語例文2〜3個と和訳
+- tip: 本番で同じタイプの問題を速く正確に解くコツ（60〜120字）`;
+  return call({ system: TUTOR, prompt, schema, effort: 'low' });
+}
+
+// 解説への追加質問（history: [{q, a}]）
+export async function askFollowUp(ctx, history, question) {
+  const schema = obj({ answer: str });
+  const prompt = `${mistakeText(ctx)}
+
+これまでのやり取り:
+${history.map(h => `学習者: ${h.q}\n講師: ${h.a}`).join('\n') || '（なし）'}
+
+学習者の新しい質問: ${question}
+
+この問題に関連する質問として、日本語で簡潔に（300字以内）答えてください。`;
+  return (await call({ system: TUTOR, prompt, schema, effort: 'low' })).answer;
+}
+
+// ---------- 単語・熟語の生成 ----------
+export async function generateVocab(kind, count, exclude) {
+  const schema = obj({ items: arr(obj({ word: str, pos: str, ja: str, ex: str })) });
+  const what = kind === 'idiom'
+    ? 'TOEIC L&R で 800〜990点レベルの学習者が覚えるべき熟語・句動詞・慣用表現（例: in compliance with, on behalf of, carry out, be eligible for）。pos は「熟語」「句動詞」「前置詞句」など'
+    : 'TOEIC L&R で 800〜990点レベルの学習者が覚えるべきビジネス・日常の頻出単語（中学〜高校基礎レベルの易しい語は除く）。pos は「名」「動」「形」「副」のいずれか';
+  const prompt = `${what}を${count}個作成してください。
+- word: 英語（熟語は原形の形で）
+- ja: 日本語の意味（TOEICで問われる意味を中心に簡潔に、複数可）
+- ex: その語を使った自然なビジネス英語の例文1文（TOEICの文体で）
+- 次の語句は既に学習済みなので含めないこと: ${exclude.slice(-400).join(', ')}
+- 同じ語句を重複させないこと`;
+  const data = await call({ system: 'あなたはTOEIC語彙の専門家です。正確な意味と自然な例文を提供します。', prompt, schema, effort: 'low' });
+  return data.items || [];
+}
+
+// ---------- 学習アドバイス ----------
+export async function coachAdvice(summary) {
+  const schema = obj({
+    summary: str,
+    priorities: arr(obj({ title: str, detail: str })),
+    today: arr(str),
+    encouragement: str,
+  });
+  const prompt = `TOEIC学習者の記録です。これをもとに日本語で学習アドバイスを作成してください。
+
+${summary}
+
+- summary: 現状の分析（150〜250字。強み・弱みを数字を使って具体的に）
+- priorities: 目標達成のための優先課題を3つ（title は短く、detail は具体的な学習方法を100字程度）
+- today: 今日このアプリでやるべきことを3〜5項目（例: 「Part 5 の関係詞を10問」）
+- encouragement: ひとこと励まし（50字以内）`;
+  return call({ system: 'あなたはTOEIC 900点突破を指導する学習コーチです。データに基づき、具体的で実行可能な助言をします。', prompt, schema, effort: 'medium' });
+}
