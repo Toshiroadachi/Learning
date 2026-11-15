@@ -9,7 +9,7 @@ import P5 from '../data/p5.js';
 import P6 from '../data/p6.js';
 import P7 from '../data/p7.js';
 import VOCAB from '../data/vocab.js';
-import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT } from './ai.js';
+import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT, currentModel, costOf } from './ai.js';
 
 const BUILTIN = { 1: P1, 2: P2, 3: P3, 4: P4, 5: P5, 6: P6, 7: P7 };
 const SET_PARTS = new Set([3, 4, 6, 7]);
@@ -156,7 +156,7 @@ function taskLink(t) {
 function renderHome() {
   const st = S();
   const { recs, pred, tgt } = recommend();
-  const target = st.settings.targetScore;
+  const target = tgt.L + tgt.R;
   const gap = target - pred.total;
   const days = st.settings.examDate ? Math.ceil((new Date(st.settings.examDate) - new Date(today())) / 86400000) : null;
   const tasks = st.schedule.map(t => ({ t, p: taskProgress(t) }));
@@ -184,20 +184,6 @@ function renderHome() {
   </section>
 
   <section class="card">
-    <div class="row-between"><h2>今日のスケジュール</h2><span class="pill">${doneN}/${tasks.length} 完了　🔥${streak()}日連続</span></div>
-    <ul class="tasks">
-      ${tasks.map(({ t, p }) => `
-        <li class="${p.done ? 'done' : ''}">
-          <label><input type="checkbox" data-task="${esc(t.id)}" ${p.done ? 'checked' : ''}>
-          <span>${esc(t.label)}</span></label>
-          <span class="muted small">${t.kind === 'manual' ? `${t.target}${esc(t.unit)}` : `${Math.min(p.n, t.target)}/${t.target}${esc(t.unit)}`}</span>
-          ${taskLink(t) ? `<a class="btn sm" href="${taskLink(t)}">開始</a>` : ''}
-        </li>`).join('')}
-    </ul>
-    <div class="muted small">項目は「設定」から自由に編集できます。</div>
-  </section>
-
-  <section class="card">
     <h2>あなたへのおすすめ</h2>
     <p class="muted small">目標${target}点に対する各パートの「伸びしろ点数」から、今やるべき順に並べています。</p>
     ${recs.slice(0, 3).map((r, i) => `
@@ -220,6 +206,22 @@ function renderHome() {
   <section class="card">
     <h2>パート別 推定正答率</h2>
     ${partBars(pred.stats, tgt)}
+  </section>
+
+  ${aiUsageCard()}
+
+  <section class="card">
+    <div class="row-between"><h2>今日のスケジュール</h2><span class="pill">${doneN}/${tasks.length} 完了　🔥${streak()}日連続</span></div>
+    <ul class="tasks">
+      ${tasks.map(({ t, p }) => `
+        <li class="${p.done ? 'done' : ''}">
+          <label><input type="checkbox" data-task="${esc(t.id)}" ${p.done ? 'checked' : ''}>
+          <span>${esc(t.label)}</span></label>
+          <span class="muted small">${t.kind === 'manual' ? `${t.target}${esc(t.unit)}` : `${Math.min(p.n, t.target)}/${t.target}${esc(t.unit)}`}</span>
+          ${taskLink(t) ? `<a class="btn sm" href="${taskLink(t)}">開始</a>` : ''}
+        </li>`).join('')}
+    </ul>
+    <div class="muted small">項目は「設定」から自由に編集できます。</div>
   </section>`;
 
   view().querySelectorAll('input[data-task]').forEach(cb => cb.addEventListener('change', () => {
@@ -228,6 +230,36 @@ function renderHome() {
     log.manual[cb.dataset.task] = cb.checked;
     save(); renderHome();
   }));
+}
+
+// AI利用状況（このアプリ内での利用記録から集計）
+function aiUsageCard() {
+  const st = S();
+  const prov = aiProvider(st.settings);
+  const usage = st.aiUsage || [];
+  if (!prov && !usage.length) return '';
+  const month = today().slice(0, 7);
+  const sum = list => {
+    let n = 0, i = 0, o = 0, cost = 0, unknown = false;
+    for (const u of list) { n++; i += u.in; o += u.out; const c = costOf(u, st.settings); if (c == null) unknown = true; else cost += c; }
+    return { n, i, o, cost, unknown };
+  };
+  const all = sum(usage), mon = sum(usage.filter(u => today(new Date(u.ts)).slice(0, 7) === month));
+  const k = v => v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'k' : String(v);
+  const money = v => `$${v.toFixed(v < 1 ? 3 : 2)}（約${Math.round(v * 150).toLocaleString()}円）`;
+  const costTxt = x => x.n === 0 ? '—' : x.unknown && x.cost === 0 ? '単価未設定' : money(x.cost) + (x.unknown ? '＋単価不明分' : '');
+  const isOA = prov === 'openai' || (!prov && usage[usage.length - 1]?.provider === 'openai');
+  const dash = isOA ? 'https://platform.openai.com/usage' : 'https://console.anthropic.com/usage';
+  return `<section class="card">
+    <div class="row-between"><h2>AIの利用状況</h2><span class="pill">${prov ? (prov === 'openai' ? 'OpenAI' : 'Claude') + '：' + esc(currentModel(st.settings)) : 'AI未使用'}</span></div>
+    <table class="tbl">
+      <tr><th></th><th>回数</th><th>トークン<br><small>入力/出力</small></th><th>推定金額</th></tr>
+      <tr><td>今月</td><td>${mon.n}</td><td>${k(mon.i)} / ${k(mon.o)}</td><td>${costTxt(mon)}</td></tr>
+      <tr><td>累計</td><td>${all.n}</td><td>${k(all.i)} / ${k(all.o)}</td><td>${costTxt(all)}</td></tr>
+    </table>
+    <p class="small muted">このアプリで使った分の記録です（1ドル=150円で概算）。${isOA && !st.settings.openaiPriceIn ? 'OpenAI の金額を出すには「設定」でモデルの単価を入力してください。' : ''}
+    残高・正確な請求額は <a href="${dash}" target="_blank" rel="noopener">${isOA ? 'OpenAI' : 'Anthropic'} の利用状況ページ ↗</a> で確認できます。</p>
+  </section>`;
 }
 
 function weakTagLine(part) {
@@ -251,7 +283,7 @@ function partBars(stats, tgt) {
 // ---------- 練習メニュー ----------
 function renderPractice() {
   const st = partStats();
-  const tgt = targetRates(S().settings.targetScore);
+  const tgt = targetRates(S().settings);
   view().innerHTML = `
   <section class="card">
     <h2>パートを選んで練習</h2>
@@ -879,7 +911,12 @@ function renderSettings() {
         <label>リーディング（任意）<input type="number" id="curR" min="5" max="495" step="5" value="${s.currentR || ''}" placeholder="例 415"></label>
       </div>
       <div class="small muted" id="lrNote"></div>
-      <label>目標スコア<input type="number" id="tgt" min="10" max="990" step="5" value="${s.targetScore}"></label>
+      <label>目標スコア（合計）<input type="number" id="tgt" min="10" max="990" step="5" value="${s.targetScore}"></label>
+      <div class="two">
+        <label>目標リスニング（任意）<input type="number" id="tgtL" min="5" max="495" step="5" value="${s.targetL || ''}" placeholder="例 475"></label>
+        <label>目標リーディング（任意）<input type="number" id="tgtR" min="5" max="495" step="5" value="${s.targetR || ''}" placeholder="例 425"></label>
+      </div>
+      <div class="small muted" id="tgtNote"></div>
       <label>次の試験日<input type="date" id="exam" value="${esc(s.examDate)}"></label>
       <label>音声の速さ <input type="range" id="rate" min="0.6" max="1.4" step="0.05" value="${s.speechRate}"> <span id="rateV">${s.speechRate}x</span></label>
       <label>Part 5 の目標秒数/問<input type="number" id="p5t" min="5" max="60" value="${s.p5TimeLimit}"></label>
@@ -908,6 +945,11 @@ function renderSettings() {
         <label>モデル<select id="omodel"></select></label>
         <label id="omodelCustomWrap" class="hidden-block">モデル名を直接入力<input id="omodelCustom" value="${esc(s.openaiModel)}" placeholder="${OPENAI_DEFAULT}" autocomplete="off" autocapitalize="off"></label>
         <div class="btn-row"><button class="btn sm" id="fetchModels">このキーで使えるモデル一覧を取得</button><span id="modelsStatus" class="small muted"></span></div>
+        <div class="two">
+          <label>単価：入力（$/100万トークン）<input type="number" id="opIn" min="0" step="0.01" value="${esc(s.openaiPriceIn)}" placeholder="例 2"></label>
+          <label>単価：出力（$/100万トークン）<input type="number" id="opOut" min="0" step="0.01" value="${esc(s.openaiPriceOut)}" placeholder="例 10"></label>
+        </div>
+        <p class="small muted">単価は任意。入れるとホームに推定金額が出ます（選んだモデルの単価は <a href="https://platform.openai.com/docs/pricing" target="_blank" rel="noopener">OpenAI の料金ページ ↗</a> で確認）。</p>
         <p class="small muted">OpenAI のモデルは頻繁に更新されます。キーを入れたら「一覧を取得」を押してください（使えない名前は自動で最新モデルに置き換わります）。目安：名前に mini / nano / luna が付くものは安価、無印や上位名は高品質・高価格。</p>
       </div>
     </div>
@@ -986,13 +1028,27 @@ function renderSettings() {
   $('#curL').addEventListener('input', syncLR);
   $('#curR').addEventListener('input', syncLR);
   syncLR();
+  const syncT = () => {
+    const L = +$('#tgtL').value, R = +$('#tgtR').value;
+    const ok = L >= 5 && L <= 495 && R >= 5 && R <= 495;
+    if (ok) $('#tgt').value = L + R;
+    $('#tgt').readOnly = ok;
+    $('#tgtNote').textContent = ok ? `目標 合計 ${L + R} 点（この配分でパートごとの目標正答率を計算します）`
+      : (L || R) ? 'リスニングとリーディングの両方を入力すると内訳が使われます' : '内訳が未入力の場合は一般的な配分（リスニング約53%）で計算します';
+  };
+  $('#tgtL').addEventListener('input', syncT);
+  $('#tgtR').addEventListener('input', syncT);
+  syncT();
   $('#rate').addEventListener('input', e => { $('#rateV').textContent = e.target.value + 'x'; });
   $('#saveS').addEventListener('click', () => {
     collect();
     Object.assign(s, {
       currentScore: +$('#cur').value || 600,
       currentL: (+$('#curL').value >= 5 && +$('#curR').value >= 5) ? Math.min(495, +$('#curL').value) : 0,
-      currentR: (+$('#curL').value >= 5 && +$('#curR').value >= 5) ? Math.min(495, +$('#curR').value) : 0, targetScore: +$('#tgt').value || 900, examDate: $('#exam').value,
+      currentR: (+$('#curL').value >= 5 && +$('#curR').value >= 5) ? Math.min(495, +$('#curR').value) : 0, targetScore: +$('#tgt').value || 900,
+      targetL: (+$('#tgtL').value >= 5 && +$('#tgtR').value >= 5) ? Math.min(495, +$('#tgtL').value) : 0,
+      targetR: (+$('#tgtL').value >= 5 && +$('#tgtR').value >= 5) ? Math.min(495, +$('#tgtR').value) : 0,
+      openaiPriceIn: $('#opIn').value, openaiPriceOut: $('#opOut').value, examDate: $('#exam').value,
       speechRate: +$('#rate').value, p5TimeLimit: +$('#p5t').value || 20, apiKey: $('#key').value.trim(),
       aiProvider: $('#prov').value, claudeModel: $('#claudeModel').value,
       openaiKey: $('#okey').value.trim(), openaiModel: ($('#omodel').value === '__custom' ? $('#omodelCustom').value.trim() : $('#omodel').value) || OPENAI_DEFAULT,

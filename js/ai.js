@@ -1,7 +1,7 @@
 // （任意機能）AI による問題生成・ニュース解説
 // Claude（Anthropic）または OpenAI を設定画面で選択。APIキーはこの端末の localStorage にのみ保存され、
 // 各社の API へ直接送信されます。
-import { getState } from './storage.js';
+import { getState, save } from './storage.js';
 
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.2.0/+esm';
 
@@ -13,6 +13,31 @@ export const CLAUDE_MODELS = [
 // OpenAI の候補（参考）。実際に使えるモデルは設定画面の「一覧を取得」で、キーに応じた最新一覧に置き換わる
 export const OPENAI_SUGGESTED = ['gpt-6.1-sol', 'gpt-6-luna', 'gpt-6-astra', 'gpt-5.6-terra', 'gpt-5.6-luna'];
 export const OPENAI_DEFAULT = 'gpt-6.1-sol';
+
+// Claude の単価（USD / 100万トークン：入力, 出力）
+const CLAUDE_PRICES = { 'claude-opus-5-5': [4, 20], 'claude-sonnet-5-5': [2, 10], 'claude-haiku-5-5': [0.10, 0.50] };
+
+export function currentModel(settings = getState().settings) {
+  const p = aiProvider(settings);
+  if (p === 'openai') return settings.openaiModel || OPENAI_DEFAULT;
+  if (p === 'anthropic') return settings.claudeModel || 'claude-opus-5-5';
+  return '';
+}
+
+// 1回の利用の推定金額（単価不明なら null）
+export function costOf(u, settings = getState().settings) {
+  let price = null;
+  if (u.provider === 'anthropic') price = CLAUDE_PRICES[u.model] || null;
+  else if (settings.openaiPriceIn !== '' && settings.openaiPriceOut !== '' && settings.openaiPriceIn != null && settings.openaiPriceOut != null)
+    price = [+settings.openaiPriceIn, +settings.openaiPriceOut];
+  return price ? (u.in * price[0] + u.out * price[1]) / 1e6 : null;
+}
+
+function recordUsage(provider, model, inTok, outTok) {
+  const st = getState();
+  (st.aiUsage ||= []).push({ ts: Date.now(), provider, model, in: inTok || 0, out: outTok || 0 });
+  save();
+}
 
 export function aiProvider(settings = getState().settings) {
   if (settings.aiProvider === 'none') return null;
@@ -83,6 +108,7 @@ async function callClaude({ system, prompt, schema, effort }) {
   const resp = model.includes('haiku')
     ? await c.messages.create(params)
     : await c.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
+  recordUsage('anthropic', model, resp.usage?.input_tokens, resp.usage?.output_tokens);
   if (resp.stop_reason === 'refusal') throw new Error('リクエストが拒否されました。条件を変えて再試行してください。');
   if (resp.stop_reason === 'max_tokens') throw new Error('出力が長すぎて途中で切れました。数を減らして再試行してください。');
   const text = resp.content.filter(b => b.type === 'text').map(b => b.text).join('');
@@ -117,6 +143,7 @@ async function callOpenAI({ system, prompt, schema }) {
     text: { format: { type: 'json_schema', name: 'result', strict: true, schema } },
   });
   if (res.ok) {
+    recordUsage('openai', data.model || model, data.usage?.input_tokens, data.usage?.output_tokens);
     if (data.status === 'incomplete') throw new Error('出力が途中で切れました。数を減らして再試行してください。');
     const parts = (data.output || []).flatMap(o => o.content || []);
     const refusal = parts.find(c => c.type === 'refusal');
@@ -132,6 +159,7 @@ async function callOpenAI({ system, prompt, schema }) {
     response_format: { type: 'json_schema', json_schema: { name: 'result', strict: true, schema } },
   }));
   if (!res.ok) throw openaiError(res, data, model);
+  recordUsage('openai', data.model || model, data.usage?.prompt_tokens, data.usage?.completion_tokens);
   const msg = data.choices?.[0]?.message;
   if (msg?.refusal) throw new Error('リクエストが拒否されました: ' + msg.refusal);
   if (data.choices?.[0]?.finish_reason === 'length') throw new Error('出力が途中で切れました。数を減らして再試行してください。');

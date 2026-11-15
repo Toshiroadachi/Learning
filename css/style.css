@@ -186,7 +186,10 @@ select, input[type=number], input[type=date], input[type=password], input:not([t
 
 /* settings */
 .form { display: grid; gap: 10px; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.two > label { min-width: 0; }
+.two input { width: 100%; }
+.form { grid-template-columns: minmax(0, 1fr); }
 .form label { display: flex; flex-direction: column; gap: 3px; font-size: .88rem; }
 .sched-row { display: grid; grid-template-columns: 1fr 120px 56px 60px 52px 34px; gap: 6px; margin-bottom: 6px; align-items: center; }
 .sched-row [hidden] { visibility: hidden; display: block; }
@@ -207,4 +210,9 @@ select, input[type=number], input[type=date], input[type=password], input:not([t
   .sched-row input, .sched-row select { padding: 6px 4px; font-size: .82rem; }
   .sched-row .s-label { grid-column: 1 / -1; }
   .news-item img { width: 64px; height: 52px; }
+}
+
+/* iPhone で入力欄フォーカス時に画面が拡大されないよう 16px 以上に */
+@media (max-width: 520px) {
+  input, select, textarea { font-size: 16px !important; }
 }

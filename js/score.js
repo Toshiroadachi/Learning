@@ -106,9 +106,14 @@ export function predict(state = getState()) {
 }
 
 // 目標スコアに必要な各パート目標正答率
-export function targetRates(target) {
-  // 900点なら L 475 / R 425 前後が一般的な配分（リスニングの方が高得点を取りやすい）
-  const { L, R } = splitLR(target);
+export function targetLR(settings) {
+  if (settings.targetL > 0 && settings.targetR > 0) return { L: settings.targetL, R: settings.targetR };
+  // 未入力なら 900点 → L 475 / R 425 のような一般的な配分（リスニングの方が高得点を取りやすい）
+  return splitLR(settings.targetScore || 900);
+}
+
+export function targetRates(settings) {
+  const { L, R } = targetLR(settings);
   const lr = scaledToRate('L', L), rr = scaledToRate('R', R);
   return { L, R, lr, rr };
 }
@@ -116,7 +121,7 @@ export function targetRates(target) {
 // 推薦：目標との差 × 問題数 × データ不足ボーナス で「伸びしろ点数」を算出
 export function recommend(state = getState()) {
   const pred = predict(state);
-  const tgt = targetRates(state.settings.targetScore || 900);
+  const tgt = targetRates(state.settings);
   const recs = [];
   for (const [p, info] of Object.entries(PART_INFO)) {
     const s = pred.stats[p];
