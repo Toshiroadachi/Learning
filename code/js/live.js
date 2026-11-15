@@ -1,4 +1,4 @@
-// 本物の Claude によるエージェント体験（Claude Code 風）
+// 本物の AI（OpenAI）によるエージェント体験（Claude Code / Codex 風）
 // 仮想プロジェクトのファイルはこの端末に保存。コード実行はブラウザ内の Python（Pyodide）。
 import { getState, save, logActivity } from './store.js';
 import { LIVE_PROJECTS } from '../data/live-projects.js';
@@ -43,14 +43,14 @@ export function renderLive(view, arg) {
   const st = getState();
   if (!AI.hasKey()) {
     view.innerHTML = `<div class="row-between"><h1>⚡ 本物のAIで体験</h1><a class="small" href="#/lab">← AIラボ</a></div>
-      <div class="card"><p>ここでは<b>本物の Claude</b> が、ブラウザ内の仮想プロジェクトのファイルを読み・編集し・テストを実行します。許可ダイアログ・プランモード・差分の確認など、Claude Code と同じ流れを体験できます。</p>
-      <p class="small">利用には Anthropic の API キーが必要です（従量課金。1回の依頼で数円〜数十円程度）。</p>
+      <div class="card"><p>ここでは<b>本物の AI（OpenAI のモデル）</b>が、ブラウザ内の仮想プロジェクトのファイルを読み・編集し・テストを実行します。許可ダイアログ・プランモード・差分の確認など、Claude Code と同じ流れを体験できます。</p>
+      <p class="small">利用には OpenAI の API キーが必要です（TOEIC アプリと同じキーを使えます。従量課金）。</p>
       <a class="btn primary" href="#/settings">設定で API キーを登録</a></div>`;
     return null;
   }
   if (arg === 'new' || !st.live) {
     view.innerHTML = `<div class="row-between"><h1>⚡ 本物のAIで体験</h1><a class="small" href="#/lab">← AIラボ</a></div>
-      <p class="small muted">プロジェクトを選ぶと、Claude（${esc(AI.currentModel())}）があなたの指示で実際に作業します。</p>
+      <p class="small muted">プロジェクトを選ぶと、AI（${esc(AI.currentModel())}）があなたの指示で実際に作業します。</p>
       ${LIVE_PROJECTS.map(p => `<button class="tile" style="width:100%;text-align:left;margin-bottom:10px;font:inherit" data-p="${p.id}"><div class="t">${esc(p.title)}</div><div class="small muted">${esc(p.desc)}</div></button>`).join('')}
       ${st.live ? '<a class="btn" href="#/live">← 前回の続きに戻る</a>' : ''}`;
     view.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
@@ -87,7 +87,7 @@ class LiveSession {
       <div class="row-between" style="margin-bottom:6px"><a class="small" href="#/live/new">← プロジェクト選択</a>
         <span class="row"><button class="btn sm" id="files">📁 ファイル</button><button class="btn sm" id="help">?</button></span></div>
       <div class="term-wrap">
-        <div class="term-head"><i></i><i></i><i></i><span>claude — ~/${esc(this.project.id)} · ${esc(AI.currentModel())}</span></div>
+        <div class="term-head"><i></i><i></i><i></i><span>agent — ~/${esc(this.project.id)} · ${esc(AI.currentModel())}</span></div>
         <div class="term" id="term"></div>
         <div class="statusline"><span id="mode"></span><span id="usage"></span></div>
       </div>
@@ -109,8 +109,8 @@ class LiveSession {
     m.style.cursor = 'pointer';
     m.onclick = () => { if (!this.busy) { this.s.mode = NEXT_MODE[this.s.mode]; this.persist(); this.status(); } };
     const u = this.s.usage;
-    const usd = AI.costOf({ model: AI.currentModel(), in: u.in, out: u.out });
-    $('#usage', this.view).textContent = `${((u.in + u.out) / 1000).toFixed(1)}k tok · $${usd.toFixed(3)}`;
+    const usd = AI.costOf({ in: u.in, out: u.out });
+    $('#usage', this.view).textContent = `${((u.in + u.out) / 1000).toFixed(1)}k tok${usd != null ? ` · $${usd.toFixed(3)}` : ''}`;
   }
 
   add(item) { this.s.transcript.push(item); this.draw(item); this.persist(); }
@@ -120,7 +120,7 @@ class LiveSession {
     switch (t.k) {
       case 'banner':
         d.className = 'ln box';
-        d.innerHTML = `<span class="cl">✻</span> Welcome to <b>Claude Code</b>（ブラウザ体験版）\n\n  <span class="dim">本物の Claude が仮想プロジェクトで作業します</span>\n  <span class="dim">/help でコマンド一覧 · Shift+Tab の代わりにステータス行をタップ</span>\n\n  <span class="dim">cwd: ~/${esc(this.project.id)}</span>`;
+        d.innerHTML = `<span class="cl">✻</span> <b>AI エージェント体験</b>（OpenAI ${esc(AI.currentModel())}）\n\n  <span class="dim">本物の AI が仮想プロジェクトで、Claude Code / Codex と同じ流れで作業します</span>\n  <span class="dim">/help でコマンド一覧 · Shift+Tab の代わりにステータス行をタップ</span>\n\n  <span class="dim">cwd: ~/${esc(this.project.id)}</span>`;
         break;
       case 'user': d.className = 'ln userline'; d.innerHTML = `<span class="dim">&gt;</span> ${esc(t.text)}`; break;
       case 'text': d.innerHTML = `<span class="cl">⏺</span> ${esc(t.text)}`; break;
@@ -150,7 +150,7 @@ class LiveSession {
   }
 
   busyPanel() {
-    this.panel.innerHTML = `<div class="row-between"><span class="small"><span class="spinner" style="width:18px;height:18px;border-width:3px;display:inline-block;vertical-align:middle;margin:0 6px 0 0"></span>Claude が作業中…</span><button class="btn sm" id="stop">■ 中断（Esc）</button></div>`;
+    this.panel.innerHTML = `<div class="row-between"><span class="small"><span class="spinner" style="width:18px;height:18px;border-width:3px;display:inline-block;vertical-align:middle;margin:0 6px 0 0"></span>AI が作業中…</span><button class="btn sm" id="stop">■ 中断（Esc）</button></div>`;
     $('#stop', this.panel).onclick = () => { if (this.ctrl) this.ctrl.abort(); };
   }
 
@@ -160,13 +160,13 @@ class LiveSession {
     if (text.startsWith('/')) {
       const [cmd] = text.split(/\s+/);
       if (cmd === '/clear') { s.messages = []; s.transcript = []; s.summary = ''; this.persist(); this.render(); toast('会話をクリアしました（ファイルはそのまま）'); return; }
-      if (cmd === '/cost') { const u = s.usage; this.add({ k: 'sys', text: `このセッション: 入力 ${u.in.toLocaleString()} / 出力 ${u.out.toLocaleString()} トークン · 推定 $${AI.costOf({ model: AI.currentModel(), ...u }).toFixed(4)}` }); this.inputPanel(); return; }
+      if (cmd === '/cost') { const u = s.usage; this.add({ k: 'sys', text: `このセッション: 入力 ${u.in.toLocaleString()} / 出力 ${u.out.toLocaleString()} トークン · ${AI.costOf(u) != null ? '推定 $' + AI.costOf(u).toFixed(4) : '（設定で単価を入れると金額も表示）'}` }); this.inputPanel(); return; }
       if (cmd === '/help') { this.help(); return; }
       if (cmd === '/files') { this.showFiles(); return; }
       if (cmd === '/reset') { if (confirm('ファイルを初期状態に戻し、会話も消しますか？')) { getState().live = freshSession(this.project); this.s = getState().live; this.persist(); this.render(); } return; }
       if (cmd === '/model') { this.add({ k: 'sys', text: `現在のモデル: ${AI.currentModel()}（設定画面で変更できます）` }); this.inputPanel(); return; }
       if (cmd === '/compact') return this.compact();
-      if (cmd === '/init') text = '/init — このプロジェクトを調べて、CLAUDE.md（プロジェクトの説明書: 実行・テスト方法、構成、コーディング規約、注意点）を作成して。簡潔に。';
+      if (cmd === '/init') text = '/init — このプロジェクトを調べて、AGENTS.md（プロジェクトの説明書: 実行・テスト方法、構成、コーディング規約、注意点）を作成して。簡潔に。';
       else { this.add({ k: 'err', text: `不明なコマンド: ${cmd}（/help で一覧）` }); return; }
     }
     this.add({ k: 'user', text });
@@ -174,7 +174,7 @@ class LiveSession {
     const pre = [];
     if (!s.messages.length) {
       if (s.summary) pre.push(`（これまでの会話の要約）\n${s.summary}`);
-      if (s.files['CLAUDE.md']) pre.push(`<CLAUDE.md>\n${s.files['CLAUDE.md']}\n</CLAUDE.md>`);
+      for (const f of ['AGENTS.md', 'CLAUDE.md']) if (s.files[f]) pre.push(`<${f}>\n${s.files[f]}\n</${f}>`);
     }
     if (s.mode === 'plan') pre.push('（プランモード中：ファイルの変更や実行はせず、調査して実装計画を提示してください。ユーザーが承認したら実装します）');
     if (pre.length) content = pre.join('\n\n') + '\n\n' + text;
@@ -190,7 +190,6 @@ class LiveSession {
     const before = getState().aiUsage.length;
     try {
       const r = await AI.agentTurn(s.messages, {
-        mode: s.mode,
         signal: this.ctrl.signal,
         onText: t => this.add({ k: 'text', text: t }),
         execTool: (name, input) => this.exec(name, input),
@@ -235,7 +234,7 @@ class LiveSession {
       s.messages.push({ role: 'user', content: 'ここまでの会話を、作業の続きに必要な情報（目的・変更したファイル・決定事項・残タスク）に絞って日本語で要約して。ツールは使わないで。' });
       const before = getState().aiUsage.length;
       let summary = '';
-      await AI.agentTurn(s.messages, { mode: 'plan', onText: t => { summary += t + '\n'; }, execTool: async () => ({ content: '要約中はツールを使えません', isError: true }), maxSteps: 2 });
+      await AI.agentTurn(s.messages, { onText: t => { summary += t + '\n'; }, execTool: async () => ({ content: '要約中はツールを使えません', isError: true }), maxSteps: 2 });
       for (const u of getState().aiUsage.slice(before)) { s.usage.in += u.in; s.usage.out += u.out; }
       s.summary = summary.trim();
       s.messages = [];
@@ -291,7 +290,7 @@ class LiveSession {
         this.add({ k: 'diff', lines: diff.slice(0, 120) });
         if (s.mode !== 'accept' && !s.allow.edit) {
           const ans = await this.permission(old == null ? 'Create file' : 'Edit file', p, [
-            'Yes', 'Yes, allow all edits during this session', 'No, and tell Claude what to do differently']);
+            'Yes', 'Yes, allow all edits during this session', 'No, and tell the agent what to do differently']);
           if (ans.k === 1) { s.allow.edit = true; }
           if (ans.k === 2) { this.add({ k: 'tool', name: label, arg: p, out: 'User rejected' + (ans.text ? `: ${ans.text}` : ''), fail: true }); return { content: `ユーザーがこの変更を拒否しました。${ans.text ? 'ユーザーのコメント: ' + ans.text : '別の方法を検討してください。'}`, isError: true }; }
         }
@@ -304,7 +303,7 @@ class LiveSession {
         const isTest = name === 'run_tests';
         const cmd = isTest ? 'pytest' : `python ${norm(input.path)}${input.stdin ? ' < stdin' : ''}`;
         if (!s.allow.run) {
-          const ans = await this.permission('Bash command', cmd, ['Yes', `Yes, and don't ask again for python/pytest commands`, 'No, and tell Claude what to do differently']);
+          const ans = await this.permission('Bash command', cmd, ['Yes', `Yes, and don't ask again for python/pytest commands`, 'No, and tell the agent what to do differently']);
           if (ans.k === 1) s.allow.run = true;
           if (ans.k === 2) { this.add({ k: 'tool', name: 'Bash', arg: cmd, out: 'User rejected', fail: true }); return { content: `ユーザーが実行を拒否しました。${ans.text || ''}`, isError: true }; }
         }
@@ -369,12 +368,12 @@ class LiveSession {
     const bg = document.createElement('div');
     bg.className = 'modal-bg';
     bg.innerHTML = `<div class="modal lesson"><div class="row-between"><h2 style="margin:0">使い方</h2><button class="btn sm" id="cl">閉じる</button></div>${md(`- 下の入力欄に、Claude Code と同じように日本語で指示します（候補のチップをタップでも可）
-- Claude は **ファイルを読む → 変更する → テストを実行する** を自分で繰り返します
+- AI は **ファイルを読む → 変更する → テストを実行する** を自分で繰り返します
 - 変更やコマンド実行の前に**許可**を求められます。「No」を選ぶと理由を伝えて別案を出させられます
 - ステータス行をタップすると **通常 → accept edits → plan mode** に切り替わります（本物の Shift+Tab に相当）
 - 作業中に「■ 中断」で止められます（本物の Esc に相当）
 ### コマンド
-- \`/init\` … CLAUDE.md を作らせる（以降の会話で自動的に読み込まれます）
+- \`/init\` … AGENTS.md を作らせる（以降の会話で自動的に読み込まれます）
 - \`/clear\` … 会話をリセット（ファイルは残る）
 - \`/compact\` … 会話を要約して続ける
 - \`/cost\` … このセッションのトークン数と推定料金

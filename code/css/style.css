@@ -249,3 +249,74 @@ table.cmp th { font-size: .75rem; color: var(--muted); }
   .term { font-size: .74rem; height: 50vh; }
   .container { padding: 10px 12px; }
 }
+
+/* ---------- アプリ風シミュレーター（Claude デスクトップ/スマホ、Codex VS Code/アプリ） ---------- */
+.appwin { --aw-bg: #faf9f5; --aw-fg: #1f1e1b; --aw-dim: #7a776f; --aw-line: #e6e2d9; --aw-card: #ffffff; --aw-acc: #d97757; --aw-user: #efeae0; --aw-code: #f3f0e8;
+  border-radius: 14px; overflow: hidden; border: 1px solid var(--aw-line); background: var(--aw-bg); color: var(--aw-fg); margin-bottom: 10px; display: flex; flex-direction: column; }
+.appwin.ui-claude-mobile { border-radius: 28px; border: 6px solid #1c1c1e; max-width: 420px; margin-left: auto; margin-right: auto; }
+.appwin.ui-codex-app { --aw-bg: #141414; --aw-fg: #ececec; --aw-dim: #8d8d8d; --aw-line: #2a2a2a; --aw-card: #1d1d1d; --aw-acc: #e8e8e8; --aw-user: #262626; --aw-code: #101010; }
+.appwin.ui-codex-vscode { --aw-bg: #1e1e1e; --aw-fg: #d4d4d4; --aw-dim: #8a8a8a; --aw-line: #2d2d2d; --aw-card: #252526; --aw-acc: #3794ff; --aw-user: #2b2d31; --aw-code: #181818; }
+.appwin .aw-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--aw-line); font-size: .78rem; background: color-mix(in srgb, var(--aw-bg) 85%, var(--aw-line)); }
+.appwin .aw-dots { display: inline-flex; gap: 5px; } .appwin .aw-dots i { width: 9px; height: 9px; border-radius: 50%; background: #ff5f57; display: inline-block; }
+.appwin .aw-dots i:nth-child(2) { background: #febc2e; } .appwin .aw-dots i:nth-child(3) { background: #28c840; }
+.appwin .aw-tabs { display: inline-flex; background: var(--aw-line); border-radius: 7px; padding: 2px; }
+.appwin .aw-tabs span { padding: 1px 8px; border-radius: 5px; color: var(--aw-dim); }
+.appwin .aw-tabs span.on { background: var(--aw-card); color: var(--aw-fg); font-weight: 600; }
+.appwin .aw-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.appwin .aw-icons { color: var(--aw-dim); white-space: nowrap; }
+.appwin .aw-back { font-size: 1.2rem; color: var(--aw-acc); }
+.appwin .aw-logo { font-weight: 700; }
+.appwin .aw-sub { display: flex; gap: 6px; align-items: center; padding: 5px 10px; border-bottom: 1px solid var(--aw-line); font-size: .72rem; color: var(--aw-dim); overflow-x: auto; white-space: nowrap; }
+.appwin .aw-side { font-weight: 700; letter-spacing: .04em; }
+.appwin .aw-ed { background: var(--aw-card); border: 1px solid var(--aw-line); border-bottom: 2px solid var(--aw-acc); padding: 1px 8px; border-radius: 4px 4px 0 0; color: var(--aw-fg); }
+.appwin .aw-thread { padding: 2px 9px; border-radius: 6px; border: 1px solid var(--aw-line); }
+.appwin .aw-thread.on { background: var(--aw-user); color: var(--aw-fg); }
+.appwin .aw-body { height: 50vh; min-height: 280px; overflow-y: auto; padding: 12px; font-size: .85rem; line-height: 1.6; -webkit-overflow-scrolling: touch; }
+.appwin .aw-hello { text-align: center; padding: 28px 8px; color: var(--aw-dim); }
+.appwin .aw-hello-i { font-size: 1.8rem; color: var(--aw-acc); }
+.appwin .aw-hello-t { font-size: 1.15rem; font-weight: 600; color: var(--aw-fg); font-family: Georgia, "Hiragino Mincho ProN", serif; }
+.appwin.ui-codex-app .aw-hello-t, .appwin.ui-codex-vscode .aw-hello-t { font-family: inherit; }
+.appwin .aw-hello-s { font-size: .78rem; }
+.appwin .aw-user { margin: 10px 0 10px auto; max-width: 85%; background: var(--aw-user); padding: 8px 12px; border-radius: 14px 14px 4px 14px; white-space: pre-wrap; word-break: break-word; width: fit-content; }
+.appwin .aw-msg { margin: 8px 0; white-space: pre-wrap; word-break: break-word; }
+.appwin .aw-think { color: var(--aw-dim); font-style: italic; animation: awpulse 1.2s ease-in-out infinite; }
+@keyframes awpulse { 50% { opacity: .4; } }
+.appwin .aw-tool { margin: 4px 0; font-size: .78rem; border-left: 2px solid var(--aw-line); padding-left: 8px; }
+.appwin .aw-tool-h { color: var(--aw-fg); }
+.appwin .aw-tool-h .aw-arg { color: var(--aw-dim); font-family: ui-monospace, Menlo, monospace; word-break: break-all; }
+.appwin .aw-tool-o { color: var(--aw-dim); font-family: ui-monospace, Menlo, monospace; font-size: .74rem; white-space: pre-wrap; word-break: break-word; }
+.appwin .aw-ok { color: var(--ok); }
+.appwin .aw-diff { font-family: ui-monospace, Menlo, monospace; font-size: .74rem; background: var(--aw-code); border: 1px solid var(--aw-line); border-radius: 8px; padding: 6px 8px; margin: 4px 0 8px; white-space: pre-wrap; word-break: break-word; }
+.appwin .aw-diff .add { background: rgba(46, 160, 67, .18); }
+.appwin .aw-diff .del { background: rgba(248, 81, 73, .16); }
+.appwin .aw-card { background: var(--aw-card); border: 1px solid var(--aw-line); border-radius: 12px; padding: 10px 12px; margin: 8px 0; font-size: .8rem; }
+.appwin .aw-card.perm { border-color: var(--aw-acc); }
+.appwin .aw-card.plan { border-left: 3px solid #14b8a6; }
+.appwin .aw-card.side { border-style: dashed; }
+.appwin .aw-card-t { font-weight: 700; margin-bottom: 4px; }
+.appwin .aw-card-b { color: var(--aw-dim); white-space: normal; }
+.appwin .aw-term { font-family: ui-monospace, Menlo, monospace; font-size: .74rem; background: var(--aw-code); border-radius: 6px; padding: 6px 8px; white-space: pre-wrap; word-break: break-word; margin: 4px 0; }
+.appwin .aw-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.appwin .aw-btn { border: 1px solid var(--aw-line); border-radius: 8px; padding: 3px 10px; font-size: .74rem; }
+.appwin .aw-btn.pri { background: var(--aw-acc); color: var(--aw-bg); border-color: var(--aw-acc); }
+.appwin .aw-chosen { color: var(--ok); font-weight: 600; }
+.appwin .aw-composer { border-top: 1px solid var(--aw-line); padding: 8px 10px 10px; }
+.appwin .aw-input { background: var(--aw-card); border: 1px solid var(--aw-line); border-radius: 12px; padding: 8px 10px; min-height: 38px; font-size: .85rem; white-space: pre-wrap; word-break: break-word; }
+.appwin .aw-ph { color: var(--aw-dim); }
+.appwin .aw-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.appwin .aw-chip { font-size: .7rem; border: 1px solid var(--aw-line); border-radius: 999px; padding: 1px 8px; color: var(--aw-dim); white-space: nowrap; }
+.appwin .aw-chip.mode { color: var(--aw-acc); border-color: var(--aw-acc); }
+.appwin .coach { font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; background: #fff7ed; color: #3b2611; border-radius: 10px; padding: 8px 12px; margin: 8px 0; font-size: .82rem; line-height: 1.6; }
+.appwin .coach::before { content: "💡 解説"; display: block; font-weight: 700; color: #c2410c; font-size: .75rem; }
+.appwin .coach code { background: #fde3c8; color: #3b2611; }
+.appwin .coach b { color: #9a3412; }
+.appwin .ln { white-space: pre-wrap; word-break: break-word; }
+.appwin .file { background: var(--aw-code); border: 1px solid var(--aw-line); border-radius: 8px; padding: 6px 10px; margin: 6px 0; font-family: ui-monospace, Menlo, monospace; font-size: .74rem; }
+.appwin .file .fname { color: var(--aw-dim); border-bottom: 1px solid var(--aw-line); margin-bottom: 4px; }
+.appwin .box { border: 1px solid var(--aw-line); border-radius: 10px; padding: 8px 10px; margin: 6px 0; background: var(--aw-card); font-size: .8rem; }
+.appwin .gap { height: .5em; }
+.appwin .dim { color: var(--aw-dim); } .appwin .g { color: #16a34a; } .appwin .r { color: #dc2626; } .appwin .y { color: #b45309; } .appwin .c { color: #0284c7; } .appwin .p { color: #7c3aed; }
+.appwin .cl { color: #d97757; } .appwin .cx { color: #3794ff; }
+.appwin.ui-codex-app .g, .appwin.ui-codex-vscode .g { color: #6ee7a0; } .appwin.ui-codex-app .r, .appwin.ui-codex-vscode .r { color: #ff8b8b; }
+.appwin.ui-codex-app .y, .appwin.ui-codex-vscode .y { color: #ffd479; } .appwin.ui-codex-app .c, .appwin.ui-codex-vscode .c { color: #7dd3fc; }
+.appwin b, .appwin .b { font-weight: 700; }
