@@ -4,6 +4,9 @@ const KEY = 'codedojo:v1';
 function fresh() {
   return {
     settings: {
+      aiProvider: '',                  // '' | 'none' | 'anthropic' | 'openai'
+      apiKey: '',                      // Anthropic API キー（任意）
+      claudeModel: 'claude-opus-5-5',
       openaiKey: '',                   // OpenAI API キー（任意）
       openaiModel: '',                 // 空なら既定モデル
       openaiModels: [],                // 取得したモデル一覧

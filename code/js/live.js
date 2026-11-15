@@ -1,4 +1,4 @@
-// 本物の AI（OpenAI）によるエージェント体験（Claude Code / Codex 風）
+// 本物の AI（Claude または OpenAI）によるエージェント体験（Claude Code / Codex 風）
 // 仮想プロジェクトのファイルはこの端末に保存。コード実行はブラウザ内の Python（Pyodide）。
 import { getState, save, logActivity } from './store.js';
 import { LIVE_PROJECTS } from '../data/live-projects.js';
@@ -43,8 +43,8 @@ export function renderLive(view, arg) {
   const st = getState();
   if (!AI.hasKey()) {
     view.innerHTML = `<div class="row-between"><h1>⚡ 本物のAIで体験</h1><a class="small" href="#/lab">← AIラボ</a></div>
-      <div class="card"><p>ここでは<b>本物の AI（OpenAI のモデル）</b>が、ブラウザ内の仮想プロジェクトのファイルを読み・編集し・テストを実行します。許可ダイアログ・プランモード・差分の確認など、Claude Code と同じ流れを体験できます。</p>
-      <p class="small">利用には OpenAI の API キーが必要です（従量課金）。</p>
+      <div class="card"><p>ここでは<b>本物の AI（Claude または OpenAI）</b>が、ブラウザ内の仮想プロジェクトのファイルを読み・編集し・テストを実行します。許可ダイアログ・プランモード・差分の確認など、Claude Code と同じ流れを体験できます。</p>
+      <p class="small">利用には Anthropic（Claude）か OpenAI の API キーが必要です（従量課金）。</p>
       <a class="btn primary" href="#/settings">設定で API キーを登録</a></div>`;
     return null;
   }
@@ -109,7 +109,7 @@ class LiveSession {
     m.style.cursor = 'pointer';
     m.onclick = () => { if (!this.busy) { this.s.mode = NEXT_MODE[this.s.mode]; this.persist(); this.status(); } };
     const u = this.s.usage;
-    const usd = AI.costOf({ in: u.in, out: u.out });
+    const usd = AI.costOf({ provider: AI.provider(), model: AI.currentModel(), in: u.in, out: u.out });
     $('#usage', this.view).textContent = `${((u.in + u.out) / 1000).toFixed(1)}k tok${usd != null ? ` · $${usd.toFixed(3)}` : ''}`;
   }
 
@@ -120,7 +120,7 @@ class LiveSession {
     switch (t.k) {
       case 'banner':
         d.className = 'ln box';
-        d.innerHTML = `<span class="cl">✻</span> <b>AI エージェント体験</b>（OpenAI ${esc(AI.currentModel())}）\n\n  <span class="dim">本物の AI が仮想プロジェクトで、Claude Code / Codex と同じ流れで作業します</span>\n  <span class="dim">/help でコマンド一覧 · Shift+Tab の代わりにステータス行をタップ</span>\n\n  <span class="dim">cwd: ~/${esc(this.project.id)}</span>`;
+        d.innerHTML = `<span class="cl">✻</span> <b>AI エージェント体験</b>（${AI.providerName()} ${esc(AI.currentModel())}）\n\n  <span class="dim">本物の AI が仮想プロジェクトで、Claude Code / Codex と同じ流れで作業します</span>\n  <span class="dim">/help でコマンド一覧 · Shift+Tab の代わりにステータス行をタップ</span>\n\n  <span class="dim">cwd: ~/${esc(this.project.id)}</span>`;
         break;
       case 'user': d.className = 'ln userline'; d.innerHTML = `<span class="dim">&gt;</span> ${esc(t.text)}`; break;
       case 'text': d.innerHTML = `<span class="cl">⏺</span> ${esc(t.text)}`; break;
@@ -160,7 +160,7 @@ class LiveSession {
     if (text.startsWith('/')) {
       const [cmd] = text.split(/\s+/);
       if (cmd === '/clear') { s.messages = []; s.transcript = []; s.summary = ''; this.persist(); this.render(); toast('会話をクリアしました（ファイルはそのまま）'); return; }
-      if (cmd === '/cost') { const u = s.usage; this.add({ k: 'sys', text: `このセッション: 入力 ${u.in.toLocaleString()} / 出力 ${u.out.toLocaleString()} トークン · ${AI.costOf(u) != null ? '推定 $' + AI.costOf(u).toFixed(4) : '（設定で単価を入れると金額も表示）'}` }); this.inputPanel(); return; }
+      if (cmd === '/cost') { const u = s.usage; this.add({ k: 'sys', text: `このセッション: 入力 ${u.in.toLocaleString()} / 出力 ${u.out.toLocaleString()} トークン · ${(c => c != null ? '推定 $' + c.toFixed(4) : '（設定で単価を入れると金額も表示）')(AI.costOf({ provider: AI.provider(), model: AI.currentModel(), ...u }))}` }); this.inputPanel(); return; }
       if (cmd === '/help') { this.help(); return; }
       if (cmd === '/files') { this.showFiles(); return; }
       if (cmd === '/reset') { if (confirm('ファイルを初期状態に戻し、会話も消しますか？')) { getState().live = freshSession(this.project); this.s = getState().live; this.persist(); this.render(); } return; }
@@ -169,6 +169,12 @@ class LiveSession {
       if (cmd === '/init') text = '/init — このプロジェクトを調べて、AGENTS.md（プロジェクトの説明書: 実行・テスト方法、構成、コーディング規約、注意点）を作成して。簡潔に。';
       else { this.add({ k: 'err', text: `不明なコマンド: ${cmd}（/help で一覧）` }); return; }
     }
+    // 使う AI を切り替えた場合、会話の形式が違うので会話だけリセット（ファイルは残す）
+    if (s.messages.length && s.provider && s.provider !== AI.provider()) {
+      s.messages = []; s.summary = '';
+      this.add({ k: 'sys', text: `使う AI が ${AI.providerName()} に変わったので、会話をリセットしました（ファイルはそのまま）` });
+    }
+    s.provider = AI.provider();
     this.add({ k: 'user', text });
     let content = text;
     const pre = [];
