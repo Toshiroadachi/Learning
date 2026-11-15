@@ -9,7 +9,8 @@ import P5 from '../data/p5.js';
 import P6 from '../data/p6.js';
 import P7 from '../data/p7.js';
 import VOCAB from '../data/vocab.js';
-import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT, currentModel, costOf } from './ai.js';
+import IDIOMS from '../data/idioms.js';
+import { aiProvider, CLAUDE_MODELS, OPENAI_SUGGESTED, OPENAI_DEFAULT, currentModel, costOf, explainMistake, askFollowUp, generateVocab, coachAdvice } from './ai.js';
 
 const BUILTIN = { 1: P1, 2: P2, 3: P3, 4: P4, 5: P5, 6: P6, 7: P7 };
 const SET_PARTS = new Set([3, 4, 6, 7]);
@@ -224,6 +225,7 @@ function renderHome() {
     <div class="muted small">項目は「設定」から自由に編集できます。</div>
   </section>`;
 
+  bindCoach();
   view().querySelectorAll('input[data-task]').forEach(cb => cb.addEventListener('change', () => {
     const log = (S().log[today()] ||= { counts: {}, manual: {} });
     log.manual ||= {};
@@ -257,9 +259,64 @@ function aiUsageCard() {
       <tr><td>今月</td><td>${mon.n}</td><td>${k(mon.i)} / ${k(mon.o)}</td><td>${costTxt(mon)}</td></tr>
       <tr><td>累計</td><td>${all.n}</td><td>${k(all.i)} / ${k(all.o)}</td><td>${costTxt(all)}</td></tr>
     </table>
+    ${prov ? `<div class="btn-row"><button class="btn primary" id="coachBtn">🤖 AI学習アドバイスをもらう</button><span class="small muted" id="coachStatus"></span></div>` : ''}
+    <div id="coachOut">${st.aiAdvice ? adviceHtml(st.aiAdvice) : ''}</div>
     <p class="small muted">このアプリで使った分の記録です（1ドル=150円で概算）。${isOA && !st.settings.openaiPriceIn ? 'OpenAI の金額を出すには「設定」でモデルの単価を入力してください。' : ''}
     残高・正確な請求額は <a href="${dash}" target="_blank" rel="noopener">${isOA ? 'OpenAI' : 'Anthropic'} の利用状況ページ ↗</a> で確認できます。</p>
   </section>`;
+}
+
+function adviceHtml(a) {
+  const d = a.data;
+  return `<div class="advice">
+    <div class="small muted">${new Date(a.ts).toLocaleString('ja-JP')} のアドバイス</div>
+    <p>${esc(d.summary)}</p>
+    <b>優先課題</b>
+    <ol>${d.priorities.map(p => `<li><b>${esc(p.title)}</b><br><span class="small">${esc(p.detail)}</span></li>`).join('')}</ol>
+    <b>今日やること</b>
+    <ul>${d.today.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+    <p class="small">💪 ${esc(d.encouragement)}</p>
+  </div>`;
+}
+
+function studySummary() {
+  const st = S();
+  const { recs, pred, tgt } = recommend();
+  const days = st.settings.examDate ? Math.ceil((new Date(st.settings.examDate) - new Date(today())) / 86400000) : null;
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); last7.push(today(d)); }
+  const perDay = last7.map(d => `${d.slice(5)}: ${st.answers.filter(a => today(new Date(a.ts)) === d).length}問${dayComplete(d) ? '（全達成）' : ''}`).join(', ');
+  const parts = Object.entries(PART_INFO).map(([p, info]) => {
+    const x = pred.stats[p];
+    return `Part ${p}（${info.name}）: 推定正答率 ${pct(x.rate)}、目標 ${pct(info.sec === 'L' ? tgt.lr : tgt.rr)}、解答数 ${x.count}、直近20問 ${pct(x.recentRate)}`;
+  }).join('\n');
+  const weak = weakTags().slice(0, 8).map(t => `${t.tag}(Part ${t.part}) ${pct(t.rate)}/${t.n}問`).join('、') || 'データ不足';
+  const vocabDone = Object.keys(st.vocab).length;
+  return `現在の公式スコア: ${st.settings.currentScore}（L ${st.settings.currentL || '?'} / R ${st.settings.currentR || '?'}）
+目標: ${tgt.L + tgt.R}（L ${tgt.L} / R ${tgt.R}）${days !== null ? `、試験まで ${days}日` : ''}
+アプリの予想スコア: ${pred.total}（L ${pred.listening} / R ${pred.reading}）、総解答数 ${pred.answered}
+パート別:
+${parts}
+弱点カテゴリ（正答率/解答数）: ${weak}
+アプリの推奨順: ${recs.slice(0, 3).map(r => 'Part ' + r.part).join(' > ')}
+直近7日の解答数: ${perDay}
+単語・熟語の学習済み数: ${vocabDone}
+毎日のスケジュール: ${st.schedule.map(t => `${t.label} ${t.target}${t.unit}`).join('、')}`;
+}
+
+function bindCoach() {
+  const btn = $('#coachBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true; $('#coachStatus').textContent = '分析中…（数十秒かかることがあります）';
+    try {
+      const data = await coachAdvice(studySummary());
+      S().aiAdvice = { ts: Date.now(), data }; save();
+      $('#coachOut').innerHTML = adviceHtml(S().aiAdvice);
+      $('#coachStatus').textContent = '';
+    } catch (e) { $('#coachStatus').textContent = 'エラー: ' + e.message; }
+    btn.disabled = false;
+  });
 }
 
 function weakTagLine(part) {
@@ -437,7 +494,7 @@ function grade(container, answer, onDone) {
       if (+x.dataset.orig === answer) x.classList.add('correct');
     });
     if (chosen !== answer) b.classList.add('wrong');
-    onDone(chosen === answer, Date.now() - t0);
+    onDone(chosen === answer, Date.now() - t0, chosen);
   }));
 }
 
@@ -456,6 +513,64 @@ function nextButton(card) {
   card.appendChild(div);
   $('#next').addEventListener('click', () => { stopSpeech(); quiz.i++; renderQuiz(); });
   $('#next').focus({ preventScroll: true });
+}
+
+// ---- 間違えた問題の AI 解説 ----
+function ctxFor(u, qi, chosen) {
+  const set = SET_PARTS.has(u.part);
+  const q = set ? u.questions[qi] : u;
+  let context = '';
+  if (u.part === 1) context = `（写真の内容）${u.scene.desc}`;
+  if (u.part === 3) context = u.script.map(l => `${l.sp}: ${l.t}`).join('\n');
+  if (u.part === 4) context = u.script;
+  if ((u.part === 3 || u.part === 4) && u.graphic) context += `\n[図表]\n${u.graphic}`;
+  if (u.part === 6) context = `${u.title}\n${u.passage}`;
+  if (u.part === 7) context = u.passages.map(p => `【${p.title}】\n${p.text}`).join('\n\n');
+  const question = u.part === 1 ? '写真を最もよく描写している英文はどれか' : u.part === 6 ? `空所 ${q.q} に入るもの` : q.q;
+  return { part: u.part, context, question, options: q.options, answer: q.answer, chosen, expl: q.expl };
+}
+
+function aiHelp(container, ctx) {
+  if (!aiProvider(S().settings)) return;
+  const box = document.createElement('div');
+  box.className = 'aihelp';
+  box.innerHTML = `<button class="btn sm">🤖 なぜ間違えた？AIで詳しく解説</button><div class="aiout"></div>`;
+  container.appendChild(box);
+  const btn = box.querySelector('button'), out = box.querySelector('.aiout');
+  const history = [];
+  btn.addEventListener('click', async () => {
+    btn.disabled = true; btn.textContent = '🤖 解説を作成中…';
+    try {
+      const r = await explainMistake(ctx);
+      btn.remove();
+      out.innerHTML = `
+        <div class="ai-sec"><b>❌ あなたの答えが違う理由</b><p>${esc(r.why_wrong)}</p></div>
+        <div class="ai-sec"><b>⭕ 正解の根拠</b><p>${esc(r.why_right)}</p></div>
+        <div class="ai-sec"><b>📌 ポイント</b><p>${esc(r.point)}</p></div>
+        <div class="ai-sec"><b>📝 例文</b>${r.examples.map(e => `<p class="ex-en">${esc(e.en)} <button class="btn sm" data-say="${esc(e.en)}">🔊</button><br><small class="muted">${esc(e.ja)}</small></p>`).join('')}</div>
+        <div class="ai-sec"><b>💡 次に間違えないコツ</b><p>${esc(r.tip)}</p></div>
+        <div class="qa"></div>
+        <div class="ask"><input placeholder="さらに質問（例: 他の選択肢はどう使う？）"><button class="btn sm primary">質問</button></div>`;
+      out.querySelectorAll('[data-say]').forEach(b => b.addEventListener('click', () => speak(b.dataset.say)));
+      const input = out.querySelector('.ask input'), ask = out.querySelector('.ask button'), qa = out.querySelector('.qa');
+      const send = async () => {
+        const q = input.value.trim(); if (!q) return;
+        ask.disabled = true; input.value = '';
+        qa.insertAdjacentHTML('beforeend', `<p class="q-me">🙋 ${esc(q)}</p><p class="small muted pending">回答を作成中…</p>`);
+        try {
+          const a = await askFollowUp(ctx, history, q);
+          history.push({ q, a });
+          qa.querySelector('.pending').outerHTML = `<p class="a-ai">🤖 ${esc(a)}</p>`;
+        } catch (e) { qa.querySelector('.pending').outerHTML = `<p class="warn small">${esc(e.message)}</p>`; }
+        ask.disabled = false;
+      };
+      ask.addEventListener('click', send);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    } catch (e) {
+      btn.disabled = false; btn.textContent = '🤖 なぜ間違えた？AIで詳しく解説';
+      out.innerHTML = `<p class="warn small">${esc(e.message)}</p>`;
+    }
+  });
 }
 
 function explBox(text, extra = '') {
@@ -477,9 +592,10 @@ function qPart1(card, u, [order]) {
   const play = () => speakSequence(lines, u.id.length, 900);
   $('#play')?.addEventListener('click', play);
   setTimeout(play, 300);
-  grade(card, u.answer, (ok, ms) => {
+  grade(card, u.answer, (ok, ms, chosen) => {
     record(u, 0, ok, ms);
     card.insertAdjacentHTML('beforeend', explBox(u.expl));
+    if (!ok) aiHelp(card, ctxFor(u, 0, chosen));
     nextButton(card);
   });
 }
@@ -497,10 +613,11 @@ function qPart2(card, u, [order]) {
   const play = () => speakSequence(lines, u.id.length, 800);
   $('#play')?.addEventListener('click', play);
   setTimeout(play, 300);
-  grade(card, u.answer, (ok, ms) => {
+  grade(card, u.answer, (ok, ms, chosen) => {
     record(u, 0, ok, ms);
     $('#qtext').classList.remove('hidden-block');
     card.insertAdjacentHTML('beforeend', explBox(u.expl, ` <button class="btn sm" id="replay">🔁 もう一度聞く</button>`));
+    if (!ok) aiHelp(card, ctxFor(u, 0, chosen));
     $('#replay')?.addEventListener('click', play);
     nextButton(card);
   });
@@ -525,9 +642,10 @@ function bindSet(card, u, onAll) {
   let done = 0;
   card.querySelectorAll('.setq').forEach(div => {
     const qi = +div.dataset.qi;
-    grade(div, u.questions[qi].answer, (ok, ms) => {
+    grade(div, u.questions[qi].answer, (ok, ms, chosen) => {
       record(u, qi, ok, ms);
       div.insertAdjacentHTML('beforeend', explBox(u.questions[qi].expl));
+      if (!ok) aiHelp(div, ctxFor(u, qi, chosen));
       if (++done === u.questions.length) onAll();
     });
   });
@@ -600,11 +718,12 @@ function qPart5(card, u, [order]) {
     el.textContent = `${s}s / ${limit}s`;
     el.classList.toggle('over', s > limit);
   }, 250);
-  grade(card, u.answer, (ok, ms) => {
+  grade(card, u.answer, (ok, ms, chosen) => {
     clearInterval(iv);
     record(u, 0, ok, ms);
     const slow = ms / 1000 > limit ? `<div class="small warn">⏱ ${Math.round(ms / 1000)}秒。900点には1問${limit}秒以内が目安です。</div>` : '';
     card.insertAdjacentHTML('beforeend', explBox(u.expl) + slow + `<div class="small muted">カテゴリ: ${esc(u.tag)}</div>`);
+    if (!ok) aiHelp(card, ctxFor(u, 0, chosen));
     nextButton(card);
   });
 }
@@ -673,30 +792,71 @@ function renderResult() {
 
 // ---------- 単語 ----------
 let vocabSession = null;
+let vocabKind = 'word';   // 'word' | 'idiom'
+const vocabPool = kind => kind === 'idiom'
+  ? [...IDIOMS, ...S().aiVocab.filter(v => v.kind === 'idiom')]
+  : [...VOCAB, ...S().aiVocab.filter(v => v.kind !== 'idiom')];
+
+async function addAIVocab(kind, count, statusEl) {
+  const pool = vocabPool(kind);
+  const have = new Set(pool.map(v => v.word.toLowerCase()));
+  statusEl.textContent = `AIが${kind === 'idiom' ? '熟語' : '単語'}を作成中…（数十秒かかることがあります）`;
+  try {
+    const items = await generateVocab(kind, count, pool.map(v => v.word));
+    const fresh = items.filter(v => v.word && !have.has(v.word.toLowerCase()) && have.add(v.word.toLowerCase()))
+      .map(v => ({ word: v.word.trim(), pos: v.pos, ja: v.ja, ex: v.ex, kind, ai: true, ts: Date.now() }));
+    S().aiVocab.push(...fresh);
+    save();
+    statusEl.textContent = `${fresh.length}個追加しました。`;
+    return fresh.length;
+  } catch (e) { statusEl.textContent = 'エラー: ' + e.message; return 0; }
+}
+
 function renderVocab(arg) {
   const st = S();
   const now = Date.now();
   if (arg === 'list') return renderMyWords();
+  if (arg === 'word' || arg === 'idiom') { vocabKind = arg; vocabSession = null; history.replaceState(null, '', '#/vocab'); }
+  const pool = vocabPool(vocabKind);
+  const label = vocabKind === 'idiom' ? '熟語' : '単語';
+  const ai = !!aiProvider(st.settings);
+  const unseen = pool.filter(v => !st.vocab[v.word]);
   if (!vocabSession) {
-    const due = VOCAB.filter(v => st.vocab[v.word] && st.vocab[v.word].due <= now);
-    const fresh = VOCAB.filter(v => !st.vocab[v.word]);
+    const due = pool.filter(v => st.vocab[v.word] && st.vocab[v.word].due <= now);
     const task = st.schedule.find(t => t.kind === 'vocab');
     const size = task ? task.target : 30;
-    const deck = [...shuffle(due), ...fresh].slice(0, size);
-    vocabSession = { deck, i: 0, known: 0 };
+    const deck = [...shuffle(due), ...unseen].slice(0, size);
+    vocabSession = { deck, i: 0, known: 0, kind: vocabKind };
   }
   const s = vocabSession;
-  const mastered = Object.values(st.vocab).filter(v => v.box >= 4).length;
+  const mastered = pool.filter(v => (st.vocab[v.word]?.box || 0) >= 4).length;
+  const aiCount = pool.filter(v => v.ai).length;
+  const tabs = `<div class="chips vtabs"><a class="chip ${vocabKind === 'word' ? 'on' : ''}" href="#/vocab/word">単語</a><a class="chip ${vocabKind === 'idiom' ? 'on' : ''}" href="#/vocab/idiom">熟語</a><a class="chip" href="#/vocab/list">My単語帳 (${st.myWords.length})</a></div>`;
+  const aiBox = `<section class="card">
+      <div class="row-between"><b>AIで${label}を追加</b><span class="small muted">未学習 ${unseen.length}・うちAI追加 ${aiCount}</span></div>
+      ${ai ? `<p class="small muted">900点レベルの${label}を、学習済みと重ならないように無制限に追加できます。</p>
+      <div class="btn-row"><button class="btn primary" data-gen="20">＋ 20個追加</button><button class="btn" data-gen="50">＋ 50個追加</button><span class="small muted" id="genStatus"></span></div>`
+      : `<p class="small muted">「設定」でAIを設定すると、${label}を無制限に追加できます。</p><a class="btn sm" href="#/settings">設定を開く</a>`}
+    </section>`;
+  const bindGen = () => view().querySelectorAll('[data-gen]').forEach(b => b.addEventListener('click', async () => {
+    view().querySelectorAll('[data-gen]').forEach(x => x.disabled = true);
+    const n = await addAIVocab(vocabKind, +b.dataset.gen, $('#genStatus'));
+    if (n) setTimeout(() => { vocabSession = null; renderVocab(); }, 900);
+    else view().querySelectorAll('[data-gen]').forEach(x => x.disabled = false);
+  }));
+
   if (s.i >= s.deck.length) {
-    view().innerHTML = `<section class="card center"><h2>単語セッション完了</h2>
-      <div class="big">${s.known} / ${s.deck.length}</div><p class="muted">習得済み ${mastered} / ${VOCAB.length}語</p>
-      <div class="btn-row center"><button class="btn primary" id="again">もう1セット</button><a class="btn" href="#/vocab/list">My単語帳</a><a class="btn" href="#/home">ホーム</a></div></section>`;
+    view().innerHTML = `${tabs}<section class="card center"><h2>${s.deck.length ? `${label}セッション完了` : `出題できる${label}がありません`}</h2>
+      ${s.deck.length ? `<div class="big">${s.known} / ${s.deck.length}</div>` : `<p class="muted">復習時期の${label}も未学習の${label}もありません。${ai ? 'AIで新しく追加しましょう。' : ''}</p>`}
+      <p class="muted">習得済み ${mastered} / ${pool.length}</p>
+      <div class="btn-row center"><button class="btn primary" id="again">もう1セット</button><a class="btn" href="#/home">ホーム</a></div></section>${aiBox}`;
     $('#again').addEventListener('click', () => { vocabSession = null; renderVocab(); });
+    bindGen();
     return;
   }
   const v = s.deck[s.i];
-  view().innerHTML = `
-  <div class="quiz-head"><span class="small"><b>単語フラッシュカード</b>（900点レベル）</span><a class="small" href="#/vocab/list">My単語帳 (${st.myWords.length})</a><span class="small muted">${s.i + 1}/${s.deck.length}</span></div>
+  view().innerHTML = `${tabs}
+  <div class="quiz-head"><span class="small"><b>${label}フラッシュカード</b>（900点レベル）${v.ai ? ' <span class="pill">AI</span>' : ''}</span><span class="small muted">${s.i + 1}/${s.deck.length}</span></div>
   <div class="progress"><div style="width:${s.i / s.deck.length * 100}%"></div></div>
   <section class="card flash" id="flash">
     <div class="word">${esc(v.word)} <button class="btn sm" id="say">🔊</button></div>
@@ -710,7 +870,8 @@ function renderVocab(arg) {
     <button class="btn wrongbtn" id="no">✗ 知らなかった</button>
     <button class="btn okbtn" id="yes">○ 知ってた</button>
   </div>
-  <p class="center small muted">習得済み ${mastered} / ${VOCAB.length}語（間隔反復で自動的に出題）</p>`;
+  <p class="center small muted">習得済み ${mastered} / ${pool.length}（間隔反復で自動的に出題）</p>
+  ${unseen.length < 30 ? aiBox : ''}`;
   const reveal = () => { $('#back').classList.remove('hidden-block'); $('#judge').style.visibility = 'visible'; };
   $('#flash').addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') reveal(); });
   $('#say').addEventListener('click', () => speak(v.word));
@@ -718,6 +879,7 @@ function renderVocab(arg) {
   const judge = ok => { recordVocab(v.word, ok); if (ok) s.known++; else s.deck.push(v); s.i++; renderVocab(); };
   $('#yes').addEventListener('click', () => judge(true));
   $('#no').addEventListener('click', () => judge(false));
+  bindGen();
 }
 
 function renderMyWords() {

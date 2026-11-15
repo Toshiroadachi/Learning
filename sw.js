@@ -1,7 +1,7 @@
 // オフライン対応：アプリ本体はキャッシュ優先、ニュースはネットワーク優先
-const CACHE = 'toeic900-v5';
+const CACHE = 'toeic900-v6';
 const SHELL = ['./', 'index.html', 'css/style.css', 'js/app.js', 'js/storage.js', 'js/score.js', 'js/speech.js', 'js/ai.js',
-  'data/p1.js', 'data/p2.js', 'data/p3.js', 'data/p4.js', 'data/p5.js', 'data/p6.js', 'data/p7.js', 'data/vocab.js',
+  'data/p1.js', 'data/p2.js', 'data/p3.js', 'data/p4.js', 'data/p5.js', 'data/p6.js', 'data/p7.js', 'data/vocab.js', 'data/idioms.js',
   'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', e => {
