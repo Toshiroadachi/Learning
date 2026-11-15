@@ -4,6 +4,9 @@ const KEY = 'codedojo:v1';
 function fresh() {
   return {
     settings: {
+      aiProvider: '',                  // '' | 'none' | 'anthropic' | 'openai'
+      apiKey: '',                      // Anthropic API キー（任意）
+      claudeModel: 'claude-opus-5-5',
       openaiKey: '',                   // OpenAI API キー（任意）
       openaiModel: '',                 // 空なら既定モデル
       openaiModels: [],                // 取得したモデル一覧
@@ -75,16 +78,6 @@ export function importData(text) {
   save();
 }
 export function resetAll() { state = fresh(); save(); }
-
-// 同じサイトの TOEIC アプリに保存されている OpenAI の設定（キー・モデル・単価）を読み込む
-export function openaiFromToeicApp() {
-  try {
-    const raw = localStorage.getItem('toeic900:v1');
-    const s = raw ? JSON.parse(raw).settings || {} : {};
-    if (!s.openaiKey) return null;
-    return { openaiKey: s.openaiKey, openaiModel: s.openaiModel || '', openaiModels: s.openaiModels || [], openaiPriceIn: s.openaiPriceIn ?? '', openaiPriceOut: s.openaiPriceOut ?? '' };
-  } catch { return null; }
-}
 
 // 連続学習日数
 export function streak() {
