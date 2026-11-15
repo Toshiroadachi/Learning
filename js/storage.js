@@ -23,6 +23,7 @@ function fresh() {
       claudeModel: 'claude-opus-5-5',
       openaiKey: '',
       openaiModel: '',
+      openaiModels: [],    // 取得したモデル一覧のキャッシュ
       p5TimeLimit: 20,     // Part5 1問あたりの目標秒数
     },
     answers: [],           // {qid, part, tag, correct, ts, ms}
@@ -112,9 +113,9 @@ export function importJSON(text) {
 }
 
 export function resetAll() {
-  const { aiProvider, apiKey, claudeModel, openaiKey, openaiModel } = state.settings;
+  const { aiProvider, apiKey, claudeModel, openaiKey, openaiModel, openaiModels } = state.settings;
   state = fresh();
-  Object.assign(state.settings, { aiProvider, apiKey, claudeModel, openaiKey, openaiModel });
+  Object.assign(state.settings, { aiProvider, apiKey, claudeModel, openaiKey, openaiModel, openaiModels });
   save();
 }
 

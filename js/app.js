@@ -900,11 +900,10 @@ function renderSettings() {
       </div>
       <div id="provOpenAI" class="form">
         <label>OpenAI API キー<input type="password" id="okey" value="${esc(s.openaiKey)}" placeholder="sk-..." autocomplete="off"></label>
-        <label>モデル（一覧から選択、または直接入力）
-          <input id="omodel" list="omodels" value="${esc(s.openaiModel)}" placeholder="${OPENAI_DEFAULT}" autocomplete="off">
-          <datalist id="omodels">${OPENAI_SUGGESTED.map(m => `<option value="${m}">`).join('')}</datalist></label>
+        <label>モデル<select id="omodel"></select></label>
+        <label id="omodelCustomWrap" class="hidden-block">モデル名を直接入力<input id="omodelCustom" value="${esc(s.openaiModel)}" placeholder="${OPENAI_DEFAULT}" autocomplete="off" autocapitalize="off"></label>
         <div class="btn-row"><button class="btn sm" id="fetchModels">このキーで使えるモデル一覧を取得</button><span id="modelsStatus" class="small muted"></span></div>
-        <p class="small muted">OpenAI のモデルは頻繁に更新されます。キーを入れたら必ず「一覧を取得」を押してください（使えない名前は自動で最新モデルに置き換わります）。目安：名前に mini / nano / luna が付くものは安価、無印や上位名は高品質・高価格。</p>
+        <p class="small muted">OpenAI のモデルは頻繁に更新されます。キーを入れたら「一覧を取得」を押してください（使えない名前は自動で最新モデルに置き換わります）。目安：名前に mini / nano / luna が付くものは安価、無印や上位名は高品質・高価格。</p>
       </div>
     </div>
     <p class="small muted">キーはこの端末のブラウザ内にのみ保存され、選んだ会社の API への直接リクエストにだけ使われます。共有端末では入力しないでください。利用料金は各社 API の従量課金です（ChatGPT や Claude の月額サブスクとは別）。</p>
@@ -944,6 +943,18 @@ function renderSettings() {
   $('#prov').addEventListener('change', showProv);
   $('#okey').addEventListener('change', () => $('#okey').value.trim() && $('#fetchModels').click());
   showProv();
+  // モデルのプルダウン（取得済み一覧があればそれを、なければ参考候補を表示）
+  const drawModels = (list, selected) => {
+    const ids = list.map(m => m.id);
+    const sel = selected || ids[0] || OPENAI_DEFAULT;
+    const known = ids.includes(sel);
+    $('#omodel').innerHTML = list.map((m, i) => `<option value="${esc(m.id)}" ${m.id === sel ? 'selected' : ''}>${esc(m.id)}${m.date ? `（${esc(m.date)}）` : ''}${i === 0 && m.date ? ' ★最新' : ''}</option>`).join('')
+      + `<option value="__custom" ${known ? '' : 'selected'}>その他（直接入力）</option>`;
+    if (!known) $('#omodelCustom').value = sel;
+    $('#omodelCustomWrap').classList.toggle('hidden-block', known);
+  };
+  drawModels(s.openaiModels?.length ? s.openaiModels : OPENAI_SUGGESTED.map(id => ({ id, date: '' })), s.openaiModel);
+  $('#omodel').addEventListener('change', () => $('#omodelCustomWrap').classList.toggle('hidden-block', $('#omodel').value !== '__custom'));
   $('#fetchModels').addEventListener('click', async () => {
     const key = $('#okey').value.trim();
     if (!key) { $('#modelsStatus').textContent = '先にキーを入力してください'; return; }
@@ -951,10 +962,11 @@ function renderSettings() {
     try {
       const { listOpenAIModels } = await import('./ai.js');
       const ids = await listOpenAIModels(key);
-      $('#omodels').innerHTML = ids.map(m => `<option value="${esc(m.id)}" label="${esc(m.date)}">`).join('');
-      const cur = $('#omodel').value.trim();
-      if (ids.length && !ids.some(m => m.id === cur)) $('#omodel').value = ids[0].id;  // 使えないモデルなら最新に置き換え
-      $('#modelsStatus').textContent = `${ids.length}件取得（新しい順）。最新: ${ids.slice(0, 3).map(m => m.id).join(', ')}。モデル欄をタップして変更できます。`;
+      if (!ids.length) throw new Error('使えるモデルが見つかりませんでした');
+      s.openaiModels = ids;
+      const cur = $('#omodel').value === '__custom' ? $('#omodelCustom').value.trim() : $('#omodel').value;
+      drawModels(ids, ids.some(m => m.id === cur) ? cur : ids[0].id);  // 使えないモデルなら最新に置き換え
+      $('#modelsStatus').textContent = `${ids.length}件取得しました（新しい順）。上の「モデル」から選んで「保存」を押してください。`;
     } catch (e) { $('#modelsStatus').textContent = e.message; }
   });
   $('#rate').addEventListener('input', e => { $('#rateV').textContent = e.target.value + 'x'; });
@@ -964,7 +976,7 @@ function renderSettings() {
       currentScore: +$('#cur').value || 600, targetScore: +$('#tgt').value || 900, examDate: $('#exam').value,
       speechRate: +$('#rate').value, p5TimeLimit: +$('#p5t').value || 20, apiKey: $('#key').value.trim(),
       aiProvider: $('#prov').value, claudeModel: $('#claudeModel').value,
-      openaiKey: $('#okey').value.trim(), openaiModel: $('#omodel').value.trim() || OPENAI_DEFAULT,
+      openaiKey: $('#okey').value.trim(), openaiModel: ($('#omodel').value === '__custom' ? $('#omodelCustom').value.trim() : $('#omodel').value) || OPENAI_DEFAULT,
     });
     S().schedule = sched;
     save();
