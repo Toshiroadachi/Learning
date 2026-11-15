@@ -4,11 +4,15 @@ const KEY = 'codedojo:v1';
 function fresh() {
   return {
     settings: {
-      apiKey: '',                      // Anthropic API キー（任意）
-      claudeModel: 'claude-opus-5-5',
+      openaiKey: '',                   // OpenAI API キー（任意）
+      openaiModel: '',                 // 空なら既定モデル
+      openaiModels: [],                // 取得したモデル一覧
+      openaiPriceIn: '',               // 任意：単価（USD / 100万入力トークン）
+      openaiPriceOut: '',              // 任意：単価（USD / 100万出力トークン）
       theme: '',                       // '' | 'light' | 'dark'
       typeSpeed: 1,                    // シミュレーターの文字送り速度（0=瞬時, 1=普通, 2=ゆっくり）
-      startDay: 11,                    // Python：ここから学習（Day1〜10 は修了済み）
+      startDay: 1,                     // Python：ここから学習（それより前の Day は修了扱い）
+      v: 2,
     },
     sims: {},        // scenarioId -> { done: true, score, total, ts }
     days: {},        // day -> { done: true, ts }
@@ -28,7 +32,15 @@ export function getState() {
   if (state) return state;
   try {
     const raw = localStorage.getItem(KEY);
-    state = raw ? merge(fresh(), JSON.parse(raw)) : fresh();
+    const saved = raw ? JSON.parse(raw) : null;
+    state = saved ? merge(fresh(), saved) : fresh();
+    // v2: Python は Day 1 から、AI は OpenAI に変更
+    if (saved && (saved.settings?.v || 1) < 2) {
+      state.settings.startDay = 1;
+      state.settings.v = 2;
+      state.live = null;
+      save();
+    }
   } catch {
     state = fresh();
   }
@@ -64,12 +76,14 @@ export function importData(text) {
 }
 export function resetAll() { state = fresh(); save(); }
 
-// 同じサイトの TOEIC アプリに保存されている Anthropic API キーを読み込む
-export function keyFromToeicApp() {
+// 同じサイトの TOEIC アプリに保存されている OpenAI の設定（キー・モデル・単価）を読み込む
+export function openaiFromToeicApp() {
   try {
     const raw = localStorage.getItem('toeic900:v1');
-    return raw ? (JSON.parse(raw).settings?.apiKey || '') : '';
-  } catch { return ''; }
+    const s = raw ? JSON.parse(raw).settings || {} : {};
+    if (!s.openaiKey) return null;
+    return { openaiKey: s.openaiKey, openaiModel: s.openaiModel || '', openaiModels: s.openaiModels || [], openaiPriceIn: s.openaiPriceIn ?? '', openaiPriceOut: s.openaiPriceOut ?? '' };
+  } catch { return null; }
 }
 
 // 連続学習日数

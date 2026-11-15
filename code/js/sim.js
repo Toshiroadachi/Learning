@@ -43,6 +43,10 @@ export class SimPlayer {
     this.mode = scenario.mode || 'default';
     this.ctx = scenario.ctx ?? 100;
     this.onFinish = onFinish;
+    this.ui = scenario.ui || '';      // '' = ターミナル / claude-desktop / claude-mobile / codex-vscode / codex-app
+    this.app = !!this.ui;
+    this.chips = { ...(scenario.chips || {}) };
+    this.title = scenario.session || '';
     this.alive = true;
     this.render();
     this.run();
@@ -51,6 +55,7 @@ export class SimPlayer {
   get speed() { return [0, 1, 2.2][getState().settings.typeSpeed ?? 1]; }
 
   render() {
+    if (this.app) return this.renderApp();
     const title = this.tool === 'codex' ? 'codex — ' + (this.sc.cwd || '~/project') : 'claude — ' + (this.sc.cwd || '~/project');
     this.root.innerHTML = `
       <div class="term-wrap">
@@ -65,11 +70,49 @@ export class SimPlayer {
   }
 
   updateStatus() {
+    if (this.app) return this.renderChips();
     const [cls, text] = (MODES[this.tool][this.mode] || MODES[this.tool].default);
     const m = this.root.querySelector('#sl-mode');
     m.className = cls; m.textContent = text;
     this.root.querySelector('#sl-right').textContent = this.tool === 'codex'
       ? `${this.ctx}% context left` : (this.ctx < 100 ? `Context left until auto-compact: ${this.ctx}%` : '');
+  }
+
+  renderApp() {
+    const ui = this.ui;
+    const head = {
+      'claude-desktop': `<span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-tabs"><span>Chat</span><span class="on">Code</span></span><span class="aw-title" id="aw-title"></span><span class="aw-icons">⌨︎ ± 🌐 📁 ⋮</span>`,
+      'claude-mobile': `<span class="aw-back">‹</span><span class="aw-title" id="aw-title"></span><span class="aw-icons">⋮</span>`,
+      'codex-vscode': `<span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-title" id="aw-title"></span><span class="aw-icons">Visual Studio Code</span>`,
+      'codex-app': `<span class="aw-dots"><i></i><i></i><i></i></span><span class="aw-logo">Codex</span><span class="aw-title" id="aw-title"></span><span class="aw-icons">⌨︎ ±</span>`,
+    }[ui];
+    const sub = {
+      'codex-vscode': `<div class="aw-sub"><span class="aw-side">🧩 CODEX</span><span class="aw-ed" id="aw-ed">${esc(this.sc.editor || 'app.js')}</span></div>`,
+      'codex-app': `<div class="aw-sub" id="aw-threads"></div>`,
+    }[ui] || '';
+    this.root.innerHTML = `
+      <div class="appwin ui-${ui}">
+        <div class="aw-head">${head}</div>${sub}
+        <div class="aw-body" id="term"></div>
+        <div class="aw-composer"><div class="aw-input" id="aw-input"><span class="aw-ph">${{ 'claude-desktop': 'Claude に依頼する…', 'claude-mobile': 'Claude に依頼する…', 'codex-vscode': 'Codex に依頼する…（@ でファイル、/ でコマンド）', 'codex-app': 'Codex に依頼する…' }[ui]}</span></div><div class="aw-chips" id="aw-chips"></div></div>
+      </div>
+      <div class="panel" id="panel"></div>`;
+    this.term = this.root.querySelector('#term');
+    this.panel = this.root.querySelector('#panel');
+    this.renderChips();
+  }
+
+  renderChips() {
+    const t = this.root.querySelector('#aw-title');
+    if (t) t.textContent = this.title || { 'claude-desktop': '新しいセッション', 'claude-mobile': 'Code', 'codex-vscode': this.sc.cwd || 'project', 'codex-app': this.sc.cwd || 'project' }[this.ui];
+    const th = this.root.querySelector('#aw-threads');
+    if (th) th.innerHTML = (this.chips.threads || '').split('|').filter(Boolean).map((x, k) => `<span class="aw-thread ${k === 0 ? 'on' : ''}">${esc(x)}</span>`).join('');
+    const ed = this.root.querySelector('#aw-ed');
+    if (ed && this.chips.editor) ed.textContent = this.chips.editor;
+    const order = ['env', 'folder', 'repo', 'branch', 'where', 'mode', 'model', 'perm', 'context', 'worktree'];
+    const icon = { env: '💻', folder: '📁', repo: '📦', branch: '⎇', where: '☁︎', mode: '◐', model: '✦', perm: '🛡', context: '📎', worktree: '🌿' };
+    this.root.querySelector('#aw-chips').innerHTML = order.filter(k => this.chips[k]).map(k =>
+      `<span class="aw-chip ${k === 'mode' ? 'mode' : ''}">${icon[k]} ${esc(this.chips[k])}${k === 'context' || k === 'worktree' ? '' : ' ▾'}</span>`).join('');
   }
 
   scroll() { this.term.scrollTop = this.term.scrollHeight; }
@@ -128,6 +171,12 @@ export class SimPlayer {
       case 'banner': return this.banner(s);
       case 'clear': this.term.innerHTML = ''; return;
       case 'mode': this.mode = s.mode; this.updateStatus(); return;
+      case 'chips': Object.assign(this.chips, s.set || {}); if (s.title != null) this.title = s.title; this.renderChips(); await this.pause(200); return;
+      case 'card': {
+        this.add(`${s.title ? `<div class="aw-card-t">${fmtTerm(s.title)}</div>` : ''}${s.body ? `<div class="aw-card-b">${fmtTerm(s.body).replace(/\n/g, '<br>')}</div>` : ''}${s.buttons ? `<div class="aw-btns">${s.buttons.map((b, k) => `<span class="aw-btn ${k === 0 ? 'pri' : ''}">${esc(b)}</span>`).join('')}</div>` : ''}`, 'aw-card' + (s.cls ? ' ' + s.cls : ''));
+        await this.pause(400);
+        return;
+      }
       case 'ctx': this.ctx = s.v; this.updateStatus(); return;
       case 'gap': this.gap(); return;
       case 'out': for (const l of [].concat(s.lines ?? s.text)) this.add(fmtTerm(l)); await this.pause(250); return;
@@ -137,6 +186,15 @@ export class SimPlayer {
         return;
       }
       case 'shell': {
+        if (this.app && s.pane !== false) {
+          await this.waitPanel(`<div class="small muted">ターミナルでコマンドを実行します</div>
+          <div class="cmdinput" style="margin-top:6px"><input value="${esc(s.cmd)}" readonly><button class="btn primary" id="go">⏎ 実行</button></div>`,
+          (p, done) => { p.querySelector('#go').onclick = done; });
+          this.panel.innerHTML = '';
+          this.add(`<div class="aw-card-t">⌨︎ ターミナル</div><div class="aw-term"><span class="g">$</span> ${esc(s.cmd)}${[].concat(s.out || []).map(l => '\n' + fmtTerm(l)).join('')}</div>`, 'aw-card');
+          await this.pause(500);
+          return;
+        }
         const line = this.add('');
         await this.waitPanel(`<div class="small muted">ターミナル（シェル）でコマンドを実行します</div>
           <div class="cmdinput" style="margin-top:6px"><input value="${esc(s.cmd)}" readonly><button class="btn primary" id="go">⏎ 実行</button></div>`,
@@ -149,7 +207,7 @@ export class SimPlayer {
         return;
       }
       case 'user': {
-        await this.waitPanel(`<div class="small muted">${cl ? 'Claude Code' : 'Codex'} への入力</div>
+        await this.waitPanel(`<div class="small muted">${cl ? 'Claude' : 'Codex'} への入力</div>
           <div class="cmdinput" style="margin-top:6px"><input value="${esc(s.text)}" readonly><button class="btn primary" id="go">⏎ 送信</button></div>`,
           (p, done) => { p.querySelector('#go').onclick = done; });
         this.panel.innerHTML = '';
@@ -158,14 +216,15 @@ export class SimPlayer {
       }
       case 'think': {
         const verbs = cl ? ['Thinking…', 'Pondering…', 'Clauding…', 'Reticulating…', 'Synthesizing…'] : ['Working', 'Thinking', 'Exploring'];
+        if (this.app) { const d0 = this.add(`<span class="aw-think">${esc(s.text || (cl ? '考え中…' : 'Thinking'))}</span>`); await this.pause(s.ms || 900); d0.remove(); return; }
         const d = this.add(`<span class="spin ${cl ? '' : 'cx'}">${esc(s.text || verbs[Math.floor(Math.random() * verbs.length)])}</span> <span class="dim">(esc to interrupt)</span>`);
         await this.pause(s.ms || 900);
         d.remove();
         return;
       }
       case 'say': {
-        const d = this.add('');
-        const bullet = cl ? '<span class="cl">⏺</span> ' : '<span class="cx">•</span> ';
+        const d = this.add('', this.app ? 'aw-msg' : 'ln');
+        const bullet = this.app ? '' : cl ? '<span class="cl">⏺</span> ' : '<span class="cx">•</span> ';
         await this.typeInto(d, bullet, s.text);
         await this.pause(200);
         return;
@@ -174,7 +233,9 @@ export class SimPlayer {
       case 'todo': {
         const icon = { x: '[[g:☒]]', ' ': '☐', '>': '[[y:◼]]' };
         const lines = s.items.map(([st, t]) => `${icon[st]} ${st === 'x' ? `[[dim:${t}]]` : st === '>' ? `**${t}**` : t}`);
-        if (cl) {
+        if (this.app) {
+          this.add(`<div class="aw-card-t">☑︎ ${cl ? 'To-dos' : 'Plan'}</div>${lines.map(l => `<div>${fmtTerm(l)}</div>`).join('')}`, 'aw-card');
+        } else if (cl) {
           this.add(`<span class="cl">⏺</span> <b>Update Todos</b>`);
           lines.forEach((l, k) => this.add((k ? '     ' : '  ⎿  ') + fmtTerm(l)));
         } else {
@@ -205,6 +266,16 @@ export class SimPlayer {
 
   async userLine(text) {
     const cl = this.tool === 'claude';
+    if (this.app) {
+      const inp = this.root.querySelector('#aw-input');
+      const ph = inp.innerHTML;
+      await this.typeInto(inp, '', text);
+      await this.pause(150);
+      inp.innerHTML = ph;
+      this.add(esc(text).replace(/\n/g, '<br>'), 'aw-user');
+      await this.pause(250);
+      return;
+    }
     this.gap();
     const d = this.add('', 'ln userline');
     await this.typeInto(d, cl ? '<span class="dim">&gt;</span> ' : '<span class="cx">›</span> ', text);
@@ -213,6 +284,16 @@ export class SimPlayer {
   }
 
   banner(s) {
+    if (this.app) {
+      const msg = {
+        'claude-desktop': ['✻', '何をしましょう？', 'フォルダを選んで、Claude に作業を依頼できます'],
+        'claude-mobile': ['✻', 'Code', 'リポジトリを選んでクラウドで Claude に作業を依頼'],
+        'codex-vscode': ['◎', 'Codex', '開いているファイルは自動で文脈に含まれます'],
+        'codex-app': ['◎', '何を作りましょう？', this.sc.cwd ? `プロジェクト: ${this.sc.cwd}` : ''],
+      }[this.ui];
+      this.add(`<div class="aw-hello-i">${msg[0]}</div><div class="aw-hello-t">${esc(msg[1])}</div><div class="aw-hello-s">${esc(msg[2])}</div>`, 'aw-hello');
+      return;
+    }
     if (this.tool === 'claude') {
       this.add(`<span class="cl">✻</span> Welcome to <b>Claude Code</b>!\n\n  <span class="dim">/help for help, /status for your current setup</span>\n\n  <span class="dim">cwd: ${esc(s.cwd || this.sc.cwd || '~/project')}</span>`, 'ln box');
       if (s.tips !== false) this.add('<span class="dim"> Tips for getting started:\n  1. Run /init to create a CLAUDE.md file with instructions for Claude\n  2. Use Claude to help with file analysis, editing, bash commands and git\n  3. Be as specific as you would with another engineer for the best results</span>');
@@ -226,6 +307,16 @@ export class SimPlayer {
   async toolStep(s) {
     const cl = this.tool === 'claude';
     const outs = [].concat(s.out || []);
+    if (this.app) {
+      const ic = { Read: '📄', Search: '🔍', Bash: '⌨︎', Ran: '⌨︎', Write: '✎', Update: '✎', Edit: '✎', Edited: '✎', Explored: '🔍' }[s.name] || '⚙︎';
+      this.add(`<div class="aw-tool-h"><span class="${s.fail ? 'r' : 'aw-ok'}">${ic}</span> <b>${esc(s.name)}</b> <span class="aw-arg">${esc(s.arg ?? '')}</span></div>${outs.filter(Boolean).length ? `<div class="aw-tool-o">${outs.map(fmtTerm).join('<br>')}</div>` : ''}`, 'aw-tool');
+      await this.pause(s.ms || 400);
+      if (s.diff) {
+        this.add(s.diff.map(l => `<div class="${l[0] === '+' ? 'add' : l[0] === '-' ? 'del' : ''}">${esc(l)}</div>`).join(''), 'aw-diff');
+        await this.pause(300);
+      }
+      return;
+    }
     if (cl) {
       const arg = s.arg != null ? `(${esc(s.arg)})` : '';
       this.add(`<span class="${s.fail ? 'r' : 'g'}">⏺</span> <b>${esc(s.name)}</b>${arg}`);
@@ -252,6 +343,13 @@ export class SimPlayer {
     const opts = s.options || (cl
       ? [{ label: 'Yes', ok: true }, { label: `Yes, and don't ask again for ${s.always || 'this command'}`, ok: true }, { label: 'No, and tell Claude what to do differently (esc)', ok: false }]
       : [{ label: 'Yes, proceed', ok: true }, { label: "Yes, and don't ask again for this command", ok: true }, { label: 'No, and tell Codex what to do differently (esc)', ok: false }]);
+    if (this.app) {
+      const ao = s.options;
+      const card = this.add(`<div class="aw-card-t">⚠︎ ${esc(s.kind || '許可が必要です')}</div><div class="aw-term">${fmtTerm(s.body)}</div>${s.desc ? `<div class="aw-card-b">${esc(s.desc)}</div>` : ''}<div class="aw-btns">${ao.map((o, k) => `<span class="aw-btn ${k === 0 ? 'pri' : ''}">${esc(o.label)}</span>`).join('')}</div>`, 'aw-card perm');
+      await this.ask({ q: s.q || 'どれを押す？', options: ao });
+      card.querySelector('.aw-btns').innerHTML = `<span class="aw-chosen">✓ ${esc(ao[this.lastChoice].label)}</span>`;
+      return;
+    }
     const head = cl ? `<b>${esc(s.kind || 'Bash command')}</b>` : `<b>${esc(s.kind || 'Would you like to run the following command?')}</b>`;
     const body = `${head}\n\n  ${fmtTerm(s.body)}\n${s.desc ? `  <span class="dim">${esc(s.desc)}</span>\n` : ''}\n${cl ? 'Do you want to proceed?' : ''}\n` +
       opts.map((o, k) => `${k === 0 ? '<span class="cl">❯</span>' : ' '} ${k + 1}. ${esc(o.label)}`).join('\n');
@@ -352,6 +450,7 @@ export class SimPlayer {
             return;
           }
           if (s.modes) { this.mode = s.modes[pressed]; this.updateStatus(); }
+          if (s.chips) { Object.assign(this.chips, s.chips[pressed] || {}); this.renderChips(); }
           pressed++;
           if (pressed < (s.times || 1)) { fb.innerHTML = `<div class="fb">あと ${(s.times || 1) - pressed} 回…（ステータス行の表示が変わったのを確認）</div>`; return; }
           if (!miss) this.score++;
@@ -373,7 +472,7 @@ export class SimPlayer {
       ${this.total ? `<div>正解（1回目で）: <b>${this.score} / ${this.total}</b></div>` : ''}
       ${learn ? `<h3>このシナリオで覚えること</h3><ul class="small">${learn}</ul>` : ''}
       <div class="btn-row"><button class="btn" id="again">もう一度</button><a class="btn primary" href="#/lab">シナリオ一覧へ</a>${this.onFinish ? '<button class="btn blue" id="nextsc">次のシナリオ ▶</button>' : ''}</div>`;
-    this.panel.querySelector('#again').onclick = () => { this.i = 0; this.score = 0; this.total = 0; this.mode = this.sc.mode || 'default'; this.ctx = this.sc.ctx ?? 100; this.render(); this.run(); };
+    this.panel.querySelector('#again').onclick = () => { this.i = 0; this.score = 0; this.total = 0; this.mode = this.sc.mode || 'default'; this.ctx = this.sc.ctx ?? 100; this.chips = { ...(this.sc.chips || {}) }; this.title = this.sc.session || ''; this.render(); this.run(); };
     const n = this.panel.querySelector('#nextsc');
     if (n) n.onclick = () => this.onFinish();
   }
