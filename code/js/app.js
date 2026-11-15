@@ -1,0 +1,548 @@
+import { getState, save, logActivity, exportData, importData, resetAll, keyFromToeicApp, streak } from './store.js';
+import { SimPlayer } from './sim.js';
+import { CLAUDE_SCENARIOS } from '../data/scen-claude.js';
+import { CODEX_SCENARIOS } from '../data/scen-codex.js';
+import { REFERENCE, COMPARE } from '../data/reference.js';
+import { DAYS_1 } from '../data/py-days-1.js';
+import { DAYS_2 } from '../data/py-days-2.js';
+import { ROADMAP } from '../data/py-roadmap.js';
+import { createEditor, runPython, runTests, renderOutput, errorHint, warmup, onPyStatus } from './py.js';
+import * as AI from './ai.js';
+import { renderLive } from './live.js';
+import { esc, md, toast } from './util.js';
+
+const $ = (s, el = document) => el.querySelector(s);
+const view = $('#view');
+export const SCENARIOS = [...CLAUDE_SCENARIOS, ...CODEX_SCENARIOS];
+const DAYS = [...DAYS_1, ...DAYS_2];
+
+// ---------- ルーター ----------
+let current = null;
+function route() {
+  if (current && current.destroy) current.destroy();
+  current = null;
+  const hash = location.hash || '#/home';
+  const [, name, arg] = hash.match(/^#\/(\w+)\/?(.*)$/) || [, 'home', ''];
+  document.querySelectorAll('.tabbar a').forEach(a => {
+    const r = a.dataset.route;
+    a.classList.toggle('active', r === name || (r === 'lab' && ['sim', 'live'].includes(name)) || (r === 'python' && ['day', 'play'].includes(name)) || (r === 'ref' && name === 'refquiz'));
+  });
+  window.scrollTo(0, 0);
+  const views = { home, lab, sim, live, python, day, play, ref, refquiz, settings };
+  (views[name] || home)(decodeURIComponent(arg));
+}
+window.addEventListener('hashchange', route);
+
+// ---------- ホーム ----------
+function nextPythonDay() {
+  const st = getState();
+  const start = st.settings.startDay || 1;
+  for (let d = start; d <= 100; d++) if (!st.days[d]?.done) return d;
+  return 100;
+}
+function home() {
+  const st = getState();
+  const simDone = SCENARIOS.filter(s => st.sims[s.id]?.done).length;
+  const nextSim = SCENARIOS.find(s => !st.sims[s.id]?.done);
+  const start = st.settings.startDay || 1;
+  const daysDone = Array.from({ length: 100 }, (_, i) => i + 1).filter(d => d < start || st.days[d]?.done).length;
+  const nd = nextPythonDay();
+  const ndInfo = DAYS.find(d => d.day === nd) || ROADMAP.find(d => d.day === nd);
+  view.innerHTML = `
+    <div class="card">
+      <div class="row-between"><h1>AI Code Dojo</h1><span class="pill">🔥 連続 ${streak()} 日</span></div>
+      <p class="small muted" style="margin:0 0 10px">Claude Code と Codex の使い方をスマホで疑似体験。Python も100日カリキュラムで実際にコードを書いて学べます。</p>
+      <div class="stat">
+        <div><span class="small muted">AIラボ</span><b>${simDone}<small class="small muted"> / ${SCENARIOS.length}</small></b><span class="tiny muted">シナリオ完了</span></div>
+        <div><span class="small muted">Python</span><b>${daysDone}<small class="small muted"> / 100</small></b><span class="tiny muted">日 修了</span></div>
+      </div>
+    </div>
+    <a class="card" href="#/day/${nd}" style="border-left:4px solid var(--accent)">
+      <div class="small muted">🐍 Python の続き</div>
+      <div><b>Day ${nd}</b>：${esc(ndInfo?.title || '')}</div>
+      <div class="small muted">${esc(ndInfo?.goal || ndInfo?.topics || '')}</div>
+    </a>
+    ${nextSim ? `<a class="card" href="#/sim/${nextSim.id}" style="border-left:4px solid var(--primary)">
+      <div class="small muted">🤖 次のおすすめシナリオ</div>
+      <div><span class="pill ${nextSim.tool}">${nextSim.tool === 'claude' ? 'Claude Code' : 'Codex'}</span> <b>${esc(nextSim.title)}</b></div>
+      <div class="small muted">${esc(nextSim.summary)}</div>
+    </a>` : '<div class="card">🎉 すべてのシナリオを完了しました！ 次は「本物のAIで体験」に挑戦しよう。</div>'}
+    <div class="grid2">
+      <a class="tile" href="#/live"><div class="t">⚡ 本物のAIで体験</div><div class="small muted">API キーを設定すると、Claude が実際にファイルを読み書き・テスト実行するエージェント体験ができます</div></a>
+      <a class="tile" href="#/refquiz"><div class="t">🎯 コマンド早押しクイズ</div><div class="small muted">スラッシュコマンド・ショートカットを覚えよう</div></a>
+      <a class="tile" href="#/play"><div class="t">📝 Python 練習帳</div><div class="small muted">自由にコードを書いて実行</div></a>
+      <a class="tile" href="#/ref"><div class="t">📖 機能辞典</div><div class="small muted">Claude Code / Codex の全コマンド・設定・比較表</div></a>
+    </div>`;
+}
+
+// ---------- AIラボ ----------
+function lab(arg) {
+  const st = getState();
+  const tab = arg || sessionTab('lab', 'claude');
+  const list = (tool) => SCENARIOS.filter(s => s.tool === tool).map(s => {
+    const r = st.sims[s.id];
+    return `<a class="tile ${s.tool} ${r?.done ? 'done' : ''}" href="#/sim/${s.id}">
+      <div class="row-between"><span class="pill">${s.level}</span>${r?.done ? `<span class="pill done">✓ ${r.total ? `${r.score}/${r.total}` : '完了'}</span>` : ''}</div>
+      <div class="t" style="margin-top:4px">${esc(s.title)}</div><div class="small muted">${esc(s.summary)}</div></a>`;
+  }).join('');
+  view.innerHTML = `
+    <div class="chips" style="margin-bottom:10px">
+      <a class="chip ${tab === 'claude' ? 'on' : ''}" href="#/lab/claude">Claude Code</a>
+      <a class="chip ${tab === 'codex' ? 'on' : ''}" href="#/lab/codex">Codex</a>
+      <a class="chip ${tab === 'compare' ? 'on' : ''}" href="#/lab/compare">比較・使い分け</a>
+      <a class="chip" href="#/live">⚡ 本物のAI</a>
+    </div>
+    <div id="labbody"></div>`;
+  sessionTab('lab', tab, true);
+  const body = $('#labbody');
+  if (tab === 'compare') {
+    body.innerHTML = `<div class="card"><h2>Claude Code と Codex の対応表</h2>
+      <table class="cmp"><tr><th></th><th>Claude Code</th><th>Codex</th></tr>${COMPARE.map(r => `<tr><td><b>${esc(r[0])}</b></td><td class="mono">${esc(r[1])}</td><td class="mono">${esc(r[2])}</td></tr>`).join('')}</table></div>
+      <div class="card"><h2>どんな場面で何を使う？（ユースケース集）</h2>${md(USECASES)}</div>`;
+    return;
+  }
+  const intro = tab === 'claude'
+    ? 'Anthropic の Claude Code。ターミナル・IDE・Web（claude.ai/code）・スマホで使えるエージェント。'
+    : 'OpenAI の Codex。CLI・IDE 拡張・Codex Cloud（chatgpt.com/codex）で使えるエージェント。';
+  body.innerHTML = `<p class="small muted">${intro} 画面は実物を元にした再現です（バージョンによって表示は少し異なります）。</p><div class="grid2">${list(tab)}</div>`;
+}
+function sessionTab(key, def, set) {
+  try { if (set) sessionStorage.setItem('tab:' + key, def); return sessionStorage.getItem('tab:' + key) || def; } catch { return def; }
+}
+
+const USECASES = `### 毎日の開発
+- **バグ修正**：エラー全文と再現手順を渡し、テストで検証させる（→シナリオ「バグ修正の基本フロー」）
+- **機能追加**：大きいものはプランモードで計画 → 承認 → 実装
+- **テストを書く**：「この関数のテストを書いて。境界値も」→ TDD なら先にテスト
+- **リファクタリング**：特性テストで挙動を固定してから小さく分割
+- **コードレビュー**：/review、サブエージェント、GitHub の @claude / @codex review
+### 調査・理解
+- 知らないリポジトリの全体像・処理の流れを説明させる
+- 「この関数はどこから呼ばれている？」「なぜこの実装？」（git log / blame も使える）
+- エラーログ・スクリーンショットから原因を推測させる
+### 自動化
+- \`claude -p\` / \`codex exec\` をスクリプトや CI に組み込む（リリースノート作成、依存関係の更新、Issue の仕分け）
+- フックで編集後の自動フォーマット・危険コマンドのブロック
+- カスタムコマンド・スキルで定型作業を1コマンドに
+### 並列・リモート
+- git worktree で複数のエージェントを同時に
+- クラウド（claude.ai/code・Codex Cloud）に任せて、スマホから進捗確認・PR レビュー
+### 使い分けのヒント
+- **ローカル CLI**：手元の環境で細かく確認しながら進めたいとき
+- **クラウド**：明確なタスクを並列で任せたいとき、PC を開けないとき
+- **IDE 拡張**：エディタで見ながら差分を確認したいとき
+- どちらのツールも考え方はほぼ同じ。**説明書（CLAUDE.md / AGENTS.md）・権限・検証手段（テスト）**を整えるほど賢く動く`;
+
+function sim(id) {
+  const sc = SCENARIOS.find(s => s.id === id);
+  if (!sc) return lab();
+  const same = SCENARIOS.filter(s => s.tool === sc.tool);
+  const next = same[same.indexOf(sc) + 1];
+  view.innerHTML = `
+    <div class="row-between" style="margin-bottom:8px">
+      <a href="#/lab/${sc.tool}" class="small">← 一覧</a>
+      <span class="pill ${sc.tool}">${sc.tool === 'claude' ? 'Claude Code' : 'Codex'} · ${sc.level}</span>
+    </div>
+    <h1>${esc(sc.title)}</h1>
+    <p class="small muted" style="margin-top:0">${esc(sc.summary)}</p>
+    <div id="simroot"></div>`;
+  const p = new SimPlayer($('#simroot'), sc, { onFinish: next ? () => { location.hash = '#/sim/' + next.id; } : null });
+  current = { destroy: () => p.destroy() };
+}
+
+function live(arg) {
+  current = renderLive(view, arg);
+}
+
+// ---------- 辞典 ----------
+function ref(arg) {
+  const tab = arg || sessionTab('ref', 'claude');
+  sessionTab('ref', tab, true);
+  view.innerHTML = `
+    <div class="chips" style="margin-bottom:8px">
+      <a class="chip ${tab === 'claude' ? 'on' : ''}" href="#/ref/claude">Claude Code</a>
+      <a class="chip ${tab === 'codex' ? 'on' : ''}" href="#/ref/codex">Codex</a>
+      <a class="chip" href="#/lab/compare">比較表</a>
+      <a class="chip" href="#/refquiz/${tab}">🎯 クイズ</a>
+    </div>
+    <input id="q" placeholder="検索（例: compact, 権限, 再開）" style="width:100%;margin-bottom:10px">
+    <div id="refbody"></div>
+    <p class="tiny muted">公式ドキュメント: <a href="https://code.claude.com/docs" target="_blank" rel="noopener">Claude Code</a> / <a href="https://developers.openai.com/codex" target="_blank" rel="noopener">Codex</a>（機能は頻繁に更新されます）</p>`;
+  const render = () => {
+    const q = $('#q').value.trim().toLowerCase();
+    $('#refbody').innerHTML = REFERENCE[tab].map(c => {
+      const items = c.items.filter(it => !q || (it.k + it.d + (it.ex || '')).toLowerCase().includes(q));
+      if (!items.length) return '';
+      return `<div class="card"><h2>${esc(c.cat)}</h2>${items.map(it => `<div class="ref-item"><div class="k">${esc(it.k)}</div><div class="d">${esc(it.d)}</div>${it.ex ? `<div class="ex">${esc(it.ex)}</div>` : ''}</div>`).join('')}</div>`;
+    }).join('') || '<p class="muted">見つかりませんでした</p>';
+  };
+  $('#q').oninput = render;
+  render();
+}
+
+function refquiz(arg) {
+  const tool = arg === 'codex' ? 'codex' : arg === 'claude' ? 'claude' : 'mix';
+  const pool = [];
+  for (const t of tool === 'mix' ? ['claude', 'codex'] : [tool])
+    for (const c of REFERENCE[t]) for (const it of c.items) pool.push({ ...it, tool: t, cat: c.cat });
+  let score = 0, n = 0;
+  const TOTAL = 10;
+  view.innerHTML = `<div class="row-between"><h1>🎯 コマンドクイズ</h1><span class="pill" id="sc"></span></div>
+    <div class="chips"><a class="chip ${tool === 'mix' ? 'on' : ''}" href="#/refquiz/mix">ミックス</a><a class="chip ${tool === 'claude' ? 'on' : ''}" href="#/refquiz/claude">Claude Code</a><a class="chip ${tool === 'codex' ? 'on' : ''}" href="#/refquiz/codex">Codex</a></div>
+    <div id="qz" class="panel"></div>`;
+  const ask = () => {
+    $('#sc').textContent = `${score} / ${n}`;
+    if (n >= TOTAL) {
+      $('#qz').innerHTML = `<div class="q">結果: ${score} / ${TOTAL}</div><p class="small">${score >= 8 ? 'すばらしい！ 実戦でも使いこなせそうです。' : 'シナリオで実際の場面を体験すると覚えやすくなります。'}</p><div class="btn-row"><a class="btn primary" href="#/refquiz/${tool}" onclick="setTimeout(()=>location.reload(),0)">もう一度</a><a class="btn" href="#/lab">シナリオへ</a></div>`;
+      logActivity('quiz', tool);
+      return;
+    }
+    const ans = pool[Math.floor(Math.random() * pool.length)];
+    const same = pool.filter(p => p.cat === ans.cat && p.k !== ans.k);
+    const others = shuffle(same.length >= 3 ? same : pool.filter(p => p.k !== ans.k)).slice(0, 3);
+    const opts = shuffle([ans, ...others]);
+    $('#qz').innerHTML = `<div class="small muted">${ans.tool === 'claude' ? 'Claude Code' : 'Codex'} · ${esc(ans.cat)}</div>
+      <div class="q">${esc(ans.d)}</div><div class="opts">${opts.map((o, k) => `<button class="opt mono" data-k="${k}">${esc(o.k)}</button>`).join('')}</div><div id="fb"></div>`;
+    $('#qz').querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      const o = opts[+b.dataset.k];
+      const ok = o.k === ans.k;
+      n++; if (ok) score++;
+      $('#qz').querySelectorAll('.opt').forEach((x, k) => { x.disabled = true; if (opts[k].k === ans.k) x.classList.add('correct'); });
+      if (!ok) b.classList.add('wrong');
+      $('#fb').innerHTML = `<div class="fb ${ok ? 'ok' : 'ng'}">${ok ? '⭕ 正解' : '❌ 正解は ' + esc(ans.k)}${ans.ex ? `<div class="tiny mono">${esc(ans.ex)}</div>` : ''}</div><button class="btn primary block" id="nx" style="margin-top:8px">次へ</button>`;
+      $('#nx').onclick = ask;
+    });
+  };
+  ask();
+}
+function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ---------- Python ----------
+function python() {
+  const st = getState();
+  const start = st.settings.startDay || 1;
+  const nd = nextPythonDay();
+  const cell = (d, title, cls) => `<a class="dayc ${cls}" href="#/day/${d}"><b>Day ${d}</b>${esc(title)}</a>`;
+  const block = (from, to) => {
+    let h = '';
+    for (let d = from; d <= to; d++) {
+      const info = DAYS.find(x => x.day === d);
+      const road = ROADMAP.find(x => x.day === d);
+      const done = st.days[d]?.done || d < start;
+      const cls = [done ? 'done' : '', d === nd ? 'next' : '', !info && !st.aiDays[d] ? 'road' : '', st.aiDays[d] ? 'ai' : ''].join(' ');
+      h += cell(d, info?.title || st.aiDays[d]?.title || road?.title || '', cls);
+    }
+    return h;
+  };
+  view.innerHTML = `
+    <div class="card">
+      <h1>🐍 Python 100日</h1>
+      <p class="small" style="margin:0">本物の Python（ブラウザ内で動作）でコードを書き、自動テストで採点します。スマホ向けに記号キーのバーを用意しました。</p>
+      <div class="btn-row"><a class="btn primary" href="#/day/${nd}">Day ${nd} から続ける ▶</a><a class="btn" href="#/play">📝 練習帳</a></div>
+      <p class="tiny muted" style="margin-bottom:0">Day ${start - 1 >= 1 ? `1〜${start - 1} は修了済みとして扱っています（復習用に開けます）。変更は設定から。` : ''} Day 31 以降はロードマップ。AI（設定でAPIキー）を使うとその日のレッスンと演習を作成できます。</p>
+    </div>
+    <h3>Day 1〜10 基礎（復習）</h3><div class="daylist">${block(1, 10)}</div>
+    <h3>Day 11〜30 中級：プロジェクト・OOP・ファイル・データ</h3><div class="daylist">${block(11, 30)}</div>
+    <h3>Day 31〜53 API・Web スクレイピング・自動化</h3><div class="daylist">${block(31, 53)}</div>
+    <h3>Day 54〜70 Web 開発（Flask・DB・認証）</h3><div class="daylist">${block(54, 70)}</div>
+    <h3>Day 71〜80 データサイエンス</h3><div class="daylist">${block(71, 80)}</div>
+    <h3>Day 81〜100 ポートフォリオ制作</h3><div class="daylist">${block(81, 100)}</div>`;
+  warmup();
+}
+
+function day(arg) {
+  const n = +arg || 1;
+  const st = getState();
+  let info = DAYS.find(d => d.day === n);
+  const road = ROADMAP.find(d => d.day === n);
+  const aiInfo = st.aiDays[n];
+  if (!info && aiInfo) info = { ...aiInfo, day: n, ai: true };
+  const nav = `<div class="row-between" style="margin-bottom:6px">
+      <a class="small" href="#/python">← 一覧</a>
+      <span class="row">${n > 1 ? `<a class="btn sm" href="#/day/${n - 1}">◀ Day ${n - 1}</a>` : ''}${n < 100 ? `<a class="btn sm" href="#/day/${n + 1}">Day ${n + 1} ▶</a>` : ''}</span></div>`;
+  if (!info) {
+    view.innerHTML = `${nav}<div class="card"><div class="small muted">Day ${n} · ロードマップ</div><h1>${esc(road?.title)}</h1>
+      <p>${esc(road?.topics)}</p>
+      <p class="small muted">${{ ok: 'ブラウザ版 Python でそのまま練習できる内容です。', sim: 'ネットワーク等を使う内容なので、データを用意して疑似体験する形で学びます。', pc: 'PC での実践が前提の内容です。ここでは仕組みを理解する演習を行い、PC で Claude Code や Codex と一緒に本番の開発をしてみましょう。' }[road?.browser]}</p>
+      ${AI.hasKey() ? `<button class="btn primary" id="gen">🤖 AI でこの日のレッスンと演習を作成</button><p class="tiny muted">${esc(AI.currentModel())} を使用。1回あたり数円〜十数円程度。作成後は端末に保存されます。</p>`
+        : `<p class="small">設定で Anthropic API キーを登録すると、AI がこの日のレッスンと採点付き演習をその場で作成します。</p><a class="btn" href="#/settings">設定へ</a> <a class="btn" href="#/play">練習帳で自習</a>`}
+      <div id="genout"></div></div>`;
+    const g = $('#gen');
+    if (g) g.onclick = async () => {
+      g.disabled = true;
+      $('#genout').innerHTML = '<div class="spinner"></div><p class="small center muted">レッスンを作成中…（30秒〜1分ほど）</p>';
+      try {
+        const prev = [...DAYS, ...ROADMAP].filter(d => d.day < n).slice(-12).map(d => `Day${d.day} ${d.title}`);
+        const data = await AI.generateDay(road, prev);
+        $('#genout').innerHTML = '<p class="small center muted">模範解答でテストを検証中…</p>';
+        for (const ex of data.exercises) {
+          const r = await runTests(ex.solution, ex.tests);
+          ex.verified = r.tests && r.tests.length && r.tests.every(t => t.pass);
+        }
+        st.aiDays[n] = data; save();
+        day(String(n));
+      } catch (e) {
+        g.disabled = false;
+        $('#genout').innerHTML = `<p class="ngc small">${esc(e.message)}</p>`;
+      }
+    };
+    return;
+  }
+  const allPassed = () => info.exercises.every(ex => getState().exercises[ex.id]?.passed);
+  view.innerHTML = `${nav}
+    <div class="card lesson">
+      <div class="small muted">Day ${n}${info.review ? ' · 復習' : ''}${info.project ? ' · プロジェクト' : ''}${info.ai ? ' · AI 作成' : ''}</div>
+      <h1>${esc(info.title)}</h1>
+      <p class="small muted" style="margin-top:0">🎯 ${esc(info.goal)}</p>
+      ${md(info.lesson)}
+      ${info.ai ? `<div class="btn-row"><button class="btn sm" id="regen">🔄 作り直す</button></div>` : ''}
+    </div>
+    <div id="exs"></div>
+    <div class="card center" id="daydone"></div>`;
+  if (info.ai) $('#regen').onclick = () => { if (confirm('この日のレッスンを作り直しますか？')) { delete st.aiDays[n]; save(); day(String(n)); } };
+  const updateDone = () => {
+    const ok = allPassed();
+    if (ok && !st.days[n]?.done) { st.days[n] = { done: true, ts: Date.now() }; save(); logActivity('day', n); toast(`🎉 Day ${n} 修了！`); }
+    $('#daydone').innerHTML = (ok || st.days[n]?.done)
+      ? `<div>🎉 <b>Day ${n} 修了！</b></div><div class="btn-row" style="justify-content:center">${n < 100 ? `<a class="btn primary" href="#/day/${n + 1}">Day ${n + 1} へ ▶</a>` : ''}</div>`
+      : `<div class="small muted">すべての演習のテストに合格すると Day ${n} 修了です</div><button class="btn sm" id="markdone" style="margin-top:6px">演習なしで修了にする</button>`;
+    const m = $('#markdone');
+    if (m) m.onclick = () => { st.days[n] = { done: true, ts: Date.now() }; save(); logActivity('day', n); updateDone(); };
+  };
+  const exs = $('#exs');
+  info.exercises.forEach((ex, idx) => {
+    const box = document.createElement('div');
+    exs.appendChild(box);
+    exerciseCard(box, ex, idx, info, updateDone);
+  });
+  updateDone();
+  warmup();
+}
+
+function exerciseCard(box, ex, idx, info, onPass) {
+  const st = getState();
+  const passed = () => getState().exercises[ex.id]?.passed;
+  box.className = 'card ex-card' + (passed() ? ' passed' : '');
+  box.innerHTML = `
+    <div class="row-between"><h2 style="margin:0">演習 ${idx + 1}：${esc(ex.title)}</h2>${passed() ? '<span class="pill done">✓ 合格</span>' : ''}</div>
+    ${ex.verified === false ? '<p class="tiny warn">⚠ AI が作った演習のうち、模範解答でテストが通らなかったものです。テストの判定が不正確な可能性があります。</p>' : ''}
+    <div class="lesson">${md(ex.prompt)}</div>
+    <div class="ed"></div>
+    <div class="btn-row">
+      <button class="btn primary run">▶ 実行</button>
+      <button class="btn blue test">✓ 採点</button>
+      <button class="btn hint">💡 ヒント</button>
+      <button class="btn sm ans">答え</button>
+      <button class="btn sm reset">リセット</button>
+    </div>
+    <div class="out hide"></div>
+    <div class="testres"></div>
+    <div class="aiarea"></div>`;
+  const draft = st.drafts[ex.id] ?? st.exercises[ex.id]?.code ?? ex.starter;
+  let tsave = null;
+  const ed = createEditor($('.ed', box), {
+    value: draft,
+    onChange: v => { clearTimeout(tsave); tsave = setTimeout(() => { getState().drafts[ex.id] = v; save(); }, 500); },
+  });
+  const out = $('.out', box);
+  let lastRun = null;
+
+  // 実行（input() は入力欄で受け付け、全体を再実行して続きを再現する）
+  const doRun = async () => {
+    out.classList.remove('hide');
+    out.innerHTML = '<span class="sys">実行中…</span>';
+    const code = ed.value;
+    const inputs = [];
+    const seed = Math.floor(Math.random() * 1e6);
+    const step = async () => {
+      const res = await runPython(code, inputs, seed);
+      lastRun = res;
+      renderOutput(out, res, { onInput: v => { inputs.push(v); out.insertAdjacentHTML('beforeend', '<span class="sys">\n…</span>'); step(); } });
+      aiButtons();
+    };
+    await step();
+  };
+  $('.run', box).onclick = doRun;
+
+  $('.test', box).onclick = async () => {
+    const tr = $('.testres', box);
+    tr.innerHTML = '<div class="spinner"></div>';
+    const code = ed.value;
+    const res = await runTests(code, ex.tests);
+    if (res.status === 'timeout' || res.status === 'error') {
+      tr.innerHTML = `<div class="result ng">${esc(res.err)}</div>`;
+      return;
+    }
+    const all = res.tests.every(t => t.pass);
+    tr.innerHTML = res.tests.map(t => `<div class="result ${t.pass ? 'ok' : 'ng'}">${t.pass ? '✅' : '❌'} ${esc(t.name)}${t.pass ? '' : `<pre class="code" style="margin-top:6px;white-space:pre-wrap">${esc(t.msg)}</pre>${errorHint(t.msg) ? `<div class="small">💡 ${esc(errorHint(t.msg))}</div>` : ''}${t.out ? `<details class="small"><summary>このテストでの出力</summary><pre class="code" style="white-space:pre-wrap">${esc(t.out.slice(0, 3000))}</pre></details>` : ''}`}</div>`).join('');
+    lastRun = { status: all ? 'ok' : 'error', out: res.tests.map(t => t.out).join('\n'), err: res.tests.filter(t => !t.pass).map(t => t.msg).join('\n') };
+    if (all) {
+      const s = getState();
+      const first = !s.exercises[ex.id]?.passed;
+      s.exercises[ex.id] = { passed: true, code, ts: Date.now() };
+      save();
+      if (first) logActivity('exercise', ex.id);
+      box.classList.add('passed');
+      tr.insertAdjacentHTML('afterbegin', '<div class="result ok"><b>🎉 合格！</b> すべてのテストに通りました。</div>');
+      onPass();
+    }
+    aiButtons(all);
+  };
+  $('.hint', box).onclick = () => {
+    const a = $('.aiarea', box);
+    a.innerHTML = `<div class="ai-box">💡 ${md(ex.hint)}</div>`;
+    aiButtons();
+  };
+  $('.ans', box).onclick = () => {
+    if (!confirm('模範解答を表示しますか？（まずは自分で考えてみるのがおすすめ）')) return;
+    $('.aiarea', box).innerHTML = `<div class="ai-box"><b>模範解答</b><pre class="code">${esc(ex.solution)}</pre><button class="btn sm" id="useans">エディタに入れる</button></div>`;
+    $('#useans', box).onclick = () => { ed.value = ex.solution; getState().drafts[ex.id] = ex.solution; save(); };
+  };
+  $('.reset', box).onclick = () => {
+    if (!confirm('最初のコードに戻しますか？')) return;
+    ed.value = ex.starter; delete getState().drafts[ex.id]; save();
+  };
+
+  // AI 先生
+  let history = [];
+  function aiButtons(justPassed) {
+    if (!AI.hasKey()) return;
+    let bar = $('.aibar', box);
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'btn-row aibar';
+      $('.aiarea', box).after(bar);
+    }
+    const hasErr = lastRun && (lastRun.status === 'error' || lastRun.status === 'timeout');
+    bar.innerHTML = `<span class="small muted">🤖 AI先生:</span>
+      <button class="btn sm" data-k="hint">ヒントをもらう</button>
+      ${hasErr ? '<button class="btn sm" data-k="error">エラーを解説</button>' : ''}
+      ${justPassed || passed() ? '<button class="btn sm" data-k="review">コードレビュー</button>' : ''}
+      <button class="btn sm" data-k="ask">質問する</button>`;
+    bar.querySelectorAll('button').forEach(b => b.onclick = () => askAI(b.dataset.k));
+  }
+  async function askAI(kind) {
+    let question = '';
+    if (kind === 'ask') { question = prompt('AI先生への質問'); if (!question) return; }
+    const area = document.createElement('div');
+    area.className = 'ai-box';
+    area.innerHTML = '<div class="spinner"></div>';
+    $('.aibar', box).before(area);
+    try {
+      const r = await AI.tutor(kind, { exercise: ex, code: ed.value, result: lastRun ? (lastRun.out || '') + '\n' + (lastRun.err || '') : '', question, history });
+      history = r.messages.slice(-8);
+      area.innerHTML = `🤖 ${md(r.text)}`;
+    } catch (e) { area.innerHTML = `<span class="ngc">${esc(e.message)}</span>`; }
+  }
+  aiButtons();
+}
+
+function play() {
+  const st = getState();
+  view.innerHTML = `<div class="row-between"><h1>📝 Python 練習帳</h1><a class="small" href="#/python">← 100日</a></div>
+    <p class="small muted" style="margin-top:0">自由にコードを書いて実行できます。turtle で絵を描いたり、pandas・matplotlib も使えます。</p>
+    <div class="chips" id="snips"></div>
+    <div id="ed"></div>
+    <div class="btn-row"><button class="btn primary" id="run">▶ 実行</button><button class="btn sm" id="clr">クリア</button>${AI.hasKey() ? '<button class="btn sm" id="ask">🤖 AIに質問</button>' : ''}</div>
+    <div class="out hide" id="out"></div><div id="aiout"></div>`;
+  const SNIPS = {
+    'こんにちは': 'name = input("名前は？ ")\nprint(f"こんにちは、{name}さん！")\n',
+    'タートル': 'import turtle\nt = turtle.Turtle()\nt.color("tomato")\nfor i in range(36):\n    t.forward(150)\n    t.left(170)\n',
+    'グラフ': 'import matplotlib.pyplot as plt\nx = list(range(1, 11))\nplt.plot(x, [n * n for n in x], marker="o")\nplt.title("y = x^2")\nplt.show()\n',
+    'pandas': 'import pandas as pd\ndf = pd.DataFrame({"name": ["A", "B", "C"], "score": [80, 95, 72]})\nprint(df.describe())\nprint(df.sort_values("score", ascending=False))\n',
+    'クラス': 'class Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def bark(self):\n        print(f"{self.name}: ワン！")\n\nDog("ポチ").bark()\n',
+  };
+  $('#snips').innerHTML = Object.keys(SNIPS).map(k => `<button class="chip" data-k="${k}">${k}</button>`).join('');
+  let t = null;
+  const ed = createEditor($('#ed'), { value: st.playground || SNIPS['こんにちは'], onChange: v => { clearTimeout(t); t = setTimeout(() => { getState().playground = v; save(); }, 500); } });
+  $('#snips').querySelectorAll('.chip').forEach(b => b.onclick = () => { ed.value = SNIPS[b.dataset.k]; getState().playground = ed.value; save(); });
+  let last = null;
+  $('#run').onclick = async () => {
+    const out = $('#out');
+    out.classList.remove('hide');
+    out.innerHTML = '<span class="sys">実行中…</span>';
+    const inputs = [], seed = Math.floor(Math.random() * 1e6), code = ed.value;
+    const step = async () => {
+      last = await runPython(code, inputs, seed);
+      renderOutput(out, last, { onInput: v => { inputs.push(v); step(); } });
+    };
+    await step();
+    logActivity('play', '');
+  };
+  $('#clr').onclick = () => { ed.value = ''; };
+  const ask = $('#ask');
+  if (ask) ask.onclick = async () => {
+    const q = prompt('このコードについての質問'); if (!q) return;
+    $('#aiout').innerHTML = '<div class="spinner"></div>';
+    try {
+      const r = await AI.tutor('ask', { code: ed.value, result: last ? (last.out || '') + (last.err || '') : '', question: q });
+      $('#aiout').innerHTML = `<div class="ai-box">🤖 ${md(r.text)}</div>`;
+    } catch (e) { $('#aiout').innerHTML = `<p class="ngc">${esc(e.message)}</p>`; }
+  };
+  warmup();
+}
+
+// ---------- 設定 ----------
+function settings() {
+  const st = getState();
+  const s = st.settings;
+  const u = AI.usageSummary();
+  const toeicKey = keyFromToeicApp();
+  view.innerHTML = `
+    <div class="card"><h2>🤖 AI 機能（任意）</h2>
+      <p class="small">Anthropic の API キーを登録すると、①本物の Claude によるエージェント体験 ②Python の AI 先生 ③Day 31〜100 のレッスン自動作成 が使えます。キーはこの端末にだけ保存され、Anthropic の API へ直接送信されます。API の利用料は従量課金で、Claude の月額プランとは別です。</p>
+      <div class="form">
+        <label>API キー<input type="password" id="key" value="${esc(s.apiKey)}" placeholder="sk-ant-..." autocomplete="off"></label>
+        ${toeicKey && toeicKey !== s.apiKey ? '<button class="btn sm" id="fromtoeic">TOEIC アプリに保存されているキーを使う</button>' : ''}
+        <label>モデル<select id="model">${AI.CLAUDE_MODELS.map(m => `<option value="${m.id}" ${m.id === AI.currentModel() ? 'selected' : ''}>${m.label}</option>`).join('')}</select></label>
+      </div>
+      <p class="small muted">これまでの利用: ${u.n} 回 / 入力 ${u.in.toLocaleString()} トークン / 出力 ${u.out.toLocaleString()} トークン / 推定 $${u.usd.toFixed(3)}（約 ${Math.round(u.usd * 155)} 円）</p>
+    </div>
+    <div class="card"><h2>学習の設定</h2>
+      <div class="form">
+        <label>Python の開始日（それより前の Day は修了扱い）<input type="number" id="startDay" min="1" max="100" value="${s.startDay}"></label>
+        <label>シミュレーターの文字送り<select id="speed"><option value="0" ${s.typeSpeed == 0 ? 'selected' : ''}>瞬時</option><option value="1" ${s.typeSpeed == 1 ? 'selected' : ''}>普通</option><option value="2" ${s.typeSpeed == 2 ? 'selected' : ''}>ゆっくり</option></select></label>
+        <label>テーマ<select id="theme"><option value="">端末に合わせる</option><option value="light" ${s.theme === 'light' ? 'selected' : ''}>ライト</option><option value="dark" ${s.theme === 'dark' ? 'selected' : ''}>ダーク</option></select></label>
+      </div>
+    </div>
+    <div class="card"><h2>データ</h2>
+      <p class="small muted">学習記録はこの端末のブラウザに保存されています。機種変更の前に書き出しておきましょう。</p>
+      <div class="btn-row"><button class="btn" id="exp">書き出し</button><label class="btn">読み込み<input type="file" id="imp" accept="application/json" hidden></label><button class="btn danger" id="reset" style="color:var(--ng)">すべてリセット</button></div>
+    </div>
+    <div class="card small muted">ホーム画面に追加するとアプリのように使えます（iPhone: 共有 → ホーム画面に追加 / Android: メニュー → アプリをインストール）。<br>
+    シナリオの画面は実際の Claude Code / Codex を元にした再現で、バージョンにより表示や機能が異なる場合があります。最新情報は公式ドキュメントを確認してください。<br>
+    <a href="../">TOEIC 900 Trainer へ</a></div>`;
+  const upd = (k, v) => { st.settings[k] = v; save(); };
+  $('#key').onchange = e => { upd('apiKey', e.target.value.trim()); toast('保存しました'); };
+  const ft = $('#fromtoeic');
+  if (ft) ft.onclick = () => { upd('apiKey', toeicKey); settings(); toast('TOEIC アプリのキーを設定しました'); };
+  $('#model').onchange = e => upd('claudeModel', e.target.value);
+  $('#startDay').onchange = e => upd('startDay', Math.max(1, Math.min(100, +e.target.value || 1)));
+  $('#speed').onchange = e => upd('typeSpeed', +e.target.value);
+  $('#theme').onchange = e => { upd('theme', e.target.value); applyTheme(); };
+  $('#exp').onclick = () => {
+    const blob = new Blob([exportData()], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `codedojo-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+  };
+  $('#imp').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { importData(await f.text()); toast('読み込みました'); settings(); } catch { toast('読み込めませんでした'); }
+  };
+  $('#reset').onclick = () => { if (confirm('学習記録・設定をすべて消去しますか？')) { resetAll(); settings(); } };
+}
+
+function applyTheme() {
+  const t = getState().settings.theme;
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+}
+
+onPyStatus(msg => { const el = $('#topinfo'); if (el) el.textContent = msg ? '🐍 ' + msg.slice(0, 40) : ''; });
+applyTheme();
+route();
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
