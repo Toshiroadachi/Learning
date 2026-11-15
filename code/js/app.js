@@ -6,6 +6,7 @@ import { CLAUDE_APP_SCENARIOS } from '../data/scen-claude-app.js';
 import { CODEX_APP_SCENARIOS } from '../data/scen-codex-app.js';
 import { ADVANCED_SCENARIOS } from '../data/scen-advanced.js';
 import { GUIDES } from '../data/guides.js';
+import { COMMANDS } from '../data/commands.js';
 import { REFERENCE, COMPARE } from '../data/reference.js';
 import { DAYS_0 } from '../data/py-days-0.js';
 import { DAYS_1 } from '../data/py-days-1.js';
@@ -33,10 +34,10 @@ function route() {
   const [, name, arg] = hash.match(/^#\/(\w+)\/?(.*)$/) || [, 'home', ''];
   document.querySelectorAll('.tabbar a').forEach(a => {
     const r = a.dataset.route;
-    a.classList.toggle('active', r === name || (r === 'lab' && ['sim', 'live'].includes(name)) || (r === 'python' && ['day', 'play'].includes(name)) || (r === 'ref' && name === 'refquiz'));
+    a.classList.toggle('active', r === name || (r === 'lab' && ['sim', 'live'].includes(name)) || (r === 'python' && ['day', 'play'].includes(name)) || (r === 'ref' && ['refquiz', 'cmds'].includes(name)));
   });
   window.scrollTo(0, 0);
-  const views = { home, lab, sim, live, python, day, play, ref, refquiz, settings };
+  const views = { home, lab, sim, live, python, day, play, ref, refquiz, settings, cmds };
   (views[name] || home)(decodeURIComponent(arg));
 }
 window.addEventListener('hashchange', route);
@@ -78,6 +79,7 @@ function home() {
     <div class="grid2">
       <a class="tile" href="#/live"><div class="t">⚡ 本物のAIで体験</div><div class="small muted">OpenAI の API キーを設定すると、AI が実際にファイルを読み書き・テスト実行するエージェント体験ができます</div></a>
       <a class="tile" href="#/lab/adv"><div class="t">⭐ 上級機能・使い方ガイド</div><div class="small muted">/goal・/loop・スケジュール・コンピューター操作・プラグイン・スキル・コネクタ・Dispatch</div></a>
+      <a class="tile" href="#/cmds"><div class="t">⌨️ スラッシュコマンド大全</div><div class="small muted">Claude Code・Codex の / コマンドを全部、使い方つきで。入力練習も</div></a>
       <a class="tile" href="#/refquiz"><div class="t">🎯 コマンド早押しクイズ</div><div class="small muted">スラッシュコマンド・ショートカットを覚えよう</div></a>
       <a class="tile" href="#/play"><div class="t">📝 Python 練習帳</div><div class="small muted">自由にコードを書いて実行</div></a>
       <a class="tile" href="#/ref"><div class="t">📖 機能辞典</div><div class="small muted">Claude Code / Codex の全コマンド・設定・比較表</div></a>
@@ -193,6 +195,7 @@ function ref(arg) {
       <a class="chip ${tab === 'claude' ? 'on' : ''}" href="#/ref/claude">Claude Code</a>
       <a class="chip ${tab === 'codex' ? 'on' : ''}" href="#/ref/codex">Codex</a>
       <a class="chip" href="#/lab/compare">比較表</a>
+      <a class="chip" href="#/cmds/${tab}">⌨️ コマンド大全</a>
       <a class="chip" href="#/refquiz/${tab}">🎯 クイズ</a>
     </div>
     <input id="q" placeholder="検索（例: compact, 権限, 再開）" style="width:100%;margin-bottom:10px">
@@ -214,7 +217,7 @@ function refquiz(arg) {
   const tool = arg === 'codex' ? 'codex' : arg === 'claude' ? 'claude' : 'mix';
   const pool = [];
   for (const t of tool === 'mix' ? ['claude', 'codex'] : [tool])
-    for (const c of REFERENCE[t]) for (const it of c.items) pool.push({ ...it, tool: t, cat: c.cat });
+    for (const c of [...REFERENCE[t], ...COMMANDS[t]]) for (const it of c.items) if (!/廃止/.test(c.cat)) pool.push({ ...it, tool: t, cat: c.cat });
   let score = 0, n = 0;
   const TOTAL = 10;
   view.innerHTML = `<div class="row-between"><h1>🎯 コマンドクイズ</h1><span class="pill" id="sc"></span></div>
@@ -246,6 +249,55 @@ function refquiz(arg) {
   ask();
 }
 function shuffle(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ---------- スラッシュコマンド大全 ----------
+function cmds(arg) {
+  const tool = arg === 'codex' ? 'codex' : 'claude';
+  view.innerHTML = `
+    <div class="row-between"><h1>⌨️ コマンド大全</h1><a class="small" href="#/ref/${tool}">← 辞典</a></div>
+    <div class="chips" style="margin-bottom:8px">
+      <a class="chip ${tool === 'claude' ? 'on' : ''}" href="#/cmds/claude">Claude Code</a>
+      <a class="chip ${tool === 'codex' ? 'on' : ''}" href="#/cmds/codex">Codex</a>
+      <button class="chip" id="practice">✍️ 入力練習</button>
+    </div>
+    <p class="small muted" style="margin-top:0">${tool === 'claude' ? 'Claude Code の / コマンドの全一覧（公式ドキュメント 2026年11月時点）。デスクトップ・スマホ（Remote Control／クラウド）でも多くが使えます。🧩 は Claude が自動で使うこともある「スキル」。' : 'Codex の / コマンドの全一覧（Codex CLI 0.166 時点のまとめ）。多くは IDE 拡張・Codex アプリでも共通です。'} 入力欄に <code>/</code> と打つと候補が出ます。</p>
+    <input id="q" placeholder="検索（例: goal, 巻き戻し, plugin）" style="width:100%;margin-bottom:10px">
+    <div id="pr"></div><div id="cbody"></div>`;
+  const render = () => {
+    const q = $('#q').value.trim().toLowerCase();
+    $('#cbody').innerHTML = COMMANDS[tool].map(c => {
+      const items = c.items.filter(it => !q || (it.k + it.d + (it.ex || '') + (it.u || '')).toLowerCase().includes(q));
+      if (!items.length) return '';
+      return `<div class="card"><h2>${esc(c.cat)} <span class="pill">${items.length}</span></h2>${items.map(it => `<div class="ref-item"><div class="k">${esc(it.k)}${it.sk ? ' <span class="pill" title="スキル">🧩</span>' : ''}</div><div class="d">${esc(it.d)}</div>${it.ex ? `<div class="ex">例: ${esc(it.ex)}</div>` : ''}${it.u ? `<div class="small muted">💡 ${esc(it.u)}</div>` : ''}</div>`).join('')}</div>`;
+    }).join('') || '<p class="muted">見つかりませんでした</p>';
+  };
+  $('#q').oninput = render;
+  render();
+  // 入力練習：説明を見てコマンドを打つ
+  const pool = COMMANDS[tool].filter(c => !/廃止/.test(c.cat)).flatMap(c => c.items).filter(it => it.k.startsWith('/') && !it.k.includes('<スキル名>'));
+  let score = 0, n = 0;
+  const ask = () => {
+    const it = pool[Math.floor(Math.random() * pool.length)];
+    const answers = it.k.split(' / ').map(x => x.split(' ')[0].toLowerCase());
+    $('#pr').innerHTML = `<div class="panel"><div class="row-between"><span class="small muted">入力練習（${tool === 'claude' ? 'Claude Code' : 'Codex'}）</span><span class="pill">${score} / ${n}</span></div>
+      <div class="q" style="margin-top:6px">${esc(it.d)}</div>
+      <div class="cmdinput"><input id="pi" placeholder="/..." autocapitalize="off" autocomplete="off" spellcheck="false"><button class="btn primary" id="pg">⏎</button></div>
+      <div id="pf"></div></div>`;
+    const inp = $('#pi');
+    inp.focus();
+    const check = () => {
+      const v = inp.value.trim().toLowerCase().split(' ')[0];
+      const ok = answers.includes(v);
+      n++; if (ok) score++;
+      $('#pf').innerHTML = `<div class="fb ${ok ? 'ok' : 'ng'}">${ok ? '⭕ 正解' : '❌ 正解は'} <b class="mono">${esc(it.k)}</b>${it.ex ? `<div class="tiny mono">例: ${esc(it.ex)}</div>` : ''}</div><div class="btn-row"><button class="btn primary" id="pn">次へ</button><button class="btn" id="pe">終わる</button></div>`;
+      $('#pn').onclick = ask;
+      $('#pe').onclick = () => { $('#pr').innerHTML = ''; if (n) toast(`${n}問中 ${score}問正解`); logActivity('quiz', 'cmds-' + tool); };
+    };
+    $('#pg').onclick = check;
+    inp.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) check(); };
+  };
+  $('#practice').onclick = ask;
+}
 
 // ---------- Python ----------
 function python() {

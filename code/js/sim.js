@@ -299,7 +299,7 @@ export class SimPlayer {
       if (s.tips !== false) this.add('<span class="dim"> Tips for getting started:\n  1. Run /init to create a CLAUDE.md file with instructions for Claude\n  2. Use Claude to help with file analysis, editing, bash commands and git\n  3. Be as specific as you would with another engineer for the best results</span>');
     } else {
       this.add(`<span class="cx">&gt;_</span> <b>OpenAI Codex</b>\n\n  <span class="dim">model:</span>     ${esc(s.model || 'gpt-5-codex')}   <span class="dim">/model to change</span>\n  <span class="dim">directory:</span> ${esc(s.cwd || this.sc.cwd || '~/project')}`, 'ln box cx');
-      if (s.tips !== false) this.add('<span class="dim">  To get started, describe a task or try one of these commands:\n\n  /init - create an AGENTS.md file with instructions for Codex\n  /status - show current session configuration\n  /approvals - choose what Codex can do without approval\n  /model - choose what model and reasoning effort to use</span>');
+      if (s.tips !== false) this.add('<span class="dim">  To get started, describe a task or try one of these commands:\n\n  /init - create an AGENTS.md file with instructions for Codex\n  /status - show current session configuration\n  /permissions - choose what Codex can do without approval\n  /model - choose what model and reasoning effort to use</span>');
     }
     this.gap();
   }

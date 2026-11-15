@@ -34,13 +34,13 @@ export const CODEX_SCENARIOS = [
 },
 {
   id: 'cx-approvals', tool: 'codex', level: '基本', title: '承認モードとサンドボックス',
-  summary: '/approvals で Read Only / Auto / Full Access を切替。サンドボックスと承認ポリシーの関係',
+  summary: '/permissions（旧 /approvals）で Read Only / Auto / Full Access を切替。サンドボックスと承認ポリシーの関係',
   cwd: '~/todo-app', mode: 'auto',
   learn: ['**Read Only** … 読むだけ。編集・実行は毎回承認が必要', '**Auto**（既定）… ワークスペース内の編集・コマンド実行は自動。外部ネットワークや範囲外は承認', '**Full Access** … 何でも承認なし（ネットワーク含む）。隔離環境でのみ', 'CLI フラグ: `--sandbox read-only|workspace-write|danger-full-access`、`--ask-for-approval`（`-a`）', '`--full-auto` はワークスペース書き込み＋必要時のみ承認の組み合わせ'],
   steps: [
     { t: 'banner', tips: false },
     { t: 'note', text: 'Codex は **サンドボックス**（OS の仕組みで、書き込み先やネットワークを制限）の中でコマンドを実行します。どこまで自動でやらせるかを「承認モード」で決めます。' },
-    { t: 'type', q: '承認モードを切り替えるコマンドは？', answer: ['/approvals'], hint: '/approvals', suggest: [['/approvals', 'choose what Codex can do without approval'], ['/status', 'show current session configuration']] },
+    { t: 'type', q: '権限（承認モード）を切り替えるコマンドは？（以前は /approvals という名前でした）', answer: ['/permissions', '/approvals'], hint: '/permissions', suggest: [['/permissions', 'choose what Codex can do without approval'], ['/status', 'show current session configuration']] },
     { t: 'out', lines: ['[[dim:Select Approval Mode]]', '  1. Read Only    [[dim:Codex can read files and answer questions. Requires approval to edit, run commands, or access network]]', '[[cx:›]] 2. Auto         [[dim:(current) Codex can read, edit, and run commands in the workspace. Requires approval for network or outside workspace]]', '  3. Full Access  [[dim:Codex can edit files outside the workspace and access the network without approval. Exercise caution]]'] },
     { t: 'choice', q: '初めて見る他人のリポジトリ。まずはコードの説明だけ聞きたい。どれにする？', options: [
       { label: '1. Read Only', ok: true, fb: '◎ 何も変更されない安心モード。調査・質問だけならこれ。' },
@@ -54,7 +54,7 @@ export const CODEX_SCENARIOS = [
     { t: 'tool', name: 'Ran', arg: 'npm test', out: ['Tests: [[r:1 failed]], 11 passed', '  ✕ PATCH /todos/:id marks done'] },
     { t: 'say', text: '1件失敗しています（PATCH /todos/:id）。done を Number() で変換しているのが原因と思われます。' },
     { t: 'choice', q: '修正もお願いしたい。編集とテスト実行を毎回聞かれずに進めたいなら？', options: [
-      { label: '/approvals で 2. Auto に切り替える', ok: true, fb: '◎ ワークスペース内の編集と実行は自動、外部アクセスだけ確認。普段使いの標準。' },
+      { label: '/permissions で 2. Auto に切り替える', ok: true, fb: '◎ ワークスペース内の編集と実行は自動、外部アクセスだけ確認。普段使いの標準。' },
       { label: 'Full Access に切り替える', ok: false, fb: 'この作業にネットワークや範囲外アクセスは不要。必要以上の権限は与えないのが原則。' }] },
     { t: 'mode', mode: 'auto' },
     { t: 'user', text: 'その原因を修正して、テストを通して' },
@@ -162,7 +162,7 @@ export const CODEX_SCENARIOS = [
     { t: 'out', lines: ['[[dim:MCP Tools]]', '  • playwright  [[g:enabled]]', '    tools: browser_navigate, browser_click, browser_take_screenshot, …'] },
     { t: 'type', q: '現在のモデル・承認ポリシー・サンドボックス・使用量などのセッション設定を表示するコマンドは？', answer: ['/status'], hint: '/status' },
     { t: 'out', lines: ['[[dim:📂 Workspace]]  ~/todo-app', '  Approval: on-request   Sandbox: workspace-write', '  AGENTS files: AGENTS.md', '[[dim:🧠 Model]]  gpt-5-codex (reasoning high)', '[[dim:📊 Usage]]  5h limit: [[g:18% used]]   weekly: [[g:9% used]]'] },
-    { t: 'note', text: 'Claude Code との対応: config.toml ≒ settings.json、AGENTS.md ≒ CLAUDE.md、/approvals ≒ /permissions＋Shift+Tab、codex exec ≒ claude -p。概念はほぼ共通なので、片方を覚えればもう片方もすぐ使えます。' },
+    { t: 'note', text: 'Claude Code との対応: config.toml ≒ settings.json、AGENTS.md ≒ CLAUDE.md、/permissions ≒ /permissions＋Shift+Tab、codex exec ≒ claude -p。概念はほぼ共通なので、片方を覚えればもう片方もすぐ使えます。' },
   ],
 },
 {
