@@ -435,8 +435,13 @@ textarea:disabled { opacity: 0.65; }
         <div class="settings">
           <div class="row">
             <label for="rate">読む速さ <span class="val" id="rateVal">0.80×</span></label>
-            <input type="range" id="rate" min="0.5" max="1.2" step="0.05" value="0.8">
-            <div class="scale"><span>とてもゆっくり</span><span>ふつう</span><span>はやい</span></div>
+            <input type="range" id="rate" min="0.2" max="1.2" step="0.05" value="0.8">
+            <div class="seg" id="ratePresets">
+              <button type="button" data-v="0.3">超ゆっくり 0.3</button>
+              <button type="button" data-v="0.5">ゆっくり 0.5</button>
+              <button type="button" data-v="0.7">やや遅め 0.7</button>
+              <button type="button" data-v="1">ふつう 1.0</button>
+            </div>
           </div>
           <div class="row">
             <span class="lbl">文と文のあいだ <span class="sub">長めにすると後について言える</span></span>
@@ -919,7 +924,7 @@ function speakItem(i, g) {
   const u = new SpeechSynthesisUtterance(q.text);
   const v = voiceFor(c);
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = c.lang;
-  const rate = Math.max(0.3, Math.min(2, Number(S.rate) * c.rateMul));
+  const rate = Math.max(0.15, Math.min(2, Number(S.rate) * c.rateMul));
   u.rate = rate; u.pitch = c.pitch; u.volume = 1;
   utter = u;
 
@@ -1008,9 +1013,16 @@ $("voiceSel").addEventListener("change", e => {
 });
 
 const rateEl = $("rate");
-const showRate = () => { $("rateVal").textContent = Number(S.rate).toFixed(2) + "×"; };
+const showRate = () => {
+  $("rateVal").textContent = Number(S.rate).toFixed(2) + "×";
+  $("ratePresets").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(Math.abs(Number(b.dataset.v) - Number(S.rate)) < 0.001)));
+};
 rateEl.value = S.rate; showRate();
 rateEl.addEventListener("input", () => { S.rate = Number(rateEl.value); showRate(); save(); });
+$("ratePresets").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  S.rate = Number(b.dataset.v); rateEl.value = S.rate; showRate(); save();
+});
 
 function bindSeg(id, onChange) {
   const seg = $(id), key = seg.dataset.key;
