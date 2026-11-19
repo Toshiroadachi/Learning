@@ -253,7 +253,7 @@ select {
 }
 .ghost-btn:hover { border-color: var(--accent); }
 .ghost-btn.danger { color: var(--ng); border-color: var(--ng); }
-.ghost-btn.mic.on { background: var(--coral); border-color: var(--coral); color: var(--surface); }
+.mic.on { background: var(--coral); border-color: var(--coral); color: var(--surface); }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .test-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .test-top b { color: var(--ink); font-size: 0.95rem; }
@@ -315,7 +315,7 @@ textarea:disabled { opacity: 0.65; }
 .best-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
 .best { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
 .best h4 { margin: 0; font-family: var(--font-en); font-weight: 600; font-size: 1rem; }
-.best .line { display: grid; grid-template-columns: 3.6em minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 0.8rem; }
+.best .line { display: grid; grid-template-columns: 4.8em minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 0.8rem; }
 .best .line b { font-family: var(--font-en); font-size: 1rem; font-variant-numeric: tabular-nums; min-width: 2.2em; text-align: right; }
 .meter { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
 .meter i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
@@ -377,7 +377,8 @@ textarea:disabled { opacity: 0.65; }
           <div class="settings">
             <div class="seg" id="methodSeg" data-key="method">
               <button type="button" data-v="cloze">穴埋め（4択）</button>
-              <button type="button" data-v="recall">暗唱（書く・話す）</button>
+              <button type="button" data-v="speak">声で暗唱</button>
+              <button type="button" data-v="recall">書いて暗唱</button>
             </div>
             <div class="row" id="levelRow">
               <span class="lbl">空欄の数</span>
@@ -390,6 +391,7 @@ textarea:disabled { opacity: 0.65; }
             <label class="switch" id="hintRow"><input type="checkbox" id="hintToggle"> 和訳ヒントを表示</label>
           </div>
           <p class="muted" id="tDesc"></p>
+          <p class="muted" id="tMicNote" hidden>この画面ではマイクが使えません。スマホでは <a href="https://toshiroadachi.github.io/Learning/retelling/" target="_blank" rel="noopener">Web版</a> を iPhone なら Safari、Android なら Chrome で開くと、声のテストができます。</p>
           <div class="btn-row"><button type="button" class="big-btn" id="tStartBtn">テストを始める</button><span class="muted" id="tBestNow"></span></div>
         </div>
         <div id="tCloze" class="test" hidden>
@@ -403,6 +405,7 @@ textarea:disabled { opacity: 0.65; }
           <div class="hintbox" id="rcHint"></div>
           <textarea id="rcInput" placeholder="覚えた英文を書いてください" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" aria-label="覚えた英文"></textarea>
           <div class="partial" id="rcPartial" aria-live="polite"></div>
+          <p class="muted" id="micNote" hidden>この画面ではマイクが使えません。スマホでは <a href="https://toshiroadachi.github.io/Learning/retelling/" target="_blank" rel="noopener">Web版</a> を iPhone なら Safari、Android なら Chrome で開くと、声のテストができます。</p>
           <div class="btn-row" id="rcAsk">
             <button type="button" class="ghost-btn mic" id="micBtn" hidden>マイクで話す</button>
             <button type="button" class="ghost-btn" id="rcFirst">最初の3語ヒント</button>
@@ -435,8 +438,13 @@ textarea:disabled { opacity: 0.65; }
         <div class="settings">
           <div class="row">
             <label for="rate">読む速さ <span class="val" id="rateVal">0.80×</span></label>
-            <input type="range" id="rate" min="0.5" max="1.2" step="0.05" value="0.8">
-            <div class="scale"><span>とてもゆっくり</span><span>ふつう</span><span>はやい</span></div>
+            <input type="range" id="rate" min="0.2" max="1.2" step="0.05" value="0.8">
+            <div class="seg" id="ratePresets">
+              <button type="button" data-v="0.3">超ゆっくり 0.3</button>
+              <button type="button" data-v="0.5">ゆっくり 0.5</button>
+              <button type="button" data-v="0.7">やや遅め 0.7</button>
+              <button type="button" data-v="1">ふつう 1.0</button>
+            </div>
           </div>
           <div class="row">
             <span class="lbl">文と文のあいだ <span class="sub">長めにすると後について言える</span></span>
@@ -919,7 +927,7 @@ function speakItem(i, g) {
   const u = new SpeechSynthesisUtterance(q.text);
   const v = voiceFor(c);
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = c.lang;
-  const rate = Math.max(0.3, Math.min(2, Number(S.rate) * c.rateMul));
+  const rate = Math.max(0.15, Math.min(2, Number(S.rate) * c.rateMul));
   u.rate = rate; u.pitch = c.pitch; u.volume = 1;
   utter = u;
 
@@ -1008,9 +1016,16 @@ $("voiceSel").addEventListener("change", e => {
 });
 
 const rateEl = $("rate");
-const showRate = () => { $("rateVal").textContent = Number(S.rate).toFixed(2) + "×"; };
+const showRate = () => {
+  $("rateVal").textContent = Number(S.rate).toFixed(2) + "×";
+  $("ratePresets").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(Math.abs(Number(b.dataset.v) - Number(S.rate)) < 0.001)));
+};
 rateEl.value = S.rate; showRate();
 rateEl.addEventListener("input", () => { S.rate = Number(rateEl.value); showRate(); save(); });
+$("ratePresets").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  S.rate = Number(b.dataset.v); rateEl.value = S.rate; showRate(); save();
+});
 
 function bindSeg(id, onChange) {
   const seg = $(id), key = seg.dataset.key;
@@ -1047,7 +1062,8 @@ document.addEventListener("keydown", e => {
 /* ---------- Memorization test ---------- */
 const STOP = new Set("a an the to of in on as at and but so or for by was were is are be her his she he it they them that this there no from with".split(" "));
 const RANK = s => s >= 95 ? "S" : s >= 80 ? "A" : s >= 60 ? "B" : s >= 40 ? "C" : "D";
-const METHOD_LABEL = { cloze: "穴埋め", recall: "暗唱" };
+const METHOD_LABEL = { cloze: "穴埋め", speak: "声で暗唱", recall: "書いて暗唱" };
+const METHODS = ["cloze", "speak", "recall"];
 const LEVEL = { easy: 0.25, normal: 0.45, hard: 0.7 };
 const LEVEL_LABEL = { easy: "やさしい", normal: "ふつう", hard: "むずかしい" };
 const SEL_KEYS = ["7-1", "7-2", "7-3", "7-4", "all"];
@@ -1064,6 +1080,7 @@ const CHEER = {
 const secLabel = sel => sel === "all" ? "7-1〜7-4" : sel;
 const selSecs = () => S.sel === "all" ? SECTIONS : SECTIONS.filter(s => s.id === S.sel);
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const ALIAS = { yuko: ["yoko", "yuuko", "yukko"], msf: ["emsf", "msn", "mss"], yemen: ["yeman", "yamen", "yaman"], arabic: ["arabian"] };
 const coreOf = tok => tok.replace(/^[^\w]+|[^\w]+$/g, "");
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 const POOL = (() => {
@@ -1081,11 +1098,14 @@ function updateTestIntro() {
   $("tTitle").textContent = `暗記テスト ・ ${secLabel(S.sel)}`;
   $("tDesc").textContent = S.method === "cloze"
     ? `英文の一部が空欄になります。4つの中から正しい単語を選んでください（${LEVEL_LABEL[S.level]}：単語の約${Math.round(LEVEL[S.level] * 100)}%が空欄）。`
-    : "和訳をヒントに、段落ごとに英文を思い出して書きます。マイクが使える画面では話して入力もできます。合っていた単語の割合が点数になります。";
+    : S.method === "speak"
+    ? "和訳をヒントに、覚えた英文を段落ごとに声に出して言います。聞き取れた単語の割合が点数になります。はっきり、少しゆっくり話すのがコツです。"
+    : "和訳をヒントに、段落ごとに英文を思い出して書きます。合っていた単語の割合が点数になります。";
+  $("tMicNote").hidden = !(S.method === "speak" && MIC.ready && !micAvailable());
   const b = bestOf(S.sel, S.method);
   $("tBestNow").textContent = b ? `自己ベスト ${b.score}点（${RANK(b.score)}）` : "まだ記録がありません";
   $("levelRow").hidden = S.method !== "cloze";
-  $("hintRow").hidden = S.method !== "recall";
+  $("hintRow").hidden = S.method === "cloze";
   $("miniMethod").textContent = METHOD_LABEL[S.method];
 }
 function resetTest() { stopMic(); T = null; tv("tStart"); updateTestIntro(); }
@@ -1189,9 +1209,15 @@ function lev(a, b) {
     d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
   return d[a.length][b.length];
 }
-const eqw = (a, b) => a === b || (a.length >= 5 && Math.abs(a.length - b.length) <= 1 && lev(a, b) <= 1) || (a.length >= 8 && lev(a, b) <= 2);
+const eqw = (a, b) => a === b || (ALIAS[a] && ALIAS[a].includes(b)) || (a.length >= 5 && Math.abs(a.length - b.length) <= 1 && lev(a, b) <= 1) || (a.length >= 8 && lev(a, b) <= 2);
 function grade(target, input) {
-  const toks = target.split(/\s+/), tw = toks.map(normTarget), uw = normInput(input);
+  const toks = target.split(/\s+/), tw = toks.map(normTarget), raw = normInput(input);
+  // join words the recognizer split in two ("teen age" -> "teenage")
+  const tset = new Set(tw), uw = [];
+  for (let k = 0; k < raw.length; k++) {
+    const j = raw[k] + (raw[k + 1] || "");
+    if (k + 1 < raw.length && tset.has(j) && !tset.has(raw[k])) { uw.push(j); k++; } else uw.push(raw[k]);
+  }
   const n = tw.length, m = uw.length;
   const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
@@ -1207,16 +1233,27 @@ function grade(target, input) {
 function startRecall() {
   const items = [];
   selSecs().forEach(sec => sec.parts.forEach((p, pi) => items.push({ sec: sec.id, pi, text: p.en.join(" "), ja: p.ja })));
-  T = { kind: "recall", sel: S.sel, items, idx: 0, res: [] };
+  T = { kind: S.method === "speak" ? "speak" : "recall", sel: S.sel, items, idx: 0, res: [] };
   tv("tRecall"); showRecall();
 }
 function showRecall() {
   const t = T, it = t.items[t.idx];
-  $("rcLabel").textContent = `暗唱 ・ Retelling ${it.sec} の ${CIRCLED[it.pi]}`;
+  const speak = t.kind === "speak", canMic = micAvailable();
+  $("rcLabel").textContent = `${METHOD_LABEL[t.kind]} ・ Retelling ${it.sec} の ${CIRCLED[it.pi]}`;
   $("rcProg").textContent = `${t.idx + 1} / ${t.items.length}段落`;
   const hint = $("rcHint"); hint.innerHTML = "";
   hint.append(S.hint ? el("div", null, it.ja) : el("div", "muted", "和訳ヒントはオフです。何も見ずに思い出してみましょう。"));
   const ta = $("rcInput"); ta.value = ""; ta.disabled = false;
+  ta.readOnly = speak && canMic;
+  ta.placeholder = speak && canMic ? "「話し始める」を押して、覚えた英文を英語で言ってください。聞き取った英文がここに出ます。" : "覚えた英文を書いてください";
+  MIC.base = "";
+  $("micBtn").className = (speak ? "big-btn" : "ghost-btn") + " mic";
+  $("micBtn").hidden = !canMic;
+  $("micNote").hidden = !(speak && !canMic);
+  $("rcCheck").className = speak && canMic ? "ghost-btn" : "big-btn";
+  $("rcCheck").textContent = speak && canMic ? "採点する" : "答え合わせ";
+  $("rcRetry").textContent = speak && canMic ? "もう一度話す" : "書き直す";
+  setMic(false);
   $("rcPartial").textContent = "";
   $("rcAsk").hidden = false; $("rcFeedback").hidden = true; $("rcFirst").disabled = false;
 }
@@ -1270,7 +1307,7 @@ function finishTest(got, total) {
 /* ---------- Records ---------- */
 const RKEY = "retelling7.records";
 const validRec = r => r && typeof r.id === "string" && typeof r.score === "number" && typeof r.at === "string" &&
-  SEL_KEYS.includes(r.sec) && (r.method === "cloze" || r.method === "recall");
+  SEL_KEYS.includes(r.sec) && METHODS.includes(r.method);
 let RECORDS = (() => { try { const a = JSON.parse(localStorage.getItem(RKEY)); return Array.isArray(a) ? a.filter(validRec) : []; } catch { return []; } })();
 let REMOTE = null;
 const sortRecords = () => RECORDS.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
@@ -1310,7 +1347,7 @@ function renderRecords() {
   const grid = $("bestGrid"); grid.innerHTML = "";
   SEL_KEYS.forEach(k => {
     const card = el("div", "best"); card.append(el("h4", null, k === "all" ? "全部（7-1〜7-4）" : "Retelling " + k));
-    ["cloze", "recall"].forEach(m => {
+    METHODS.forEach(m => {
       const b = bestOf(k, m);
       const line = el("div", "line");
       const meter = el("div", "meter"); const fill = el("i"); fill.style.width = (b ? b.score : 0) + "%"; meter.append(fill);
@@ -1376,13 +1413,18 @@ async function initRemote() {
   } catch {}
 }
 
-/* ---------- Microphone (recall test) ---------- */
-let DICT = null, REC = null;
+/* ---------- Microphone (speaking test) ---------- */
+let DICT = null, SRC = null;
+const MIC = { on: false, want: false, base: "", inst: null, autoCheck: false, ready: false, restarts: 0 };
+const micAvailable = () => !!DICT || !!SRC;
+const isSpeakTest = () => !!(T && T.kind === "speak");
 function setMic(on) {
+  MIC.on = on;
   const b = $("micBtn");
   b.classList.toggle("on", on);
-  b.textContent = on ? "話し終わったらタップ" : "マイクで話す";
+  b.textContent = on ? "■ 話し終わった" : isSpeakTest() ? "● 話し始める" : "マイクで話す";
   if (!on) $("rcPartial").textContent = "";
+  else $("rcPartial").textContent = "聞き取り中… 英語で話してください";
 }
 function appendText(t) {
   const ta = $("rcInput"); if (ta.disabled) return;
@@ -1390,56 +1432,91 @@ function appendText(t) {
   if (!v.trim()) t = t.replace(/^\s+/, ""); else if (!/\s$/.test(v) && !/^\s/.test(t)) t = " " + t;
   ta.value = v + t;
 }
-function micUnavailable() { $("micBtn").hidden = true; setMic(false); $("rcPartial").textContent = "この画面ではマイクが使えません。文字で入力してください。"; }
+function micUnavailable() {
+  DICT = null; SRC = null; MIC.want = false;
+  setMic(false);
+  $("micBtn").hidden = true;
+  const ta = $("rcInput"); ta.readOnly = false; ta.placeholder = "覚えた英文を書いてください";
+  $("rcCheck").className = "big-btn"; $("rcCheck").textContent = "答え合わせ";
+  $("micNote").hidden = false;
+  updateTestIntro();
+}
+function afterListening() {
+  setMic(false);
+  if (MIC.autoCheck) { MIC.autoCheck = false; if ($("rcInput").value.trim()) checkRecall(); }
+}
 function initMic() {
+  SRC = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   if (window.claude && typeof window.claude.use === "function") {
     window.claude.use("dictation").then(d => {
-      if (!d) return;
-      DICT = d; $("micBtn").hidden = false;
-      d.onPartial(({ text }) => { $("rcPartial").textContent = text; });
-      d.onFinal(({ text }) => { appendText(text); });
-      d.onState(({ state, reason }) => {
-        setMic(state !== "idle");
-        if (state === "idle" && (reason === "unavailable" || reason === "not_granted")) micUnavailable();
-      });
-    }).catch(() => {});
-    return;
-  }
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SR) { REC = { SR, inst: null }; $("micBtn").hidden = false; }
+      if (d) {
+        DICT = d;
+        d.onPartial(({ text }) => { if (text) $("rcPartial").textContent = text; });
+        d.onFinal(({ text }) => { appendText(text); });
+        d.onState(({ state, reason }) => {
+          if (state !== "idle") { if (!MIC.on) setMic(true); return; }
+          if (reason === "unavailable" || reason === "not_granted") { DICT = null; if (!SRC) micUnavailable(); else setMic(false); return; }
+          afterListening();
+        });
+      }
+    }).catch(() => {}).finally(() => { MIC.ready = true; updateTestIntro(); });
+  } else MIC.ready = true;
+}
+function srStart() {
+  const r = new SRC();
+  r.lang = "en-US"; r.interimResults = true; r.maxAlternatives = 1;
+  r.continuous = !/Android/i.test(navigator.userAgent);
+  let cur = "";
+  r.onresult = e => {
+    let s = "";
+    for (let i = 0; i < e.results.length; i++) s += e.results[i][0].transcript + " ";
+    cur = s.trim();
+    const ta = $("rcInput"); if (!ta.disabled) ta.value = (MIC.base + " " + cur).trim();
+  };
+  r.onerror = e => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "audio-capture") micUnavailable();
+    else if (e.error !== "no-speech" && e.error !== "aborted") MIC.want = false;
+  };
+  r.onend = () => {
+    MIC.base = (MIC.base + " " + cur).trim(); cur = ""; MIC.inst = null;
+    if (MIC.want && MIC.restarts++ < 30) { try { srStart(); return; } catch { MIC.want = false; } }
+    afterListening();
+  };
+  MIC.inst = r;
+  r.start();
+  setMic(true);
 }
 function micClick() {
+  if (MIC.on) {
+    MIC.autoCheck = isSpeakTest();
+    MIC.want = false;
+    if (DICT && DICT.active()) DICT.stop().catch(() => {});
+    if (MIC.inst) MIC.inst.stop(); else if (!DICT || !DICT.active()) afterListening();
+    return;
+  }
   if (DICT) {
-    if (DICT.active()) { DICT.stop().catch(() => {}); return; }
     DICT.start({ language: "en" }).catch(e => {
       setMic(false);
-      if (e && (e.code === "unavailable" || e.code === "not_granted")) micUnavailable();
+      if (e && (e.code === "unavailable" || e.code === "not_granted")) { DICT = null; if (!SRC) micUnavailable(); }
     });
     haltSpeech(); setPlayingUI(false);
     return;
   }
-  if (!REC) return;
-  if (REC.inst) { REC.inst.stop(); return; }
-  const r = new REC.SR();
-  r.lang = "en-US"; r.continuous = true; r.interimResults = true;
-  r.onresult = e => {
-    let interim = "";
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const x = e.results[i];
-      if (x.isFinal) appendText(x[0].transcript); else interim += x[0].transcript;
-    }
-    $("rcPartial").textContent = interim;
-  };
-  r.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") micUnavailable(); };
-  r.onend = () => { if (REC) REC.inst = null; setMic(false); };
+  if (!SRC) return;
   haltSpeech(); setPlayingUI(false);
-  try { r.start(); REC.inst = r; setMic(true); } catch { REC.inst = null; }
+  MIC.want = true; MIC.restarts = 0; MIC.base = $("rcInput").value.trim();
+  try { srStart(); } catch { MIC.inst = null; micUnavailable(); }
 }
 async function stopMic() {
+  MIC.want = false; MIC.autoCheck = false;
   try {
     if (DICT && DICT.active()) await DICT.stop();
-    if (REC && REC.inst) REC.inst.stop();
+    if (MIC.inst) {
+      const r = MIC.inst;
+      await new Promise(res => { r.addEventListener("end", res, { once: true }); r.stop(); setTimeout(res, 1500); });
+    }
   } catch {}
+  if (MIC.on) setMic(false);
 }
 
 /* ---------- Views ---------- */
@@ -1460,13 +1537,16 @@ $("rcQuit").addEventListener("click", resetTest);
 $("rcCheck").addEventListener("click", checkRecall);
 $("micBtn").addEventListener("click", micClick);
 $("rcFirst").addEventListener("click", () => {
-  if (!T || T.kind !== "recall") return;
+  if (!T || !T.items) return;
   const it = T.items[T.idx];
   $("rcHint").append(el("div", "first", it.text.split(/\s+/).slice(0, 3).join(" ") + " …"));
   $("rcFirst").disabled = true;
 });
-$("rcRetry").addEventListener("click", () => { $("rcAsk").hidden = false; $("rcFeedback").hidden = true; $("rcInput").disabled = false; });
-$("rcListen").addEventListener("click", () => { if (T && T.kind === "recall") speakOnce(T.items[T.idx].text); });
+$("rcRetry").addEventListener("click", () => {
+  $("rcAsk").hidden = false; $("rcFeedback").hidden = true; $("rcInput").disabled = false;
+  if (T && T.kind === "speak" && micAvailable()) { $("rcInput").value = ""; MIC.base = ""; }
+});
+$("rcListen").addEventListener("click", () => { if (T && T.items) speakOnce(T.items[T.idx].text); });
 $("rcNext").addEventListener("click", () => {
   const t = T; if (!t) return;
   t.idx++;
