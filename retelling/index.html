@@ -225,6 +225,110 @@ select {
   .avatar.talking .mouth { animation: none; transform: scaleY(1.8); }
   .prompter { scroll-behavior: auto; }
 }
+
+/* ---------- Test & records ---------- */
+:root { --ok: #23845F; --ok-soft: #DDF1E7; --ng: #C2412D; --ng-soft: #FBE3DD; --gold: #A8730A; --gold-soft: #FCEFCF; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ok: #5BD19F; --ok-soft: #173A2D; --ng: #FF8A70; --ng-soft: #42211B; --gold: #F2C14E; --gold-soft: #3A2F12; }
+}
+:root[data-theme="dark"] { --ok: #5BD19F; --ok-soft: #173A2D; --ng: #FF8A70; --ng-soft: #42211B; --gold: #F2C14E; --gold-soft: #3A2F12; }
+
+.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 14px; max-width: 100%; overflow-x: auto; justify-self: start; }
+.tabs button {
+  font: inherit; font-weight: 800; font-size: 0.9rem; border: 0; background: transparent; color: var(--muted);
+  padding: 8px 16px; border-radius: 10px; cursor: pointer; min-height: 42px; white-space: nowrap;
+}
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / 0.14); }
+.muted { color: var(--muted); margin: 0; font-size: 0.88rem; }
+.test { display: grid; gap: 14px; min-width: 0; }
+.test h3 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+.big-btn {
+  font: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer; border: 1.5px solid var(--accent);
+  background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 8px 20px; min-height: 46px;
+}
+.big-btn:hover { filter: brightness(1.08); }
+.ghost-btn {
+  font: inherit; font-weight: 700; font-size: 0.86rem; cursor: pointer; border: 1.5px solid var(--line);
+  background: var(--surface); color: var(--ink); border-radius: 12px; padding: 6px 14px; min-height: 42px;
+}
+.ghost-btn:hover { border-color: var(--accent); }
+.ghost-btn.danger { color: var(--ng); border-color: var(--ng); }
+.ghost-btn.mic.on { background: var(--coral); border-color: var(--coral); color: var(--surface); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.test-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.test-top b { color: var(--ink); font-size: 0.95rem; }
+.cloze {
+  position: relative; font-family: var(--font-en); font-size: clamp(1.08rem, 1rem + 0.5vw, 1.3rem); line-height: 2.15;
+  max-height: min(42vh, 380px); overflow-y: auto; padding: 8px 2px 24px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  scroll-behavior: smooth;
+}
+.blank {
+  display: inline-block; min-width: 2.6em; text-align: center; line-height: 1.35; padding: 0 4px;
+  color: transparent; border-bottom: 2.5px solid var(--mask); border-radius: 5px 5px 0 0; user-select: none;
+}
+.blank.active { background: var(--marker); border-color: var(--marker-ink); }
+.blank.ok { color: var(--ok); background: var(--ok-soft); border-color: var(--ok); user-select: auto; }
+.blank.ng { color: var(--ng); background: var(--ng-soft); border-color: var(--ng); user-select: auto; }
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.choice {
+  font-family: var(--font-en); font-size: 1.05rem; cursor: pointer; min-height: 54px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px; overflow-wrap: anywhere;
+}
+.choice:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-soft); }
+.choice:disabled { cursor: default; }
+.choice.ok { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.choice.ng { background: var(--ng-soft); border-color: var(--ng); color: var(--ng); }
+.hintbox { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; display: grid; gap: 4px; }
+.hintbox .first { font-family: var(--font-en); color: var(--accent); }
+textarea {
+  font-family: var(--font-en); font-size: 1.05rem; line-height: 1.6; width: 100%; min-height: 130px; resize: vertical;
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--surface); color: var(--ink);
+}
+textarea:disabled { opacity: 0.65; }
+.partial { font-family: var(--font-en); font-size: 0.85rem; color: var(--muted); font-style: italic; min-height: 1.3em; }
+.part-score { font-weight: 800; }
+.diff { font-family: var(--font-en); font-size: 1.05rem; line-height: 1.9; }
+.diff .ok { color: var(--ok); }
+.diff .ng { color: var(--ng); background: var(--ng-soft); border-radius: 4px; padding: 0 3px; }
+.legend { font-size: 0.75rem; color: var(--muted); }
+.legend .ok { color: var(--ok); font-weight: 700; } .legend .ng { color: var(--ng); font-weight: 700; }
+.result { display: grid; gap: 12px; justify-items: center; text-align: center; padding-block: 6px; }
+.score-num { font-family: var(--font-en); font-weight: 600; font-size: 4.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.score-num small { font-size: 1.2rem; color: var(--muted); margin-left: 4px; }
+.rank {
+  display: inline-grid; place-items: center; min-width: 2.1em; height: 2.1em; padding: 0 0.45em; border-radius: 999px;
+  font-family: var(--font-en); font-weight: 600; font-size: 0.78rem; background: var(--surface-2); color: var(--muted);
+}
+.rank.S { background: var(--gold-soft); color: var(--gold); box-shadow: inset 0 0 0 1.5px var(--gold); }
+.rank.A { background: var(--ok-soft); color: var(--ok); }
+.rank.B { background: var(--accent-soft); color: var(--accent); }
+.result .rank { font-size: 1.3rem; }
+.newbest { font-weight: 800; color: var(--gold); background: var(--gold-soft); padding: 4px 14px; border-radius: 999px; }
+.cheer { display: flex; gap: 12px; align-items: center; text-align: left; max-width: 480px; }
+.cheer .avatar { width: 72px; height: 72px; border-radius: 16px; }
+.cheer .bubble::before { top: 22px; }
+.records { display: grid; gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--surface-2); border-radius: 14px; padding: 12px; min-width: 0; }
+.stat b { display: block; font-family: var(--font-en); font-size: 1.8rem; font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 0.75rem; color: var(--muted); font-weight: 700; }
+.best-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.best { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+.best h4 { margin: 0; font-family: var(--font-en); font-weight: 600; font-size: 1rem; }
+.best .line { display: grid; grid-template-columns: 3.6em minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 0.8rem; }
+.best .line b { font-family: var(--font-en); font-size: 1rem; font-variant-numeric: tabular-nums; min-width: 2.2em; text-align: right; }
+.meter { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.best .count { font-size: 0.72rem; color: var(--muted); }
+.history { list-style: none; margin: 0; padding: 0; display: grid; }
+.history li { display: grid; grid-template-columns: 5.6em minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.85rem; }
+.history time { color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.history .sc { font-family: var(--font-en); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.empty { color: var(--muted); font-size: 0.9rem; padding-block: 8px; margin: 0; }
+.mini-best { display: grid; gap: 8px; }
+.mini-best div { display: grid; grid-template-columns: 5.5em minmax(0, 1fr) auto auto; align-items: center; gap: 8px; font-size: 0.85rem; }
+.mini-best .en { font-family: var(--font-en); font-weight: 600; }
+.mini-best b { font-family: var(--font-en); font-variant-numeric: tabular-nums; }
 </style>
 
 <div class="wrap">
@@ -232,15 +336,20 @@ select {
     <h1>リテリング暗記プレーヤー<small>Retelling 7</small></h1>
     <p>白川優子さん（国境なき医師団）の英文 ・ 4本</p>
   </header>
+  <nav class="tabs" id="tabs" aria-label="モード">
+    <button type="button" data-v="practice">読み上げ練習</button>
+    <button type="button" data-v="test">暗記テスト</button>
+    <button type="button" data-v="records">記録</button>
+  </nav>
 
-  <div class="layout">
+  <div class="layout" data-view="practice test">
     <div class="stage-col">
       <section class="panel" aria-label="読む範囲">
         <h2>読む範囲</h2>
         <div class="sections" id="sections"></div>
       </section>
 
-      <section class="panel stage" aria-label="読み上げ">
+      <section class="panel stage" aria-label="読み上げ" data-view="practice">
         <div class="host">
           <div class="avatar" id="hostAvatar" aria-hidden="true"></div>
           <div class="host-info">
@@ -261,10 +370,67 @@ select {
           <p class="hint">英文をタップすると、その文から読み上げます</p>
         </div>
       </section>
+
+      <section class="panel" aria-label="暗記テスト" data-view="test">
+        <div id="tStart" class="test">
+          <h3 id="tTitle">暗記テスト</h3>
+          <div class="settings">
+            <div class="seg" id="methodSeg" data-key="method">
+              <button type="button" data-v="cloze">穴埋め（4択）</button>
+              <button type="button" data-v="recall">暗唱（書く・話す）</button>
+            </div>
+            <div class="row" id="levelRow">
+              <span class="lbl">空欄の数</span>
+              <div class="seg" id="levelSeg" data-key="level">
+                <button type="button" data-v="easy">やさしい</button>
+                <button type="button" data-v="normal">ふつう</button>
+                <button type="button" data-v="hard">むずかしい</button>
+              </div>
+            </div>
+            <label class="switch" id="hintRow"><input type="checkbox" id="hintToggle"> 和訳ヒントを表示</label>
+          </div>
+          <p class="muted" id="tDesc"></p>
+          <div class="btn-row"><button type="button" class="big-btn" id="tStartBtn">テストを始める</button><span class="muted" id="tBestNow"></span></div>
+        </div>
+        <div id="tCloze" class="test" hidden>
+          <div class="test-top"><b id="czLabel"></b><span id="czProg"></span></div>
+          <div class="cloze" id="czText"></div>
+          <div class="choices" id="czChoices"></div>
+          <div class="btn-row"><button type="button" class="ghost-btn" id="czQuit">テストをやめる</button></div>
+        </div>
+        <div id="tRecall" class="test" hidden>
+          <div class="test-top"><b id="rcLabel"></b><span id="rcProg"></span></div>
+          <div class="hintbox" id="rcHint"></div>
+          <textarea id="rcInput" placeholder="覚えた英文を書いてください" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" aria-label="覚えた英文"></textarea>
+          <div class="partial" id="rcPartial" aria-live="polite"></div>
+          <div class="btn-row" id="rcAsk">
+            <button type="button" class="ghost-btn mic" id="micBtn" hidden>マイクで話す</button>
+            <button type="button" class="ghost-btn" id="rcFirst">最初の3語ヒント</button>
+            <button type="button" class="big-btn" id="rcCheck">答え合わせ</button>
+          </div>
+          <div id="rcFeedback" class="test" hidden>
+            <div class="part-score" id="rcScore"></div>
+            <div class="diff" id="rcDiff"></div>
+            <div class="legend"><span class="ok">緑</span>＝言えた単語　<span class="ng">赤</span>＝抜けた・違った単語</div>
+            <div class="btn-row">
+              <button type="button" class="ghost-btn" id="rcListen">正解を聞く</button>
+              <button type="button" class="ghost-btn" id="rcRetry">書き直す</button>
+              <button type="button" class="big-btn" id="rcNext">次へ</button>
+            </div>
+          </div>
+          <div class="btn-row"><button type="button" class="ghost-btn" id="rcQuit">テストをやめる</button></div>
+        </div>
+        <div id="tResult" class="result" hidden></div>
+      </section>
     </div>
 
     <div class="side-col">
-      <section class="panel">
+      <section class="panel" data-view="test">
+        <h2>自己ベスト（<span id="miniMethod"></span>）</h2>
+        <div class="mini-best" id="miniBest"></div>
+      </section>
+
+      <section class="panel" data-view="practice">
         <h2>読み方</h2>
         <div class="settings">
           <div class="row">
@@ -325,6 +491,23 @@ select {
       <div id="ttsWarn" class="warn" hidden>このブラウザは音声読み上げに対応していません。iPhone なら Safari、Android やパソコンなら Chrome / Edge で開いてください。</div>
     </div>
   </div>
+
+  <section class="records" data-view="records" hidden>
+    <div class="panel">
+      <h2>がんばりの記録</h2>
+      <div class="stats" id="stats"></div>
+      <p class="note" id="syncNote">記録はこのブラウザに保存されます。</p>
+    </div>
+    <div class="panel">
+      <h2>セクションごとの自己ベスト</h2>
+      <div class="best-grid" id="bestGrid"></div>
+    </div>
+    <div class="panel">
+      <h2>最近のテスト</h2>
+      <ul class="history" id="history"></ul>
+      <div class="btn-row" id="clearRow" style="margin-top:12px"></div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -468,7 +651,8 @@ const CAST = [
 
 /* ---------- Settings (per viewer) ---------- */
 const KEY = "retelling7.settings";
-const S = Object.assign({ sel: "7-1", cast: "mori", rate: 0.8, gap: "1", repeat: "1", mode: "full", ja: false, big: false, voices: {} },
+const S = Object.assign({ sel: "7-1", cast: "mori", rate: 0.8, gap: "1", repeat: "1", mode: "full", ja: false, big: false, voices: {},
+  view: "practice", method: "cloze", level: "normal", hint: true },
   (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })());
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 
@@ -529,7 +713,7 @@ function renderSections() {
     const b = document.createElement("button");
     b.type = "button"; b.className = "chip"; b.innerHTML = it.html;
     b.setAttribute("aria-pressed", String(S.sel === it.v));
-    b.addEventListener("click", () => { S.sel = it.v; save(); stop(true); renderSections(); renderText(); });
+    b.addEventListener("click", () => { S.sel = it.v; save(); stop(true); renderSections(); renderText(); resetTest(); });
     box.appendChild(b);
   }
 }
@@ -790,11 +974,12 @@ function speakItem(i, g) {
   speechSynthesis.speak(u);
 }
 
-function tryVoice() {
+function tryVoice() { speakOnce("Hello! Let's practice the retelling together."); setBubble(cur().hello); }
+function speakOnce(text) {
   if (!TTS) { $("ttsWarn").hidden = false; return; }
   haltSpeech(); setPlayingUI(false);
   const c = cur();
-  const u = new SpeechSynthesisUtterance("Hello! Let's practice the retelling together.");
+  const u = new SpeechSynthesisUtterance(text);
   const v = voiceFor(c);
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = c.lang;
   u.rate = Number(S.rate) * c.rateMul; u.pitch = c.pitch;
@@ -802,7 +987,6 @@ function tryVoice() {
   u.onstart = () => { if (g === gen) $("hostAvatar").classList.add("talking"); };
   u.onend = u.onerror = () => { if (g === gen) $("hostAvatar").classList.remove("talking"); };
   setTimeout(() => { if (g === gen) speechSynthesis.speak(u); }, 60);
-  setBubble(c.hello);
 }
 
 /* ---------- Controls ---------- */
@@ -853,11 +1037,448 @@ ja.addEventListener("change", () => { S.ja = ja.checked; save(); applyView(); })
 big.addEventListener("change", () => { S.big = big.checked; save(); applyView(); });
 
 document.addEventListener("keydown", e => {
+  if (S.view !== "practice") return;
   if (e.target.closest("input, select, textarea, button")) return;
   if (e.code === "Space") { e.preventDefault(); playing ? pause() : playFrom(pos); }
   else if (e.code === "ArrowRight") $("nextBtn").click();
   else if (e.code === "ArrowLeft") $("prevBtn").click();
 });
+
+/* ---------- Memorization test ---------- */
+const STOP = new Set("a an the to of in on as at and but so or for by was were is are be her his she he it they them that this there no from with".split(" "));
+const RANK = s => s >= 95 ? "S" : s >= 80 ? "A" : s >= 60 ? "B" : s >= 40 ? "C" : "D";
+const METHOD_LABEL = { cloze: "穴埋め", recall: "暗唱" };
+const LEVEL = { easy: 0.25, normal: 0.45, hard: 0.7 };
+const LEVEL_LABEL = { easy: "やさしい", normal: "ふつう", hard: "むずかしい" };
+const SEL_KEYS = ["7-1", "7-2", "7-3", "7-4", "all"];
+const CHEER = {
+  mori: ["素晴らしい。ほぼ完璧に覚えていますね。", "いいペースです。抜けた所を重点的に復習しましょう。", "大丈夫。まずは読み上げを3回聞いてから再挑戦です。"],
+  grace: ["Excellent! 見事な暗記です。", "Good job. あと少しで完璧よ。", "Don't worry. ゆっくり繰り返しましょう。"],
+  emma: ["速報です、高得点が出ました！", "着実に伸びています。次回に期待です。", "まずは聞くところから、一緒に始めましょう。"],
+  leo: ["クリティカルヒット！最強の暗記力だ！", "いい感じだ！レベルアップまであと少し！", "まだ序盤だ！修行して再挑戦だ！"],
+  luna: ["完璧な詠唱ね。魔力MAXよ♪", "呪文はほぼ覚えたわね。あと一息！", "まだ呪文がうろ覚えね。もう一回聞こ？"],
+  gareth: ["見事なり！そなたは真の騎士だ。", "良い戦いだった。次は勝てるぞ。", "敗北は恥ではない。再び剣を取れ。"],
+  bit: ["セイカイリツ コウ。スバラシイ データ デス。", "セイチョウ ヲ カンソク。ケイゾク ヲ スイショウ。", "データ フソク。リスニング ヲ ジッコウ シテクダサイ。"],
+  pipi: ["すごーい！キラキラ高得点だね！", "いい感じ！もうちょっとだよ〜", "だいじょうぶ！ピピといっしょにもう一回！"]
+};
+const secLabel = sel => sel === "all" ? "7-1〜7-4" : sel;
+const selSecs = () => S.sel === "all" ? SECTIONS : SECTIONS.filter(s => s.id === S.sel);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const coreOf = tok => tok.replace(/^[^\w]+|[^\w]+$/g, "");
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+const POOL = (() => {
+  const m = new Map();
+  SECTIONS.forEach(s => s.parts.forEach(p => p.en.forEach(t => t.split(/\s+/).forEach(tok => {
+    const c = coreOf(tok); if (c.length >= 2 && !m.has(c.toLowerCase())) m.set(c.toLowerCase(), c);
+  }))));
+  return [...m.values()];
+})();
+
+let T = null;
+const tv = id => ["tStart", "tCloze", "tRecall", "tResult"].forEach(x => { $(x).hidden = x !== id; });
+
+function updateTestIntro() {
+  $("tTitle").textContent = `暗記テスト ・ ${secLabel(S.sel)}`;
+  $("tDesc").textContent = S.method === "cloze"
+    ? `英文の一部が空欄になります。4つの中から正しい単語を選んでください（${LEVEL_LABEL[S.level]}：単語の約${Math.round(LEVEL[S.level] * 100)}%が空欄）。`
+    : "和訳をヒントに、段落ごとに英文を思い出して書きます。マイクが使える画面では話して入力もできます。合っていた単語の割合が点数になります。";
+  const b = bestOf(S.sel, S.method);
+  $("tBestNow").textContent = b ? `自己ベスト ${b.score}点（${RANK(b.score)}）` : "まだ記録がありません";
+  $("levelRow").hidden = S.method !== "cloze";
+  $("hintRow").hidden = S.method !== "recall";
+  $("miniMethod").textContent = METHOD_LABEL[S.method];
+}
+function resetTest() { stopMic(); T = null; tv("tStart"); updateTestIntro(); }
+function startTest() {
+  haltSpeech(); setPlayingUI(false);
+  if (S.method === "cloze") startCloze(); else startRecall();
+}
+
+/* Cloze: pick words, show 4 choices */
+function distractors(ans) {
+  const low = ans.toLowerCase(), cap = /^[A-Z]/.test(ans);
+  let pool = POOL.filter(w => w.toLowerCase() !== low && /^[A-Z]/.test(w) === cap);
+  if (pool.length < 3) pool = POOL.filter(w => w.toLowerCase() !== low);
+  pool = shuffle(pool).sort((a, b) => Math.abs(a.length - ans.length) - Math.abs(b.length - ans.length)).slice(0, 8);
+  return shuffle(pool).slice(0, 3);
+}
+function startCloze() {
+  const box = $("czText"); box.innerHTML = "";
+  const blanks = [];
+  for (const sec of selSecs()) {
+    const sd = el("div", "sec");
+    sd.append(el("div", "sec-h", "Retelling " + sec.id));
+    sec.parts.forEach((part, pi) => {
+      const pd = el("div", "part"); pd.append(el("span", "pn", CIRCLED[pi]));
+      const para = el("div", "para");
+      part.en.forEach(text => {
+        const toks = text.split(/\s+/);
+        const cands = toks.map((t, i) => i).filter(i => {
+          const c = coreOf(toks[i]);
+          return c.length >= 2 && (S.level === "hard" || (c.length >= 3 && !STOP.has(c.toLowerCase())));
+        });
+        const n = Math.max(1, Math.round(cands.length * LEVEL[S.level]));
+        const pick = new Set(shuffle(cands.slice()).slice(0, n));
+        toks.forEach((tok, i) => {
+          if (!pick.has(i)) { para.append(tok + " "); return; }
+          const c = coreOf(tok), at = tok.indexOf(c);
+          if (at > 0) para.append(tok.slice(0, at));
+          const b = el("span", "blank", c);
+          para.append(b, tok.slice(at + c.length) + " ");
+          blanks.push({ answer: c, el: b });
+        });
+      });
+      pd.append(para); sd.append(pd);
+    });
+    box.append(sd);
+  }
+  T = { kind: "cloze", sel: S.sel, level: S.level, blanks, idx: 0, correct: 0, lock: false };
+  $("czLabel").textContent = `穴埋め（${LEVEL_LABEL[S.level]}） ・ ${secLabel(S.sel)}`;
+  tv("tCloze"); box.scrollTop = 0;
+  showBlank();
+}
+function clozeProg() { $("czProg").textContent = `${Math.min(T.idx + 1, T.blanks.length)} / ${T.blanks.length}問 ・ 正解 ${T.correct}`; }
+function showBlank() {
+  const t = T, b = t.blanks[t.idx];
+  t.blanks.forEach((x, i) => x.el.classList.toggle("active", i === t.idx));
+  const box = $("czText");
+  box.scrollTo({ top: Math.max(0, b.el.offsetTop - box.clientHeight * 0.35) });
+  clozeProg();
+  const wrap = $("czChoices"); wrap.innerHTML = "";
+  shuffle([b.answer, ...distractors(b.answer)]).forEach(o => {
+    const btn = el("button", "choice", o); btn.type = "button";
+    btn.addEventListener("click", () => answerCloze(o, btn));
+    wrap.append(btn);
+  });
+  t.lock = false;
+}
+function answerCloze(o, btn) {
+  const t = T; if (!t || t.lock) return; t.lock = true;
+  const b = t.blanks[t.idx], ok = o === b.answer;
+  if (ok) t.correct++;
+  b.el.classList.remove("active"); b.el.classList.add(ok ? "ok" : "ng");
+  $("czChoices").querySelectorAll("button").forEach(x => { x.disabled = true; if (x.textContent === b.answer) x.classList.add("ok"); });
+  if (!ok) btn.classList.add("ng");
+  clozeProg();
+  setTimeout(() => {
+    if (T !== t) return;
+    t.idx++;
+    if (t.idx >= t.blanks.length) finishTest(t.correct, t.blanks.length); else showBlank();
+  }, ok ? 450 : 1300);
+}
+
+/* Recall: write or speak each paragraph, graded by word alignment */
+function normTarget(tok) { return tok.toLowerCase().replace(/[’]/g, "'").replace(/-/g, "").replace(/[^a-z0-9']/g, ""); }
+const SYN = { miss: "ms", mz: "ms", "2nd": "second" };
+function normInput(s) {
+  s = s.toLowerCase().replace(/[’]/g, "'").replace(/-/g, "");
+  s = s.replace(/\b(?:[a-z]\.){2,}/g, m => m.replace(/\./g, ""));
+  s = s.replace(/[^a-z0-9'\s]/g, " ");
+  const out = []; let run = [];
+  const flush = () => { if (run.length >= 2) out.push(run.join("")); else out.push(...run); run = []; };
+  for (const x of s.split(/\s+/).filter(Boolean)) {
+    if (x.length === 1 && x !== "a") run.push(x); else { flush(); out.push(SYN[x] || x); }
+  }
+  flush();
+  return out;
+}
+function lev(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+const eqw = (a, b) => a === b || (a.length >= 5 && Math.abs(a.length - b.length) <= 1 && lev(a, b) <= 1) || (a.length >= 8 && lev(a, b) <= 2);
+function grade(target, input) {
+  const toks = target.split(/\s+/), tw = toks.map(normTarget), uw = normInput(input);
+  const n = tw.length, m = uw.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+    dp[i][j] = eqw(tw[i], uw[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const marks = new Array(n).fill(false);
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (eqw(tw[i], uw[j]) && dp[i][j] === dp[i + 1][j + 1] + 1) { marks[i] = true; i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
+  }
+  return { toks, marks, got: marks.filter(Boolean).length, total: n };
+}
+function startRecall() {
+  const items = [];
+  selSecs().forEach(sec => sec.parts.forEach((p, pi) => items.push({ sec: sec.id, pi, text: p.en.join(" "), ja: p.ja })));
+  T = { kind: "recall", sel: S.sel, items, idx: 0, res: [] };
+  tv("tRecall"); showRecall();
+}
+function showRecall() {
+  const t = T, it = t.items[t.idx];
+  $("rcLabel").textContent = `暗唱 ・ Retelling ${it.sec} の ${CIRCLED[it.pi]}`;
+  $("rcProg").textContent = `${t.idx + 1} / ${t.items.length}段落`;
+  const hint = $("rcHint"); hint.innerHTML = "";
+  hint.append(S.hint ? el("div", null, it.ja) : el("div", "muted", "和訳ヒントはオフです。何も見ずに思い出してみましょう。"));
+  const ta = $("rcInput"); ta.value = ""; ta.disabled = false;
+  $("rcPartial").textContent = "";
+  $("rcAsk").hidden = false; $("rcFeedback").hidden = true; $("rcFirst").disabled = false;
+}
+async function checkRecall() {
+  await stopMic();
+  const t = T; if (!t) return;
+  const it = t.items[t.idx];
+  const g = grade(it.text, $("rcInput").value);
+  t.res[t.idx] = g;
+  $("rcScore").textContent = `この段落：${g.got} / ${g.total}語（${Math.round(g.got / g.total * 100)}点）`;
+  const d = $("rcDiff"); d.innerHTML = "";
+  g.toks.forEach((tok, i) => { d.append(el("span", g.marks[i] ? "ok" : "ng", tok), " "); });
+  $("rcAsk").hidden = true; $("rcFeedback").hidden = false; $("rcInput").disabled = true;
+  $("rcNext").textContent = t.idx + 1 < t.items.length ? "次の段落へ" : "結果を見る";
+}
+
+/* Results */
+function finishTest(got, total) {
+  stopMic();
+  const t = T;
+  const score = total ? Math.round(got / total * 100) : 0;
+  const prev = bestOf(t.sel, t.kind);
+  const rec = { id: "score-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), at: new Date().toISOString(),
+    sec: t.sel, method: t.kind, level: t.kind === "cloze" ? t.level : null, score, got, total };
+  addRecord(rec);
+  const r = $("tResult"); r.innerHTML = "";
+  r.append(el("p", "muted", `${METHOD_LABEL[rec.method]}${rec.level ? "（" + LEVEL_LABEL[rec.level] + "）" : ""} ・ ${secLabel(rec.sec)}`));
+  const num = el("div", "score-num", String(score)); num.append(el("small", null, "点")); r.append(num);
+  const row = el("div", "btn-row"); row.style.justifyContent = "center";
+  row.append(el("span", "rank " + RANK(score), RANK(score)), el("span", "muted", `${got} / ${total}${rec.method === "cloze" ? "問正解" : "語言えた"}`));
+  r.append(row);
+  if (!prev) r.append(el("div", "newbest", "初めての記録！"));
+  else if (score > prev.score) r.append(el("div", "newbest", `自己ベスト更新！（これまで ${prev.score}点）`));
+  else r.append(el("p", "muted", `自己ベストは ${prev.score}点`));
+  const c = cur(), tier = score >= 80 ? 0 : score >= 50 ? 1 : 2;
+  const cheer = el("div", "cheer");
+  const av = el("div", "avatar"); av.innerHTML = AV[c.id](); av.setAttribute("aria-hidden", "true");
+  const bub = el("div", "bubble", CHEER[c.id][tier]);
+  cheer.append(av, bub); r.append(cheer);
+  const btns = el("div", "btn-row"); btns.style.justifyContent = "center";
+  const again = el("button", "big-btn", "もう一度テスト"); again.type = "button"; again.addEventListener("click", startTest);
+  const prac = el("button", "ghost-btn", "読み上げで復習"); prac.type = "button"; prac.addEventListener("click", () => setView("practice"));
+  const recs = el("button", "ghost-btn", "記録を見る"); recs.type = "button"; recs.addEventListener("click", () => setView("records"));
+  const pickB = el("button", "ghost-btn", "テストを選び直す"); pickB.type = "button"; pickB.id = "tPick"; pickB.addEventListener("click", resetTest);
+  btns.append(again, pickB, prac, recs); r.append(btns);
+  T = null;
+  tv("tResult");
+  updateTestIntro();
+}
+
+/* ---------- Records ---------- */
+const RKEY = "retelling7.records";
+const validRec = r => r && typeof r.id === "string" && typeof r.score === "number" && typeof r.at === "string" &&
+  SEL_KEYS.includes(r.sec) && (r.method === "cloze" || r.method === "recall");
+let RECORDS = (() => { try { const a = JSON.parse(localStorage.getItem(RKEY)); return Array.isArray(a) ? a.filter(validRec) : []; } catch { return []; } })();
+let REMOTE = null;
+const sortRecords = () => RECORDS.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
+const saveRecords = () => { try { localStorage.setItem(RKEY, JSON.stringify(RECORDS)); } catch {} };
+function addRecord(r) {
+  RECORDS.push(r); sortRecords(); saveRecords();
+  if (REMOTE) REMOTE.doc(r.id).set(r).catch(() => {});
+  renderRecords(); renderMiniBest();
+}
+function bestOf(sec, method) { let b = null; for (const r of RECORDS) if (r.sec === sec && r.method === method && (!b || r.score > b.score)) b = r; return b; }
+const dayKey = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+function streak() {
+  const days = new Set(RECORDS.map(r => dayKey(new Date(r.at))));
+  const d = new Date(); let n = 0;
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function renderMiniBest() {
+  const box = $("miniBest"); box.innerHTML = "";
+  SEL_KEYS.forEach(k => {
+    const b = bestOf(k, S.method);
+    const row = el("div");
+    const meter = el("div", "meter"); const fill = el("i"); fill.style.width = (b ? b.score : 0) + "%"; meter.append(fill);
+    row.append(el("span", "en", secLabel(k)), meter, el("b", null, b ? String(b.score) : "—"), el("span", "rank " + (b ? RANK(b.score) : ""), b ? RANK(b.score) : "-"));
+    box.append(row);
+  });
+}
+function renderRecords() {
+  const stats = $("stats"); stats.innerHTML = "";
+  const today = dayKey(new Date());
+  const recent = RECORDS.slice(-10);
+  const avg = recent.length ? Math.round(recent.reduce((a, r) => a + r.score, 0) / recent.length) : null;
+  [[String(streak()), "連続日数"], [String(RECORDS.filter(r => dayKey(new Date(r.at)) === today).length), "今日のテスト"], [avg == null ? "—" : String(avg), "最近10回の平均点"]]
+    .forEach(([v, l]) => { const s = el("div", "stat"); s.append(el("b", null, v), el("span", null, l)); stats.append(s); });
+
+  const grid = $("bestGrid"); grid.innerHTML = "";
+  SEL_KEYS.forEach(k => {
+    const card = el("div", "best"); card.append(el("h4", null, k === "all" ? "全部（7-1〜7-4）" : "Retelling " + k));
+    ["cloze", "recall"].forEach(m => {
+      const b = bestOf(k, m);
+      const line = el("div", "line");
+      const meter = el("div", "meter"); const fill = el("i"); fill.style.width = (b ? b.score : 0) + "%"; meter.append(fill);
+      const sc = el("b", null, b ? String(b.score) : "—");
+      line.append(el("span", null, METHOD_LABEL[m]), meter, sc);
+      card.append(line);
+    });
+    const n = RECORDS.filter(r => r.sec === k).length;
+    card.append(el("span", "count", n ? `${n}回テスト` : "まだテストしていません"));
+    grid.append(card);
+  });
+
+  const list = $("history"); list.innerHTML = "";
+  const rows = RECORDS.slice(-40).reverse();
+  if (!rows.length) list.append(el("li", "empty", "まだテストの記録がありません。「暗記テスト」から挑戦してみましょう。"));
+  rows.forEach(r => {
+    const d = new Date(r.at);
+    const li = el("li");
+    const time = el("time", null, `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+    time.dateTime = r.at;
+    li.append(time, el("span", null, `${secLabel(r.sec)} ・ ${METHOD_LABEL[r.method]}${r.level ? "（" + LEVEL_LABEL[r.level] + "）" : ""}`),
+      el("span", "sc", r.score + "点"), el("span", "rank " + RANK(r.score), RANK(r.score)));
+    list.append(li);
+  });
+  renderClear(false);
+}
+function renderClear(confirming) {
+  const row = $("clearRow"); row.innerHTML = "";
+  if (!RECORDS.length) return;
+  if (!confirming) {
+    const b = el("button", "ghost-btn", "記録をすべて消す"); b.type = "button";
+    b.addEventListener("click", () => renderClear(true)); row.append(b); return;
+  }
+  row.append(el("span", "muted", "本当にすべての記録を消しますか？"));
+  const yes = el("button", "ghost-btn danger", "消す"); yes.type = "button";
+  const no = el("button", "ghost-btn", "やめる"); no.type = "button";
+  yes.addEventListener("click", async () => {
+    const old = RECORDS; RECORDS = []; saveRecords(); renderRecords(); renderMiniBest(); updateTestIntro();
+    if (REMOTE) for (const r of old) { try { await REMOTE.doc(r.id).delete(); } catch {} }
+  });
+  no.addEventListener("click", () => renderClear(false));
+  row.append(yes, no);
+}
+async function initRemote() {
+  if (!window.claude || typeof window.claude.use !== "function") return;
+  try {
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) return;
+    const uid = await user.id(); if (!uid) return;
+    const col = db.collection("data/users/" + uid);
+    const snap = await col.get();
+    const have = new Set(RECORDS.map(r => r.id)), there = new Set();
+    snap.docs.forEach(d => {
+      if (!d.exists || !d.id.startsWith("score-")) return;
+      there.add(d.id);
+      const v = d.data();
+      if (validRec(v) && !have.has(v.id)) RECORDS.push(Object.assign({}, v));
+    });
+    REMOTE = col;
+    sortRecords(); saveRecords(); renderRecords(); renderMiniBest(); updateTestIntro();
+    $("syncNote").textContent = "記録はこのブラウザと、あなたのアカウントに保存されます（ほかの端末で開いても見られます）。";
+    for (const r of RECORDS) if (!there.has(r.id)) { try { await col.doc(r.id).set(r); } catch {} }
+  } catch {}
+}
+
+/* ---------- Microphone (recall test) ---------- */
+let DICT = null, REC = null;
+function setMic(on) {
+  const b = $("micBtn");
+  b.classList.toggle("on", on);
+  b.textContent = on ? "話し終わったらタップ" : "マイクで話す";
+  if (!on) $("rcPartial").textContent = "";
+}
+function appendText(t) {
+  const ta = $("rcInput"); if (ta.disabled) return;
+  const v = ta.value;
+  if (!v.trim()) t = t.replace(/^\s+/, ""); else if (!/\s$/.test(v) && !/^\s/.test(t)) t = " " + t;
+  ta.value = v + t;
+}
+function micUnavailable() { $("micBtn").hidden = true; setMic(false); $("rcPartial").textContent = "この画面ではマイクが使えません。文字で入力してください。"; }
+function initMic() {
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("dictation").then(d => {
+      if (!d) return;
+      DICT = d; $("micBtn").hidden = false;
+      d.onPartial(({ text }) => { $("rcPartial").textContent = text; });
+      d.onFinal(({ text }) => { appendText(text); });
+      d.onState(({ state, reason }) => {
+        setMic(state !== "idle");
+        if (state === "idle" && (reason === "unavailable" || reason === "not_granted")) micUnavailable();
+      });
+    }).catch(() => {});
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) { REC = { SR, inst: null }; $("micBtn").hidden = false; }
+}
+function micClick() {
+  if (DICT) {
+    if (DICT.active()) { DICT.stop().catch(() => {}); return; }
+    DICT.start({ language: "en" }).catch(e => {
+      setMic(false);
+      if (e && (e.code === "unavailable" || e.code === "not_granted")) micUnavailable();
+    });
+    haltSpeech(); setPlayingUI(false);
+    return;
+  }
+  if (!REC) return;
+  if (REC.inst) { REC.inst.stop(); return; }
+  const r = new REC.SR();
+  r.lang = "en-US"; r.continuous = true; r.interimResults = true;
+  r.onresult = e => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const x = e.results[i];
+      if (x.isFinal) appendText(x[0].transcript); else interim += x[0].transcript;
+    }
+    $("rcPartial").textContent = interim;
+  };
+  r.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") micUnavailable(); };
+  r.onend = () => { if (REC) REC.inst = null; setMic(false); };
+  haltSpeech(); setPlayingUI(false);
+  try { r.start(); REC.inst = r; setMic(true); } catch { REC.inst = null; }
+}
+async function stopMic() {
+  try {
+    if (DICT && DICT.active()) await DICT.stop();
+    if (REC && REC.inst) REC.inst.stop();
+  } catch {}
+}
+
+/* ---------- Views ---------- */
+function setView(v) {
+  if (!["practice", "test", "records"].includes(v)) v = "practice";
+  S.view = v; save();
+  document.querySelectorAll("[data-view]").forEach(e => { e.hidden = !e.dataset.view.split(" ").includes(v); });
+  $("tabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.v === v)));
+  if (v !== "practice") { haltSpeech(); setPlayingUI(false); }
+  if (v !== "test") stopMic();
+  if (v === "test" && !T && $("tResult").hidden) { tv("tStart"); updateTestIntro(); }
+  if (v === "records") renderRecords();
+}
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); });
+$("tStartBtn").addEventListener("click", startTest);
+$("czQuit").addEventListener("click", resetTest);
+$("rcQuit").addEventListener("click", resetTest);
+$("rcCheck").addEventListener("click", checkRecall);
+$("micBtn").addEventListener("click", micClick);
+$("rcFirst").addEventListener("click", () => {
+  if (!T || T.kind !== "recall") return;
+  const it = T.items[T.idx];
+  $("rcHint").append(el("div", "first", it.text.split(/\s+/).slice(0, 3).join(" ") + " …"));
+  $("rcFirst").disabled = true;
+});
+$("rcRetry").addEventListener("click", () => { $("rcAsk").hidden = false; $("rcFeedback").hidden = true; $("rcInput").disabled = false; });
+$("rcListen").addEventListener("click", () => { if (T && T.kind === "recall") speakOnce(T.items[T.idx].text); });
+$("rcNext").addEventListener("click", () => {
+  const t = T; if (!t) return;
+  t.idx++;
+  if (t.idx < t.items.length) { showRecall(); return; }
+  const got = t.res.reduce((a, g) => a + (g ? g.got : 0), 0), total = t.res.reduce((a, g) => a + (g ? g.total : 0), 0);
+  finishTest(got, total);
+});
+bindSeg("methodSeg", () => { resetTest(); renderMiniBest(); });
+bindSeg("levelSeg", resetTest);
+const hintT = $("hintToggle");
+hintT.checked = !!S.hint;
+hintT.addEventListener("change", () => { S.hint = hintT.checked; save(); });
 
 /* ---------- Boot ---------- */
 if (!TTS) $("ttsWarn").hidden = false;
@@ -866,6 +1487,11 @@ renderText();
 renderCast();
 updateHost();
 setBubble(cur().hello);
+updateTestIntro();
+renderMiniBest();
+setView(S.view);
+initMic();
+initRemote();
 if (TTS) {
   loadVoices();
   if ("onvoiceschanged" in speechSynthesis) speechSynthesis.addEventListener("voiceschanged", loadVoices);
