@@ -274,3 +274,10 @@ ${catalog}
 - 使える関数: Filter, Search, LookUp, Sort, SortByColumns, First, Last, FirstN, CountRows, CountIf, Sum, Average, Max, Min, AddColumns, Distinct, Concat, ForAll, If, Switch, IsBlank, Coalesce, Len, Left, Mid, Upper, Lower, Text, Value, StartsWith, Today, DateAdd, DateDiff, Year, Month, Set, UpdateContext, Collect, ClearCollect, Remove, Patch, Defaults, Navigate, Notify, Reset, With。`;
   return chatJSON(sys, `テーマ: ${topic}\n難易度: ${level}`, FX_GEN_SCHEMA);
 }
+
+// ---------- レッスンについて質問 ----------
+export async function askLesson({ track, title, text, question, history = [] }) {
+  const msgs = [...history, { role: 'user', content: `${history.length ? '' : `## 分野: ${TRACK_NAME[track]}\n## レッスン: ${title}\n${String(text).slice(0, 7000)}\n\n`}## 質問\n${question}` }];
+  const out = await chatText(TUTOR_SYSTEM + '\n- 受講者は上のレッスンを読んでいる途中です。レッスンの内容に沿って、たとえや小さな例（データのビフォー・アフターや式と結果）を使って、かみくだいて説明してください。', msgs);
+  return { text: out, messages: [...msgs, { role: 'assistant', content: out }] };
+}

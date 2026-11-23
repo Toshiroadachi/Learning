@@ -387,3 +387,13 @@ table.matrix td.errc { color: var(--ng); }
 .sticky-actions .btn-row::-webkit-scrollbar { display: none; }
 .sticky-actions .btn { flex: none; }
 .work { margin-bottom: 6px; }
+
+/* くわしい解説 */
+h2.sec { font-size: 1.05rem; margin: 0 0 .4rem; }
+.flow { margin: 0 0 10px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+.image-card { border-left: 4px solid var(--accent); }
+.pit-card { border-left: 4px solid var(--warn); }
+details.think { margin: 8px 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+details.think summary { cursor: pointer; font-size: .9rem; font-weight: 600; }
+details.think .lesson { margin-top: 6px; font-size: .9rem; }
+.lesson table { display: block; overflow-x: auto; max-width: 100%; }
