@@ -1,0 +1,11 @@
+{
+  "name": "MLCC Engineering Dojo",
+  "short_name": "MLCC Dojo",
+  "start_url": "./#/home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f2",
+  "theme_color": "#1d5fa8",
+  "lang": "ja",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
