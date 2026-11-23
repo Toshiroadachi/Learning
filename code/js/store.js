@@ -22,6 +22,7 @@ function fresh() {
     exercises: {},   // exId -> { passed: true, code, ts }
     drafts: {},      // exId -> code（書きかけ）
     aiDays: {},      // day -> AIが作成したレッスン
+    checks: {},      // 理解度チェックの結果  "d1-0" -> { ok, ts }
     playground: '',  // 練習帳のコード
     log: [],         // { ts, kind, id } 学習記録
     aiUsage: [],     // { ts, model, in, out }

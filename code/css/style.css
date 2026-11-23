@@ -328,3 +328,14 @@ details.guide .lesson { margin-top: 8px; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .two > label { min-width: 0; }
 .two input { width: 100%; }
+
+/* ---------- Python：くわしい解説・理解度チェック ---------- */
+h2.sec { font-size: 1.05rem; margin: 0 0 .4rem; }
+.flow { margin-top: 8px; background: var(--bg); border-radius: 8px; padding: 6px 10px; }
+.image-card { border-left: 4px solid var(--accent); }
+.pit-card { border-left: 4px solid var(--warn); }
+details.think { margin: 8px 0; background: var(--bg); border-radius: 10px; padding: 6px 10px; }
+details.think summary { cursor: pointer; font-size: .9rem; font-weight: 600; }
+details.think .lesson { margin-top: 6px; font-size: .9rem; }
+.panel .q code { font-size: .85em; }
+.panel .q pre.code { margin: 6px 0; }

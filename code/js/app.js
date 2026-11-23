@@ -12,6 +12,7 @@ import { DAYS_0 } from '../data/py-days-0.js';
 import { DAYS_1 } from '../data/py-days-1.js';
 import { DAYS_2 } from '../data/py-days-2.js';
 import { ROADMAP } from '../data/py-roadmap.js';
+import { EXPLAIN } from '../data/py-explain.js';
 import { createEditor, runPython, runTests, renderOutput, errorHint, warmup, onPyStatus } from './py.js';
 import * as AI from './ai.js';
 import { renderLive } from './live.js';
@@ -401,17 +402,35 @@ function day(arg) {
     return;
   }
   const allPassed = () => info.exercises.every(ex => getState().exercises[ex.id]?.passed);
+  const X = explainFor(n, info);
   view.innerHTML = `${nav}
-    <div class="card lesson">
+    <div class="card">
       <div class="small muted">Day ${n}${info.review ? ' · 復習' : ''}${info.project ? ' · プロジェクト' : ''}${info.ai ? ' · AI 作成' : ''}</div>
       <h1>${esc(info.title)}</h1>
-      <p class="small muted" style="margin-top:0">🎯 ${esc(info.goal)}</p>
-      ${md(info.lesson)}
-      ${info.ai ? `<div class="btn-row"><button class="btn sm" id="regen">🔄 作り直す</button></div>` : ''}
+      <p class="small muted" style="margin:0">🎯 ${esc(info.goal)}</p>
+      ${X ? `<div class="flow small">①イメージ → ②くわしい解説 → ③理解度チェック → ④演習 の順に進めましょう。分からないところは「AI に質問」も使えます。</div>` : ''}
     </div>
+    ${X ? `
+      ${X.image ? `<div class="card lesson image-card"><h2 class="sec">🗺 この日のイメージ</h2>${md(X.image)}</div>` : ''}
+      <div class="card lesson"><h2 class="sec">📖 くわしい解説</h2>${md(X.detail)}</div>
+      ${X.summary ? `<details class="card guide"><summary><b>📌 要点まとめ（復習用）</b><div class="small muted">解説の内容を短くまとめたもの。あとで見返すときに</div></summary><div class="lesson" style="margin-top:8px">${md(X.summary)}</div></details>` : ''}
+      ${X.pitfalls ? `<div class="card lesson pit-card"><h2 class="sec">⚠ つまずきやすいポイント</h2>${md(X.pitfalls)}</div>` : ''}
+      ${X.check?.length ? `<div class="card"><h2 class="sec">✅ 理解度チェック（演習の前に）</h2><p class="small muted" style="margin-top:0">全問正解できたら演習へ。間違えた問題は、解説のその部分を読み直しましょう。</p><div id="checks"></div></div>` : ''}`
+    : `<div class="card lesson">${md(info.lesson)}</div>`}
+    ${info.ai ? `<div class="btn-row" style="margin:-4px 0 12px">${!X ? '<button class="btn sm primary" id="deeper">📖 解説を詳しくする（演習・記録はそのまま）</button>' : ''}<button class="btn sm" id="regen">🔄 作り直す</button></div>` : ''}
+    <div id="askbox"></div>
     <div id="exs"></div>
     <div class="card center" id="daydone"></div>`;
-  if (info.ai) $('#regen').onclick = () => { if (confirm('この日のレッスンを作り直しますか？')) { delete st.aiDays[n]; save(); day(String(n)); } };
+  if (X?.check?.length) renderChecks($('#checks'), X.check, `d${n}`);
+  renderAsk($('#askbox'), n, info, X);
+  const dp = $('#deeper');
+  if (dp) dp.onclick = async () => {
+    if (!AI.hasKey()) { toast('設定で AI の API キーを登録してください'); return; }
+    dp.disabled = true; dp.textContent = '作成中…（30秒〜1分）';
+    try { st.aiDays[n].explain = await AI.generateExplain({ ...info, day: n }); save(); day(String(n)); }
+    catch (e) { dp.disabled = false; dp.textContent = '📖 解説を詳しくする（演習・記録はそのまま）'; toast(e.message, 4000); }
+  };
+  if (info.ai) $('#regen').onclick = () => { if (confirm('この日のレッスンと演習を作り直しますか？（合格の記録は残りますが、演習の内容は新しくなります）')) { delete st.aiDays[n]; save(); day(String(n)); } };
   const updateDone = () => {
     const ok = allPassed();
     if (ok && !st.days[n]?.done) { st.days[n] = { done: true, ts: Date.now() }; save(); logActivity('day', n); toast(`🎉 Day ${n} 修了！`); }
@@ -425,13 +444,58 @@ function day(arg) {
   info.exercises.forEach((ex, idx) => {
     const box = document.createElement('div');
     exs.appendChild(box);
-    exerciseCard(box, ex, idx, info, updateDone);
+    exerciseCard(box, ex, idx, info, updateDone, X?.steps?.[ex.id] || ex.steps);
   });
   updateDone();
   warmup();
 }
 
-function exerciseCard(box, ex, idx, info, onPass) {
+// 解説（固定教材は py-explain.js、AI 作成は新形式 or 後から詳しくしたもの）
+function explainFor(n, info) {
+  if (!info.ai && EXPLAIN[n]) return { ...EXPLAIN[n], summary: info.lesson };
+  if (info.explain) return { ...info.explain, summary: info.lesson };
+  if (info.image) return { image: info.image, detail: info.lesson, pitfalls: info.pitfalls, check: info.check, steps: Object.fromEntries(info.exercises.map(e => [e.id, e.steps])) };
+  return null;
+}
+// 理解度チェック
+function renderChecks(box, qs, prefix) {
+  const st = getState();
+  st.checks ||= {};
+  const order = qs.map(q => { const a = q.choices.map((_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; });
+  box.innerHTML = qs.map((q, qi) => `<div class="panel" data-q="${qi}"><div class="q">Q${qi + 1}. ${md(q.q).replace(/^<p>|<\/p>$/g, '')}${st.checks[`${prefix}-${qi}`]?.ok ? ' <span class="pill done">✓</span>' : ''}</div>
+    <div class="opts">${order[qi].map(ci => `<button class="opt" data-c="${ci}">${esc(q.choices[ci]).replace(/`([^`]+)`/g, '<code>$1</code>')}</button>`).join('')}</div><div class="fbx"></div></div>`).join('')
+    + '<div class="small center muted" id="chkscore"></div>';
+  let right = 0, answered = 0;
+  box.onclick = e => {
+    const b = e.target.closest('.opt'); if (!b || b.disabled) return;
+    const p = b.closest('[data-q]'); const qi = +p.dataset.q; const q = qs[qi]; const ok = +b.dataset.c === q.a;
+    p.querySelectorAll('.opt').forEach(o => { o.disabled = true; if (+o.dataset.c === q.a) o.classList.add('correct'); });
+    if (!ok) b.classList.add('wrong');
+    p.querySelector('.fbx').innerHTML = `<div class="fb ${ok ? 'ok' : 'ng'}">${ok ? '⭕ 正解！' : '❌ 不正解'}　${md(q.exp).replace(/^<p>|<\/p>$/g, '')}</div>`;
+    const k = `${prefix}-${qi}`; st.checks[k] = { ok: ok || !!st.checks[k]?.ok, last: ok, ts: Date.now() }; save();
+    answered++; if (ok) right++;
+    if (answered === qs.length) $('#chkscore', box).innerHTML = right === qs.length ? '🎉 全問正解！ 演習に進みましょう' : `${qs.length} 問中 ${right} 問正解。間違えた問題の解説を読んで、もう一度ページを開くと再挑戦できます`;
+  };
+}
+// レッスンについて AI に質問
+function renderAsk(box, n, info, X) {
+  if (!AI.hasKey()) { box.innerHTML = '<p class="tiny muted" style="margin:0 0 10px">🤖 設定で AI の API キーを登録すると、このレッスンの分からないところを AI に質問できます。</p>'; return; }
+  box.innerHTML = `<details class="card guide"><summary><b>🤖 分からないところを AI に質問</b><div class="small muted">この日の解説をふまえて、かみくだいて説明してくれます</div></summary>
+    <div style="margin-top:8px"><div class="chips"><button class="chip" data-p="この日の内容を、もっとやさしく、たとえを使って説明してください。">もっとやさしく</button><button class="chip" data-p="この日の内容について、別の簡単な例をコードと実行結果つきで見せてください。">別の例で</button><button class="chip" data-p="この日の内容で、演習に取り組む前に必ず理解しておくべきポイントを3つに絞って教えてください。">大事なポイント3つ</button></div>
+    <div class="chat ai-chat"></div><div class="cmdinput" style="margin-top:8px"><input placeholder="例：self って結局何？" data-q><button class="btn" data-send>送信</button></div></div></details>`;
+  const chat = $('.ai-chat', box); let history = [];
+  const text = X ? [X.image, X.detail, X.pitfalls].filter(Boolean).join('\n\n') : info.lesson;
+  const ask = async q => {
+    chat.insertAdjacentHTML('beforeend', `<div class="ai-box" style="border-left-color:var(--accent)">${esc(q)}</div><div class="ai-box"><div class="spinner"></div></div>`);
+    const slot = chat.lastElementChild;
+    try { const r = await AI.askLesson({ day: n, title: info.title, text, question: q, history }); history = r.messages.slice(-8); slot.innerHTML = md(r.text); logActivity('ask', n); }
+    catch (e) { slot.innerHTML = `<span class="ngc">${esc(e.message)}</span>`; }
+  };
+  box.querySelectorAll('[data-p]').forEach(b => b.onclick = () => ask(b.dataset.p));
+  $('[data-send]', box).onclick = () => { const i = $('[data-q]', box); if (i.value.trim()) { ask(i.value.trim()); i.value = ''; } };
+}
+
+function exerciseCard(box, ex, idx, info, onPass, steps) {
   const st = getState();
   const passed = () => getState().exercises[ex.id]?.passed;
   box.className = 'card ex-card' + (passed() ? ' passed' : '');
@@ -439,6 +503,7 @@ function exerciseCard(box, ex, idx, info, onPass) {
     <div class="row-between"><h2 style="margin:0">演習 ${idx + 1}：${esc(ex.title)}</h2>${passed() ? '<span class="pill done">✓ 合格</span>' : ''}</div>
     ${ex.verified === false ? '<p class="tiny warn">⚠ AI が作った演習のうち、模範解答でテストが通らなかったものです。テストの判定が不正確な可能性があります。</p>' : ''}
     <div class="lesson">${md(ex.prompt)}</div>
+    ${steps ? `<details class="think"><summary>🧭 考え方（手順）を見る <span class="tiny muted">— 何をどの順に書くか</span></summary><div class="lesson">${md(steps)}</div></details>` : ''}
     <div class="ed"></div>
     <div class="btn-row">
       <button class="btn primary run">▶ 実行</button>
