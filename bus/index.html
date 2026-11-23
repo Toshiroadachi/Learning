@@ -1,0 +1,200 @@
+<title>出張バス時刻表</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
+<style>
+/* Layout: one narrow column like a bus-stop pole sign — next-bus panel on top, 時｜分 timetable below */
+:root {
+  --bg: #eef2f0;
+  --surface: #ffffff;
+  --fg: #16211d;
+  --muted: #66736e;
+  --line: #d3dcd8;
+  --accent: #0d6b57;       /* bus-stop sign green */
+  --accent-fg: #ffffff;
+  --accent-soft: #dcefe9;
+  --warn: #b4531a;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1513; --surface: #18211e; --fg: #e8efec; --muted: #93a29c; --line: #2b3733;
+    --accent: #3fb394; --accent-fg: #06120e; --accent-soft: #1d3530; --warn: #f0995e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1513; --surface: #18211e; --fg: #e8efec; --muted: #93a29c; --line: #2b3733;
+  --accent: #3fb394; --accent-fg: #06120e; --accent-soft: #1d3530; --warn: #f0995e;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: 1.35rem; margin: 0; letter-spacing: .02em; }
+.clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .95rem; }
+.clock b { color: var(--fg); font-size: 1.15rem; }
+
+/* stop switcher */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--line); padding: 4px; border-radius: 12px; }
+.tabs button {
+  font: inherit; font-weight: 700; font-size: 1rem; border: 0; border-radius: 9px; padding: 10px 8px;
+  background: transparent; color: var(--muted); cursor: pointer;
+}
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.tabs button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+/* next bus panel */
+.next {
+  background: var(--accent); color: var(--accent-fg);
+  border-radius: 16px; padding: 18px 20px 20px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.next .label { font-size: .85rem; letter-spacing: .08em; opacity: .9; }
+.next .stopname { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+.next .time {
+  font-family: var(--font-display); font-weight: 900; font-variant-numeric: tabular-nums;
+  font-size: clamp(3.2rem, 18vw, 4.6rem); line-height: 1.05; letter-spacing: .02em;
+}
+.next .wait { font-size: 1.1rem; font-weight: 700; }
+.next .after { font-size: .9rem; opacity: .9; font-variant-numeric: tabular-nums; }
+.next.done { background: var(--surface); color: var(--fg); border: 1px solid var(--line); }
+.next.done .time { font-size: 1.6rem; }
+.soon .wait { background: var(--accent-fg); color: var(--accent); align-self: flex-start; padding: 2px 10px; border-radius: 999px; }
+
+/* timetable: Japanese 時｜分 layout */
+.table { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.table h2 { margin: 0; padding: 12px 16px; font-size: .95rem; font-weight: 700; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
+.table h2 span { color: var(--muted); font-weight: 400; font-size: .85rem; }
+.row { display: grid; grid-template-columns: 64px 1fr; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.hour {
+  background: var(--accent-soft); color: var(--accent);
+  font-family: var(--font-display); font-weight: 900; font-size: 1.5rem;
+  display: grid; place-items: center; font-variant-numeric: tabular-nums;
+}
+.mins { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+.min {
+  font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.6rem;
+  min-width: 2.6ch; text-align: center; padding: 2px 8px; border-radius: 8px;
+}
+.min.past { color: var(--muted); opacity: .45; text-decoration: line-through; font-weight: 400; }
+.min.is-next { background: var(--accent); color: var(--accent-fg); }
+.legend { font-size: .8rem; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: .8em; height: .8em; border-radius: 3px; background: var(--accent); vertical-align: -1px; margin-right: 4px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>出張バス時刻表</h1>
+    <div class="clock">現在 <b id="now">--:--</b></div>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <section class="next" id="next" aria-live="polite"></section>
+
+  <section class="table" id="table"></section>
+
+  <p class="legend"><span><i></i>次のバス</span><span>取り消し線＝発車済み</span><span>時刻は30秒ごとに自動更新</span></p>
+</div>
+
+<script>
+const STOPS = [
+  { id: "oku", name: "邑久駅発", times: ["07:55", "08:20", "09:00", "09:30"] },
+  { id: "omc", name: "OMC発",   times: ["17:15", "17:40", "18:05"] },
+];
+
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const pad = n => String(n).padStart(2, "0");
+
+// Start on the stop whose buses are still to come today (morning → 邑久駅, afternoon → OMC)
+function defaultStop() {
+  const d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+  const first = STOPS.find(s => s.times.some(t => toMin(t) >= now));
+  return (first || STOPS[0]).id;
+}
+
+let current = defaultStop();
+try { const saved = sessionStorage.getItem("bus-stop"); if (saved && STOPS.some(s => s.id === saved)) current = saved; } catch (e) {}
+
+const tabsEl = document.getElementById("tabs");
+STOPS.forEach(s => {
+  const b = document.createElement("button");
+  b.type = "button"; b.role = "tab"; b.id = "tab-" + s.id; b.textContent = s.name;
+  b.addEventListener("click", () => {
+    current = s.id;
+    try { sessionStorage.setItem("bus-stop", current); } catch (e) {}
+    render();
+  });
+  tabsEl.appendChild(b);
+});
+
+function waitText(diff) {
+  if (diff <= 0) return "まもなく発車";
+  if (diff < 60) return `あと ${diff} 分`;
+  return `あと ${Math.floor(diff / 60)} 時間 ${diff % 60} 分`;
+}
+
+function render() {
+  const d = new Date();
+  const now = d.getHours() * 60 + d.getMinutes();
+  document.getElementById("now").textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+  const stop = STOPS.find(s => s.id === current);
+  tabsEl.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.id === "tab-" + current)));
+
+  const upcoming = stop.times.filter(t => toMin(t) >= now);
+  const nextT = upcoming[0];
+
+  // next bus panel
+  const nextEl = document.getElementById("next");
+  if (nextT) {
+    const diff = toMin(nextT) - now;
+    nextEl.className = "next" + (diff <= 10 ? " soon" : "");
+    const after = upcoming.slice(1, 3);
+    nextEl.innerHTML = `
+      <div class="label">次のバス</div>
+      <div class="stopname">${stop.name}</div>
+      <div class="time">${nextT}</div>
+      <div class="wait">${waitText(diff)}</div>
+      <div class="after">${after.length ? "その次：" + after.join("　") : "これが本日の最終です"}</div>`;
+  } else {
+    nextEl.className = "next done";
+    nextEl.innerHTML = `
+      <div class="label">${stop.name}</div>
+      <div class="time">本日の運行は終了しました</div>
+      <div class="after">明日の始発：${stop.times[0]}</div>`;
+  }
+
+  // 時｜分 timetable
+  const byHour = {};
+  stop.times.forEach(t => { const h = t.slice(0, 2); (byHour[h] ||= []).push(t); });
+  const rows = Object.keys(byHour).sort().map(h => `
+    <div class="row">
+      <div class="hour">${Number(h)}</div>
+      <div class="mins">${byHour[h].map(t => {
+        const cls = t === nextT ? "is-next" : (toMin(t) < now ? "past" : "");
+        return `<span class="min ${cls}" title="${t}">${t.slice(3)}</span>`;
+      }).join("")}</div>
+    </div>`).join("");
+  document.getElementById("table").innerHTML =
+    `<h2>${stop.name} 時刻表 <span>全${stop.times.length}便 ｜ 左：時　右：分</span></h2>${rows}`;
+}
+
+render();
+setInterval(render, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+</script>
