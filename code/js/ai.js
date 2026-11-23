@@ -181,10 +181,11 @@ export async function tutor(kind, { exercise, code, result, question, history = 
 const obj = (properties) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 const str = { type: 'string' };
 const arr = items => ({ type: 'array', items });
+const CHECK_SCHEMA = arr(obj({ q: str, choices: arr(str), answer: { type: 'integer' }, exp: str }));
 const DAY_SCHEMA = obj({
-  title: str, goal: str, lesson: str,
+  title: str, goal: str, image: str, lesson: str, pitfalls: str, check: CHECK_SCHEMA,
   exercises: arr(obj({
-    title: str, prompt: str, starter: str, solution: str, hint: str,
+    title: str, prompt: str, steps: str, starter: str, solution: str, hint: str,
     tests: arr(obj({ name: str, inputs: arr(str), check: str })),
   })),
 });
@@ -195,9 +196,19 @@ const DAY_SYSTEM = `あなたは「100日で学ぶ Python」コースの教材�
 - API や Web が題材の日は、レスポンスの JSON や HTML を文字列として用意して「疑似体験」させ、PC での本番の書き方も lesson で示す
 - Web サーバー（Flask）が題材の日は、デコレーターやルーティングの仕組みを自作の小さな関数で再現する演習にする
 
+受講者は初心者で「説明が足りないまま演習に進んでしまう」ことが多いので、演習の前に理解できるよう、ていねいに説明してください。
+
 出力仕様:
-- lesson: 簡易マークダウン（### 見出し、- 箇条書き、\`\`\`python コード\`\`\`、> ヒント、表は | 区切り）。800〜1800字。
+- image: この日に学ぶことを、身近なたとえで3〜6行で説明する導入（簡易マークダウン）。「なぜ必要か」「何ができるようになるか」を書く。
+- lesson: くわしい解説（簡易マークダウン：### 見出し、- 箇条書き、\`\`\`python コード\`\`\`、> ヒント、表は | 区切り）。2000〜3500字。
+  - 見出しで5〜7個の小さなステップに分け、1ステップに新しいことは1つだけ。
+  - 各コード例のすぐ後に「▶ 実行結果」として \`\`\` で出力を示す。
+  - 新しい書き方は、コードの各部分が何をしているかを言葉で説明する。ループや状態が変わる例は、変数の値の変化を表（| 区切り）で追う。
+  - 演習で使う書き方は、必ずこの解説の中で一度は例を見せる。
+- pitfalls: つまずきやすい点・よくあるエラーを4〜6個の箇条書きで（エラー名・原因・直し方）。
+- check: 理解度チェックの4択問題を3個。choices は4つ、answer は正解の選択肢の番号（0始まり）、exp は正解の理由。コードの実行結果を問う問題を1つ以上含める。
 - exercises: 2〜3個。starter は書き始めのコード、solution は模範解答（starter を完成させたもの）。
+  - steps: 答えのコードは書かずに、考え方の手順を 3〜5 個の番号付きリストで（何をどの順に書くか）。
 - tests: 各演習 1〜4個。check は Python コード。assert 文に日本語の失敗メッセージを付ける。変数 __out__（標準出力全体の文字列）、__lines__（出力の行リスト）、__code_src__（受講者のコード）と、受講者コードで定義した関数・変数が使える。inputs は input() に順に与える文字列。プログラムが input() を呼ぶなら、どのテストにも十分な inputs を与えること（関数だけを確かめるテストでも、トップレベルのコードが input を呼ぶならその分が必要）。
 - テストは solution で必ず通り、starter では失敗するように。乱数を使う場合は結果に依存しない検証にする（random.seed(1) は実行前に設定済み）。`;
 
@@ -225,7 +236,49 @@ export async function generateDay(info, prevTitles) {
   }
   const day = JSON.parse(text || '{}');
   day.exercises.forEach((ex, i) => { ex.id = `ai${info.day}-${i + 1}`; });
+  day.check = (day.check || []).map(q => ({ q: q.q, choices: q.choices, a: q.answer, exp: q.exp }));
   return day;
+}
+
+// ---------- 既存のレッスンの解説を詳しくする（演習・記録はそのまま） ----------
+const EXPLAIN_SCHEMA = obj({ image: str, detail: str, pitfalls: str, check: CHECK_SCHEMA, steps: arr(obj({ id: str, steps: str })) });
+export async function generateExplain(info) {
+  const sys = DAY_SYSTEM.split('出力仕様:')[0] + `次のレッスンは説明が短く、受講者が理解しないまま演習に進んでしまいます。演習の内容は変えずに、解説だけを詳しく書き直してください。
+- image: 身近なたとえで3〜6行の導入
+- detail: くわしい解説 2000〜3500字（5〜7個の小さなステップ、各コード例の後に「▶ 実行結果」、変数の変化は表で追う、演習で使う書き方は必ず例を見せる）
+- pitfalls: つまずきやすい点を4〜6個の箇条書き
+- check: 4択の理解度チェックを3問（answer は正解の番号、0始まり）
+- steps: 各演習（id で指定）について、答えのコードを書かずに考え方の手順を3〜5個の番号付きリストで`;
+  const prompt = `Day ${info.day}: ${info.title}\nねらい: ${info.goal}\n\n## 元の解説\n${info.lesson}\n\n## 演習\n${info.exercises.map(e => `### id: ${e.id}　${e.title}\n${e.prompt}`).join('\n\n')}`;
+  const p = need();
+  let text;
+  if (p === 'anthropic') {
+    const resp = await claudeCreate({ max_tokens: 16000, output_config: { effort: 'medium', format: { type: 'json_schema', schema: EXPLAIN_SCHEMA } }, system: sys, messages: [{ role: 'user', content: prompt }] });
+    if (resp.stop_reason === 'refusal' || resp.stop_reason === 'max_tokens') throw new Error('作成できませんでした。もう一度お試しください。');
+    text = clText(resp);
+  } else {
+    const data = await openaiRespond({ instructions: sys, input: prompt, text: { format: { type: 'json_schema', name: 'explain', strict: true, schema: EXPLAIN_SCHEMA } } });
+    if (data.status === 'incomplete') throw new Error('出力が途中で切れました。再試行してください。');
+    text = oaText(data);
+  }
+  const r = JSON.parse(text || '{}');
+  return { image: r.image, detail: r.detail, pitfalls: r.pitfalls, check: (r.check || []).map(q => ({ q: q.q, choices: q.choices, a: q.answer, exp: q.exp })), steps: Object.fromEntries((r.steps || []).map(x => [x.id, x.steps])) };
+}
+
+// ---------- レッスンについて AI に質問 ----------
+export async function askLesson({ day, title, text, question, history = [] }) {
+  const p = need();
+  const msgs = [...history, { role: 'user', content: `${history.length ? '' : `## Day ${day}: ${title}\n${String(text).slice(0, 6000)}\n\n`}## 質問\n${question}` }];
+  let out;
+  if (p === 'anthropic') {
+    const resp = await claudeCreate({ max_tokens: 4000, output_config: { effort: 'low' }, system: TUTOR_SYSTEM + '\n- 受講者は上のレッスンを読んでいる途中です。レッスンの内容に沿って、たとえや小さなコード例と実行結果を使って、かみくだいて説明してください。', messages: msgs });
+    if (resp.stop_reason === 'refusal') throw new Error('回答できない内容でした。質問を変えてみてください。');
+    out = clText(resp);
+  } else {
+    const data = await openaiRespond({ instructions: TUTOR_SYSTEM + '\n- 受講者は上のレッスンを読んでいる途中です。レッスンの内容に沿って、たとえや小さなコード例と実行結果を使って、かみくだいて説明してください。', input: msgs });
+    out = oaText(data);
+  }
+  return { text: out, messages: [...msgs, { role: 'assistant', content: out }] };
 }
 
 // ---------- 本物のエージェント体験（Claude Code / Codex 風） ----------
