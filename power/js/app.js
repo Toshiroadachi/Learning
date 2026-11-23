@@ -4,6 +4,7 @@ import { BI_LESSONS } from '../data/bi-lessons.js';
 import { APPS_LESSONS } from '../data/apps-lessons.js';
 import { REF, SHORTCUTS } from '../data/reference.js';
 import { PC_TASKS } from '../data/pc-tasks.js';
+import { EXPLAIN } from '../data/explain.js';
 import { PQ_SOURCES, PQ_FILES } from '../data/pq-sources.js';
 import { APPS } from '../data/apps-screens.js';
 import { renderPQ, gradePQ, runQuery, gridHTML, startSteps } from './pqui.js';
@@ -156,11 +157,17 @@ function lesson(id) {
   const T = TRACKS[l.track]; const st = getState();
   const idx = T.lessons.findIndex(x => x.id === id);
   const next = T.lessons[idx + 1];
+  const X = EXPLAIN[l.id];
   logActivity('lesson', id);
   view.innerHTML = `<div class="track-${l.track}">
     <div class="row-between" style="margin-bottom:6px"><a href="#/track/${l.track}" class="small">← ${T.short}</a><span class="tbadge">${T.icon} 第${idx + 1}回</span></div>
     <h1>${esc(l.title)}</h1><p class="small muted" style="margin-top:0">🎯 ${esc(l.goal)}</p>
-    <div class="card lesson">${md(l.body)}</div>
+    ${X ? `<div class="flow small">①イメージ → ②くわしい解説 → ③確認クイズ → ④演習 の順に進めましょう。</div>
+    <div class="card lesson image-card"><h2 class="sec">🗺 イメージ</h2>${md(X.image)}</div>
+    <div class="card lesson"><h2 class="sec">📖 くわしい解説</h2>${md(X.detail)}</div>
+    <details class="card guide"><summary><b>📌 要点まとめ（復習用）</b><div class="small muted">解説の内容を短くまとめたもの</div></summary><div class="lesson" style="margin-top:8px">${md(l.body)}</div></details>
+    <div class="card lesson pit-card"><h2 class="sec">⚠ つまずきやすいポイント</h2>${md(X.pitfalls)}</div>` : `<div class="card lesson">${md(l.body)}</div>`}
+    <div id="askbox"></div>
     <details class="card guide"><summary><b>💻 PC（Windows）での操作</b><div class="small muted">会社の PC で同じことをする手順</div></summary><div class="lesson" style="margin-top:8px">${md(l.pc)}</div></details>
     ${l.quiz.length ? `<div class="card"><h2>✅ 確認クイズ</h2><div class="quizbox"></div></div>` : ''}
     ${l.ex.length ? `<div class="card"><h2>✍️ 演習（自動採点）</h2>${l.ex.map(e => `<a class="ex-row ${st.ex[e.id]?.passed ? 'passed' : ''}" href="#/ex/${e.id}"><span><b>${esc(e.title)}</b><div class="tiny muted">${esc(e.prompt.split('\n')[0].slice(0, 60))}…</div></span><span class="small">${st.ex[e.id]?.passed ? '✓ 合格' : '▶ 挑戦'}</span></a>`).join('')}</div>` : ''}
@@ -168,7 +175,24 @@ function lesson(id) {
       ${next ? `<a class="btn primary" href="#/lesson/${next.id}">次のレッスン →</a>` : `<a class="btn primary" href="#/pc/${l.track}">PC で実践へ →</a>`}</div>
   </div>`;
   if (l.quiz.length) renderQuiz($('.quizbox'), l.quiz.map((q, i) => ({ ...q, key: `${l.id}-${i}` })));
+  renderAsk($('#askbox'), l, X);
   const md0 = $('#markDone'); if (md0) md0.onclick = () => { st.lessons[l.id] = { done: true, ts: Date.now() }; save(); toast('完了にしました'); lesson(id); };
+}
+function renderAsk(box, l, X) {
+  if (!AI.hasKey()) { box.innerHTML = '<p class="tiny muted" style="margin:0 0 10px">🤖 設定で AI の API キーを登録すると、このレッスンの分からないところを AI に質問できます。</p>'; return; }
+  box.innerHTML = `<details class="card guide"><summary><b>🤖 分からないところを AI に質問</b><div class="small muted">このレッスンの内容をふまえて、かみくだいて説明してくれます</div></summary>
+    <div style="margin-top:8px"><div class="chips"><button class="chip" data-p="このレッスンの内容を、もっとやさしく、身近なたとえを使って説明してください。">もっとやさしく</button><button class="chip" data-p="このレッスンの内容について、別の業務の例で、操作（または式）と結果を見せてください。">別の例で</button><button class="chip" data-p="このレッスンで、演習に取り組む前に必ず理解しておくべきポイントを3つに絞って教えてください。">大事なポイント3つ</button><button class="chip" data-p="このレッスンの内容を、会社の Windows PC で実際に使うときの手順と注意点を教えてください。">PC での使い方</button></div>
+    <div class="chat"></div><div class="cmdinput" style="margin-top:8px"><input placeholder="例：each って結局何？" data-q><button class="btn" data-send>送信</button></div></div></details>`;
+  const chat = box.querySelector('.chat'); let history = [];
+  const text = [X?.image, X?.detail || l.body, X?.pitfalls].filter(Boolean).join('\n\n');
+  const ask = async q => {
+    chat.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div><div class="msg ai"><div class="spinner"></div></div>`);
+    const slot = chat.lastElementChild;
+    try { const r = await AI.askLesson({ track: l.track, title: l.title, text, question: q, history }); history = r.messages.slice(-8); slot.innerHTML = md(r.text); logActivity('ask', l.id); }
+    catch (e) { slot.innerHTML = `<span class="ngc">${esc(e.message)}</span>`; }
+  };
+  box.querySelectorAll('[data-p]').forEach(b => b.onclick = () => ask(b.dataset.p));
+  box.querySelector('[data-send]').onclick = () => { const i = box.querySelector('[data-q]'); if (i.value.trim()) { ask(i.value.trim()); i.value = ''; } };
 }
 function shuffleIdx(n) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function renderQuiz(box, qs, { onDone } = {}) {
@@ -211,6 +235,8 @@ function exercise(id) {
     <div class="row-between" style="margin-bottom:6px"><a href="${l ? `#/lesson/${l.id}` : `#/track/${t}`}" class="small">← ${l ? esc(l.title) : T.short}</a><span class="tbadge">${T.icon} ${ex.ai ? 'AI 演習' : '演習'}</span></div>
     <h1>${esc(ex.title)} ${st.ex[id]?.passed ? '<span class="pill done">✓ 合格済み</span>' : ''}</h1>
     <div class="prompt">${esc(ex.prompt)}</div>
+    ${l || EXPLAIN[ex.lesson]?.steps?.[id] ? `<div class="row" style="margin-top:6px">${l ? `<a class="small" href="#/lesson/${l.id}">📖 解説を読み直す（${esc(l.title)}）</a>` : ''}</div>` : ''}
+    ${EXPLAIN[ex.lesson]?.steps?.[id] ? `<details class="think"><summary>🧭 考え方（手順）を見る <span class="tiny muted">— 何をどの順にするか</span></summary><div class="lesson">${md(EXPLAIN[ex.lesson].steps[id])}</div></details>` : ''}
     ${t === 'pq' ? `<p class="tiny muted">${esc(PQ_SOURCES[ex.query]?.desc || (ex.file ? 'CSV ファイル: C:\\データ\\' + ex.file : ''))}</p>` : ''}
     ${t === 'apps' ? `<p class="tiny muted">プレビューは操作できます（入力・選択・ボタン）。数式バーの「${esc(ex.target.control)}.${esc(ex.target.prop)}」に式を書くと自動で反映されます。${ex.tests?.length ? `採点では ${ex.tests.length} 通りの入力で試します。` : ''}</p>` : ''}
     <div class="work" style="margin-top:10px"></div>
