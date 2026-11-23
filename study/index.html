@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>理数ラボ</title>
+  <meta name="description" content="高校の物理・化学・数学を、中学生でも分かる解説と自動採点の問題で楽しく学ぶアプリ（AI 先生つき）">
+  <meta name="theme-color" content="#7c3aed">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/home" class="brand">🧪 理数<b>ラボ</b></a>
+    <span id="topinfo" class="small"></span>
+    <a href="#/settings" class="gear" aria-label="設定">⚙️</a>
+  </header>
+  <main id="view" class="container"></main>
+  <div id="fx"></div>
+  <nav class="tabbar">
+    <a href="#/home" data-route="home"><span>🏠</span>ホーム</a>
+    <a href="#/sub/phy" data-route="phy"><span>🍎</span>物理</a>
+    <a href="#/sub/chem" data-route="chem"><span>⚗️</span>化学</a>
+    <a href="#/sub/math" data-route="math"><span>📐</span>数学</a>
+    <a href="#/ai" data-route="ai"><span>🤖</span>AI先生</a>
+  </nav>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
