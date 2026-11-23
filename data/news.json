@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22T01:24:00.307Z",
+ "updated": "2026-11-23T01:48:32.695Z",
  "sources": [
   "BBC News",
   "NPR",
@@ -8,6 +8,380 @@
   "CNBC"
  ],
  "items": [
+  {
+   "id": "12umcjy",
+   "source": "BBC News",
+   "category": "Business",
+   "title": "Energy bills will soar - here's how you can ease the pain",
+   "summary": "Household energy bills are about to increase but there are ways to keep a lid on your expenditure.",
+   "link": "https://www.bbc.co.uk/news/articles/crm4rygl4m3o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/53c7/live/9b2f4a60-bd7f-11f1-bc2e-018d645d8d21.jpg",
+   "published": "2026-11-23T01:05:07.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "tzsa2c",
+   "source": "BBC News",
+   "category": "World",
+   "title": "COP31 fails to reach major climate deal as talks expose deep divisions",
+   "summary": "Hopes for an agreement on tackling climate change collapsed after a row about mentioning fossil fuels",
+   "link": "https://www.bbc.co.uk/news/articles/cqwy06zrd26lo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/afca/live/39aa8840-e69c-11f1-936e-1fd1d31671db.jpg",
+   "published": "2026-11-23T00:50:35.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1oo2z5w",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "WHO chief calls for peace amid heavy fighting in Ebola-hit DR Congo region",
+   "summary": "Fighting near a DRC hospital disrupts Ebola efforts, putting patients and workers at 'grave risk', WHO warns.",
+   "link": "https://www.aljazeera.com/news/2026/11/23/who-chief-calls-for-peace-amid-heavy-fighting-in-ebola-hit-dr-congo-region?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-23T00:39:51.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "9wuq5u",
+   "source": "BBC News",
+   "category": "Business",
+   "title": "What is going on with Poundland?",
+   "summary": "Poundland has a matter of days to find a buyer or face collapsing into administration. Why?",
+   "link": "https://www.bbc.co.uk/news/articles/cm4g10p2r0g9o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/f2b3/live/3c7f3110-d7bf-11f1-a719-bf3dc3a3d5b5.jpg",
+   "published": "2026-11-23T00:22:27.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "bfmqjc",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "South Korea’s stock market tumbles as AI bubble fears mount",
+   "summary": "The Kospi falls more than 3 percent as markets across the region brace for losses.",
+   "link": "https://www.aljazeera.com/news/2026/11/23/south-koreas-stock-market-tumbles-as-ai-bubble-fears-mount?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-23T00:18:03.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "7qpbsr",
+   "source": "BBC News",
+   "category": "Technology",
+   "title": "San Francisco is enjoying an AI boom, but worries about a crash are growing",
+   "summary": "AI employees in the industry's epicentre - San Francisco - worry that the sector is overheated.",
+   "link": "https://www.bbc.co.uk/news/articles/cqe9k09j9jv4o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/4d7f/live/712502a0-e2cd-11f1-99ed-7de3e5932968.jpg",
+   "published": "2026-11-23T00:08:00.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1uzzn7z",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Cameroon’s ex-rebels caught between hiding and broken promises",
+   "summary": "Cameroon’s former rebels face arrest fears and failed reintegration.",
+   "link": "https://www.aljazeera.com/news/2026/11/23/cameroons-ex-rebels-caught-between-hiding-and-broken-promises?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-23T00:03:30.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "qtg68n",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Iran war live: Tankers set ablaze in Hormuz as IRGC warns of unrest threat",
+   "summary": "Iran's navy claims tankers contravening its rules were set ablaze, while the IRGC said 'enemies' sought to stoke unrest.",
+   "link": "https://www.aljazeera.com/news/liveblog/2026/11/22/iran-war-live-tankers-set-ablaze-in-hormuz-as-irgc-warns-of-unrest-threat?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-22T23:59:22.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "ajt208",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Mystery of the red stream in Turkiye",
+   "summary": "The Degirmendere Stream in Rize, Turkiye has turned red and prompted investigations by local authorities.",
+   "link": "https://www.aljazeera.com/video/newsfeed/2026/11/22/mystery-of-the-red-stream-in-turkiye?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-22T23:57:58.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "jgmmxo",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Lion on the loose in Turkiye sparks fear among residents",
+   "summary": "Lion on the loose in Turkiye sparks fear among residents",
+   "link": "https://www.aljazeera.com/video/newsfeed/2026/11/22/lion-on-the-loose-in-turkiye-sparks-fear-among-residents?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-22T23:40:48.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1co5yto",
+   "source": "NPR",
+   "category": "World",
+   "title": "Ukraine war spilling into NATO territory",
+   "summary": "The war between Russia and Ukraine once again creeps onto European territory – from attacks on ships to missiles in Poland and fresh allegations of Russian operations inside Denmark.",
+   "link": "https://www.npr.org/2026/11/22/nx-s1-6050236/ukraine-war-spilling-into-nato-territory",
+   "thumb": "",
+   "published": "2026-11-22T22:40:22.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "qvbjgc",
+   "source": "NPR",
+   "category": "World",
+   "title": "Luxury development planned on land some Albanians say is theirs, not Jared Kushner's",
+   "summary": "A company working for President Trump's son-in-law Jared Kushner purchased 300 acres of Albanian land for more than $130 million in April. But Albanians in the area tell NPR this is not Kushner's land -- it's theirs.",
+   "link": "https://www.npr.org/2026/11/22/nx-s1-6012022/luxury-development-planned-on-land-some-albanians-say-is-theirs-not-jared-kushners",
+   "thumb": "",
+   "published": "2026-11-22T22:39:47.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "fz9wbj",
+   "source": "BBC News",
+   "category": "World",
+   "title": "'Danger seems greater all the time': Ukrainians search for missing after Russian strikes",
+   "summary": "The BBC's Sarah Rainsford reports from the scene of a collapsed residential building in Ukraine's Kyiv region.",
+   "link": "https://www.bbc.co.uk/news/videos/cre3dvd1k9y1o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/f57f/live/25f17b40-e69e-11f1-9d9b-5dad4444a651.jpg",
+   "published": "2026-11-22T22:37:43.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "ktzxdf",
+   "source": "The Guardian",
+   "category": "World",
+   "title": "Russian warship sinks in Benghazi after suspected Ukrainian drone attack",
+   "summary": "No one has claimed responsibility for the strike on the vessel, which had docked on its way back to Russia A Russian warship docked in the Libyan port city of Benghazi was struck in the early hours of Sunday in a suspected Ukrainian sea drone attack, causing a dramatic night-time explosion and the sinking of the vessel. The strike severely damaged the Merkury, a Russian navy corvette that had stopped to refuel and take on supplies, according to Libyan officials from the country’s eastern government. Continue reading...",
+   "link": "https://www.theguardian.com/world/2026/nov/22/blast-russian-ship-suspected-drone-attack-benghazi-libya",
+   "thumb": "https://i.guim.co.uk/img/media/196206fc578eb19b5303b6bfe5930996ed24961b/0_0_900_720/master/900.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=4a5a7fec09c73b0d217b6d1303a01b0c",
+   "published": "2026-11-22T21:33:44.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "4gv534",
+   "source": "BBC News",
+   "category": "World",
+   "title": "Explosion on Russian ship at Libya port caused by suspected drone attack, officials say",
+   "summary": "Libya's eastern government says the ship had stopped for fuel and supplies on its way back to Russia.",
+   "link": "https://www.bbc.co.uk/news/articles/cr894gjz0j0yo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/a198/live/5b2f71d0-e6ae-11f1-a094-5fdc692f3e33.jpg",
+   "published": "2026-11-22T20:28:09.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "sn96p6",
+   "source": "BBC News",
+   "category": "World",
+   "title": "What's next after no deal at COP31 climate talks?",
+   "summary": "The talks have been the longest-running in the summit's history, with negotiations breaking down two days after they had been due to end.",
+   "link": "https://www.bbc.co.uk/news/videos/cr1ewge81q4qo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/3c66/live/ad00e440-e6b2-11f1-9607-338132fd22a0.jpg",
+   "published": "2026-11-22T18:57:24.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "h29rxb",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Employees at Eric Trump-backed robot startup lose health benefits as company's cash crunch deepens",
+   "summary": "Foundation is pursuing an emergency bridge loan and has been in talks with VC firms as it waits for a $150 million investment from South Korea's Base Group.",
+   "link": "https://www.cnbc.com/2026/11/22/foundation-future-industries-health-benefits-payroll-base-group.html",
+   "thumb": "",
+   "published": "2026-11-22T18:55:05.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "da6xqa",
+   "source": "NPR",
+   "category": "World",
+   "title": "Lebanese villagers return to wrecked homes as the Israeli army pulls back",
+   "summary": "In a pilot project in a village in southern Lebanon, Israeli forces have left and the Lebanese army moved it. But villagers who return find their houses wrecked.",
+   "link": "https://www.npr.org/2026/11/22/nx-s1-6048710/lebanon-israel-army-conflict-homes",
+   "thumb": "",
+   "published": "2026-11-22T17:44:52.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "tcazom",
+   "source": "BBC News",
+   "category": "World",
+   "title": "Russia-bound ship towed away after it was attacked in Gulf of Finland",
+   "summary": "Finnish defence forces say that Ukraine was likely behind the drone strike on Saturday. Kyiv has yet to comment.",
+   "link": "https://www.bbc.co.uk/news/articles/cj752ddve27ko?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/d6f9/live/a55b16b0-e66d-11f1-9e24-791c5321ff0f.jpg",
+   "published": "2026-11-22T17:18:26.000Z",
+   "fetchedAt": "2026-11-22T01:24:00.307Z"
+  },
+  {
+   "id": "hdset4",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Director of National Intelligence Jay Clayton warns Americans of 'bumps in the road' after tech outages",
+   "summary": "Clayton’s warning comes ahead of Thanksgiving travel, after separate outages disrupted air travel, Microsoft 365 and some bank transactions.",
+   "link": "https://www.cnbc.com/2026/11/22/jay-clayton-tech-outages-faa-microsoft-thanksgiving.html",
+   "thumb": "",
+   "published": "2026-11-22T17:14:03.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "l6n8im",
+   "source": "NPR",
+   "category": "World",
+   "title": "Climate change talks fall apart in final hours over fossil fuels",
+   "summary": "Some 200 countries gathered in Antalya, Turkey, for COP31, the annual climate negotiations. Countries failed to reach an agreement over fossil fuels - the primary driver of global warming.",
+   "link": "https://www.npr.org/2026/11/22/nx-s1-6046195/cop31-climate-talks-close-disappointment",
+   "thumb": "",
+   "published": "2026-11-22T16:33:22.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "184t4lp",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "Court bans China’s BYD from selling ‘Defender clone’ SUV in EU",
+   "summary": "District court in the Hague finds Chinese carmaker infringed on intellectual property of Jaguar Land Rover Chinese carmaker BYD has been banned from selling its “Defender clone” vehicle in the EU by a court in the Netherlands, after Jaguar Land Rover (JLR) brought a case saying it infringed intellectual property rights. JLR launched legal action over the seven-seater Ti7 SUV earlier this year after BYD announced on its website that it was taking orders from UK customers for the vehicle. Earlier this month, bailiffs acting for JLR were reported to have seized digital records from BYD’s offices…",
+   "link": "https://www.theguardian.com/business/2026/nov/22/court-bans-china-byd-selling-defender-clone-suv-in-eu",
+   "thumb": "https://i.guim.co.uk/img/media/34ec5c756f42808400033b1a33ec6a6c23e267be/625_0_6228_4985/master/6228.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=ab8e8816da8a2f30e34778ec415d4087",
+   "published": "2026-11-22T15:43:47.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1wapnd4",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "UK taxpayers held more than £1tn in offshore tax havens, latest HMRC data shows",
+   "summary": "Figures show recent 10% rise in total held in financial centres such as Jersey and Panama, raising fears over cost to public purse The amount of money UK taxpayers hold in offshore accounts in tax havens has exceeded £1tn for the first time, raising concerns about potential losses to the public purse. HM Revenue and Customs (HMRC) data, obtained by the TaxWatch thinktank through freedom of information requests, shows between 2022 and 2024 the value of balances held offshore in tax havens increased by 10%. These were the latest available figures. Continue reading...",
+   "link": "https://www.theguardian.com/business/2026/nov/22/uk-taxpayer-funds-held-in-offshore-tax-havens-top-1tn-latest-hmrc-data-shows",
+   "thumb": "https://i.guim.co.uk/img/media/800ce1d542712fe94a187f06f577b17799e2d1b6/15_0_1992_1594/master/1992.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=42d9878af737cf615138f416d95f283b",
+   "published": "2026-11-22T15:43:01.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "x6oskf",
+   "source": "BBC News",
+   "category": "Business",
+   "title": "Centrica boss says he is 'hugely concerned' over impact of soaring energy bills",
+   "summary": "Chris O'Shea says the number of people unable or unwilling to pay their energy bills will increase when prices jump in the new year.",
+   "link": "https://www.bbc.co.uk/news/articles/c6jre7gpdw13o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/7208/live/d02d4240-e682-11f1-99b6-a35a62fa4264.jpg",
+   "published": "2026-11-22T13:50:21.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "kzehtw",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Saudi Arabia, Bahrain report new attacks as Iran says it remains open to a deal with U.S.",
+   "summary": "Saudi Arabia said it destroyed a drone launched by Iran-backed Houthis, while Bahrain said an industrial facility was hit by Iranian projectiles.",
+   "link": "https://www.cnbc.com/2026/11/22/saudi-houthi-bahrain-iran-attacks-araghchi-talks.html",
+   "thumb": "",
+   "published": "2026-11-22T13:25:47.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "92ft3b",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Pizza chains are under pressure. GLP-1 use is only one part of the problem",
+   "summary": "Domino's, Papa Johns and Pizza Hut face weaker demand, more delivery competition and changing eating habits, including GLP-1 use.",
+   "link": "https://www.cnbc.com/2026/11/22/pizza-chains-sales-glp-1-demand.html",
+   "thumb": "",
+   "published": "2026-11-22T13:00:01.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "plgkxc",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "The looming UK winter may spawn a double headache for Andy Burnham | Richard Partington",
+   "summary": "‘Raising growth in every postcode’ has been the PM’s rallying cry but deep regional disparities and rising energy bills pose problems this winter Andy Burnham faces two, related problems: Britain faces deep regional disparities and it is entering the coldest months of the year with rising inflation. Since entering Downing Street, raising “growth in every postcode” has been the prime minister’s rallying cry, as he bids to close the gaping chasm in living standards between the richest and poorest areas of the country. But as the war in the Middle East intensifies, the task of spreading…",
+   "link": "https://www.theguardian.com/business/2026/nov/22/looming-uk-winter-spawns-double-headache-for-andy-burnham",
+   "thumb": "https://i.guim.co.uk/img/media/e94340538344906704731943219c4840f1228d48/68_0_5000_4000/master/5000.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=d9dcc9354140d3c544a18361e611ce26",
+   "published": "2026-11-22T11:24:22.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1ubdbkp",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "UK-EU food deal hailed by British firms: ‘We’re pretty aligned anyway’",
+   "summary": "Exporters welcome end in sight for Brexit checks – but are frustrated that implementation will take so long British producers have broadly welcomed the UK’s deal with the EU, designed to remove the vast majority of physical checks on food, plants and animal products. The sanitary and phytosanitary (SPS) deal is expected to benefit Britain’s food exporters and will enable UK delicatessens and other small retailers to import European cheese and wine again, something that became economically unviable because of costly Brexit checks. Continue reading...",
+   "link": "https://www.theguardian.com/business/2026/nov/22/uk-eu-food-sps-deal-brexit-checks",
+   "thumb": "https://i.guim.co.uk/img/media/33a5b500a62308f3c01515a3a29b8ff23a030773/0_365_4284_3426/master/4284.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=a713af5cb808fbcdeef7fda59b9420dc",
+   "published": "2026-11-22T11:00:24.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "arvt1j",
+   "source": "NPR",
+   "category": "Business",
+   "title": "He expected a small-business loan. He got a 7-year nightmare",
+   "summary": "America's fastest-growing source of funding for small businesses is also one of the least regulated. One man has waged a long, lonely fight to recoup its punishing cost.",
+   "link": "https://www.npr.org/2026/11/22/nx-s1-5752261/small-business-loan-merchant-cash-advance",
+   "thumb": "",
+   "published": "2026-11-22T10:00:00.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "35yarg",
+   "source": "BBC News",
+   "category": "World",
+   "title": "South Korea education minister resigns over exam cheating scandal",
+   "summary": "Choi Kyo-jin admits last-minute measures to stop AI-assisted cheating during the college entrance exam caused chaos.",
+   "link": "https://www.bbc.co.uk/news/articles/cw3dgk29d37no?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/dc28/live/9c42c760-e66a-11f1-99b6-a35a62fa4264.jpg",
+   "published": "2026-11-22T09:20:45.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1udq5hm",
+   "source": "The Guardian",
+   "category": "World",
+   "title": "Bank of England directors illegally profited from post-abolition enslavement in Cuba",
+   "summary": "New research finds that the British-led Cobre Mining Company helped industrialise Manchester via copper deposits and enslaved African people • Slave-trade wealth was embedded in Britain’s financial system, research finds British businesses run by long-serving directors of the Bank of England profited from “brutal” enslavement in Cuba for decades after slavery’s abolition in the British empire, according to research. Men and boys were enslaved in prison conditions at the El Cobre copper ore mine near Santiago de Cuba, which supplied British firms during the Industrial Revolution, the historian…",
+   "link": "https://www.theguardian.com/news/2026/nov/22/bank-of-england-directors-illegally-profited-enslavement-cuba",
+   "thumb": "https://i.guim.co.uk/img/media/8e8d4ce7d37742836e3c3c5add2beb073cc8be21/0_0_3750_3000/master/3750.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=e5620c45cf4b29b42ed906346159bdc1",
+   "published": "2026-11-22T08:00:22.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "4c7oq8",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "Revealed: profiles of UK experts on gambling harm being hijacked to push illegal online casinos",
+   "summary": "Findings highlight unscrupulous tactics used by operators in multibillion pound illicit market and challenges facing authorities Prof Heather Wardle has dedicated 20 years to researching the harm caused by gambling. So the University of Glasgow social scientist was horrified to learn that her reputation and even her photograph had been hijacked by rogue casinos claiming her endorsement for the very games whose addictive properties she has documented. Continue reading...",
+   "link": "https://www.theguardian.com/society/2026/nov/22/profiles-uk-experts-on-gambling-harm-hijacked-to-promote-online-casinos",
+   "thumb": "https://i.guim.co.uk/img/media/81fa0e7afc6590e31714844f8f2ff98575a33f17/0_0_2811_2248/master/2811.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=ef5b8a46f71d768ce00b714a84aa9b9b",
+   "published": "2026-11-22T08:00:21.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "3u33t0",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "Hacks, AI and conspiracy theories: why are we having so many outages?",
+   "summary": "After chaos at airlines, banks and companies from Microsoft to Apple, people have become convinced the world’s systems are under attack Nicole Reindorf’s American Airlines flight was ready for takeoff in Phoenix when the pilot came on the intercom and announced what was to become the longest nationwide aviation shutdown since 9/11 . Reindorf, 70, had seen the headlines hours before about a global Microsoft outage . She immediately suspected the two were linked in some way by AI-related threats – and that she would not get to the wedding of her best friend’s son in California. Continue…",
+   "link": "https://www.theguardian.com/technology/2026/nov/22/hacks-ai-internet-outages-airlines-banks-microsoft-apple",
+   "thumb": "https://i.guim.co.uk/img/media/917aeeec17f3bee46d98e2201997eb1f9a0b316c/0_807_4000_3198/master/4000.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=d4752a8d74606eaec6916b68b2a9c81d",
+   "published": "2026-11-22T06:00:19.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
+  {
+   "id": "1hsofii",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Quantum computing’s first real-world payoff may come in energy, not drug discovery",
+   "summary": "Quantum computing firms are testing energy-grid optimization, solar materials and hydrogen catalysts as they pursue practical uses.",
+   "link": "https://www.cnbc.com/2026/11/22/quantum-computing-energy-applications.html",
+   "thumb": "",
+   "published": "2026-11-22T06:00:01.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
+  },
   {
    "id": "9uvdch",
    "source": "Al Jazeera",
@@ -51,6 +425,17 @@
    "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/3fd7/live/9009b220-e58d-11f1-99a1-253766e7ad8b.jpg",
    "published": "2026-11-22T00:10:44.000Z",
    "fetchedAt": "2026-11-22T01:24:00.307Z"
+  },
+  {
+   "id": "1htgnha",
+   "source": "BBC News",
+   "category": "Business",
+   "title": "Employers are being asked to give interview feedback - here's what applicants want",
+   "summary": "People say they often hear nothing back after applying for jobs. But could employers be forced to respond to every applicant?",
+   "link": "https://www.bbc.co.uk/news/articles/cm2d94le23xyo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/fb80/live/784ad260-e4e1-11f1-99b6-a35a62fa4264.jpg",
+   "published": "2026-11-22T00:04:07.000Z",
+   "fetchedAt": "2026-11-23T01:48:32.695Z"
   },
   {
    "id": "1fq7gcp",
@@ -171,17 +556,6 @@
    "link": "https://www.theguardian.com/environment/2026/nov/21/climate-talks-stall-countries-mull-showdown-saudi-arabia-over-fossil-fuels",
    "thumb": "https://i.guim.co.uk/img/media/e77ce2c4221d9b8e5f5d098b1cd4a32802931e6a/0_0_5594_4477/master/5594.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=f89b7724880e3eaf90c6d4de32beab0b",
    "published": "2026-11-21T19:43:52.000Z",
-   "fetchedAt": "2026-11-22T01:24:00.307Z"
-  },
-  {
-   "id": "tcazom",
-   "source": "BBC News",
-   "category": "World",
-   "title": "Russia-bound ship attacked in Gulf of Finland",
-   "summary": "Finnish defence forces say that Ukraine was likely behind the drone attack on the vessel.",
-   "link": "https://www.bbc.co.uk/news/articles/cj752ddve27ko?at_medium=RSS&at_campaign=rss",
-   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/4cee/live/4e2fa7a0-e5c5-11f1-a738-4787e1a18cce.jpg",
-   "published": "2026-11-21T19:20:22.000Z",
    "fetchedAt": "2026-11-22T01:24:00.307Z"
   },
   {
