@@ -1,0 +1,12 @@
+{
+  "_help": "村田製作所（野洲事業所）バス停発の平日時刻。times に \"HH:MM\" を発車順に入れる。closedDates には運休日（工場休業日・祝日など）を \"YYYY-MM-DD\" で入れる。アプリとiPhoneウィジェットの両方がこのファイルを読む。",
+  "stop": "村田製作所",
+  "operator": "近江鉄道バス",
+  "asOf": "",
+  "fromHour": 12,
+  "routes": [
+    { "id": "north", "name": "野洲駅北口行", "short": "北口", "times": [] },
+    { "id": "south", "name": "野洲駅南口行", "short": "南口", "times": [] }
+  ],
+  "closedDates": []
+}

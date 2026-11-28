@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>野洲駅行きバス</title>
+<meta name="description" content="村田製作所バス停から野洲駅北口・南口行きの平日バス時刻（昼〜夜）と、次の2本を表示します。">
+<meta name="theme-color" content="#1d4ed8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="野洲駅バス">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
+<style>
+/* Layout: two "next 2 buses" cards (北口｜南口) side by side, like the widget; full 時｜分 table below with a direction switch */
+:root {
+  --bg: #eef1f8;
+  --surface: #ffffff;
+  --fg: #141a2b;
+  --muted: #636b80;
+  --line: #d4d9e6;
+  --accent: #1d4ed8;
+  --accent-fg: #ffffff;
+  --accent-soft: #dfe7fb;
+  --south: #0f766e;
+  --south-soft: #d9f0ed;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e121c; --surface: #171d2b; --fg: #e7ebf5; --muted: #98a1b6; --line: #2a3246;
+    --accent: #6d95f5; --accent-fg: #0a1020; --accent-soft: #1f2a48; --south: #3fbfb0; --south-soft: #17332f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e121c; --surface: #171d2b; --fg: #e7ebf5; --muted: #98a1b6; --line: #2a3246;
+  --accent: #6d95f5; --accent-fg: #0a1020; --accent-soft: #1f2a48; --south: #3fbfb0; --south-soft: #17332f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+}
+.wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: 1.3rem; margin: 0; }
+h1 small { display: block; font-family: var(--font-body); font-weight: 400; font-size: .8rem; color: var(--muted); }
+.clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .95rem; text-align: right; }
+.clock b { color: var(--fg); font-size: 1.2rem; }
+
+.notice { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; padding: 12px 14px; font-size: .92rem; }
+
+/* next-2 cards */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.card { --c: var(--accent); --c-soft: var(--accent-soft); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+.card.south { --c: var(--south); --c-soft: var(--south-soft); }
+.card .dest { background: var(--c); color: var(--accent-fg); font-family: var(--font-display); font-weight: 700; font-size: .95rem; padding: 8px 12px; }
+.card .body { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.card .t1 { font-family: var(--font-display); font-weight: 900; font-variant-numeric: tabular-nums; font-size: clamp(2rem, 11vw, 2.8rem); line-height: 1.05; color: var(--c); }
+.card .w1 { font-weight: 700; font-size: .95rem; }
+.card .t2 { font-variant-numeric: tabular-nums; font-size: 1.15rem; font-weight: 700; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; }
+.card .t2 span { font-size: .8rem; font-weight: 400; }
+.card .none { font-size: .95rem; color: var(--muted); padding: 6px 0; }
+.card.soon .w1 { color: #c2410c; }
+
+/* direction switch */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--line); padding: 4px; border-radius: 12px; }
+.tabs button { font: inherit; font-weight: 700; border: 0; border-radius: 9px; padding: 10px 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.tabs button:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+/* 時｜分 table */
+.table { --c: var(--accent); --c-soft: var(--accent-soft); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.table.south { --c: var(--south); --c-soft: var(--south-soft); }
+.table h2 { margin: 0; padding: 12px 16px; font-size: .95rem; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.table h2 span { color: var(--muted); font-weight: 400; font-size: .85rem; }
+.row { display: grid; grid-template-columns: 60px 1fr; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.hour { background: var(--c-soft); color: var(--c); font-family: var(--font-display); font-weight: 900; font-size: 1.45rem; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.mins { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
+.min { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.5rem; min-width: 2.6ch; text-align: center; padding: 2px 8px; border-radius: 8px; }
+.min.past { color: var(--muted); opacity: .45; text-decoration: line-through; font-weight: 400; }
+.min.is-next { background: var(--c); color: var(--accent-fg); }
+.empty { padding: 16px; color: var(--muted); font-size: .92rem; }
+
+.legend { font-size: .8rem; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; margin: 0; }
+
+.install { background: var(--surface); border: 1px dashed var(--accent); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: .92rem; }
+.install strong { color: var(--accent); }
+.install ol { margin: 0; padding-left: 1.3em; }
+.install .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.install button { font: inherit; font-weight: 700; border-radius: 9px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--fg); }
+.install button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>野洲駅行きバス<small>村田製作所 発 ／ 平日・昼〜夜</small></h1>
+    <div class="clock"><span id="today"></span><br>現在 <b id="now">--:--</b></div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="cards" id="cards" aria-live="polite"></section>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <section class="table" id="table"></section>
+
+  <section class="install" id="install" hidden>
+    <strong>ホーム画面に追加すると、アプリのようにすぐ開けます</strong>
+    <div id="install-steps"></div>
+    <div class="actions">
+      <button type="button" class="primary" id="install-btn" hidden>ホーム画面に追加</button>
+      <button type="button" id="install-close">閉じる</button>
+    </div>
+  </section>
+
+  <p class="legend"><span>色付き＝次のバス</span><span>取り消し線＝発車済み</span><span id="asof"></span></p>
+</div>
+
+<script>
+const pad = n => String(n).padStart(2, "0");
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const WD = ["日", "月", "火", "水", "木", "金", "土"];
+
+let data = null;
+let current = "north";
+try { const s = sessionStorage.getItem("yasu-dir"); if (s) current = s; } catch (e) {}
+
+async function load() {
+  try {
+    const r = await fetch("timetable.json", { cache: "no-cache" });
+    data = await r.json();
+  } catch (e) {
+    data = { routes: [], closedDates: [], fromHour: 12 };
+  }
+  buildTabs();
+  render();
+}
+
+// 平日ダイヤが走る日か（土日・運休日はfalse）
+function runsOn(d) {
+  const w = d.getDay();
+  if (w === 0 || w === 6) return false;
+  return !(data.closedDates || []).includes(ymd(d));
+}
+function shownTimes(route) {
+  const from = (data.fromHour ?? 12) * 60;
+  return (route.times || []).filter(t => toMin(t) >= from).sort((a, b) => toMin(a) - toMin(b));
+}
+
+function buildTabs() {
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  if (!data.routes.some(r => r.id === current)) current = data.routes[0]?.id;
+  data.routes.forEach(r => {
+    const b = document.createElement("button");
+    b.type = "button"; b.role = "tab"; b.dataset.id = r.id; b.textContent = r.name;
+    b.addEventListener("click", () => {
+      current = r.id;
+      try { sessionStorage.setItem("yasu-dir", current); } catch (e) {}
+      render();
+    });
+    tabs.appendChild(b);
+  });
+}
+
+function waitText(diff) {
+  if (diff <= 0) return "まもなく発車";
+  if (diff < 60) return `あと ${diff} 分`;
+  return `あと ${Math.floor(diff / 60)} 時間 ${diff % 60} 分`;
+}
+
+function render() {
+  if (!data) return;
+  const d = new Date();
+  const now = d.getHours() * 60 + d.getMinutes();
+  const running = runsOn(d);
+  document.getElementById("now").textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  document.getElementById("today").textContent = `${d.getMonth() + 1}/${d.getDate()}（${WD[d.getDay()]}）`;
+  document.getElementById("asof").textContent = data.asOf ? `時刻：${data.asOf} 時点` : "";
+
+  const hasData = data.routes.some(r => (r.times || []).length);
+  const notice = document.getElementById("notice");
+  if (!hasData) {
+    notice.hidden = false;
+    notice.textContent = "時刻データがまだ登録されていません（timetable.json に追加してください）。";
+  } else if (!running) {
+    notice.hidden = false;
+    notice.textContent = (d.getDay() === 0 || d.getDay() === 6)
+      ? "今日は土日です。下は平日の時刻表です。"
+      : "今日は運休日として登録されています。下は平日の時刻表です。";
+  } else notice.hidden = true;
+
+  // next 2 cards
+  document.getElementById("cards").innerHTML = data.routes.map(r => {
+    const times = shownTimes(r);
+    const up = running ? times.filter(t => toMin(t) >= now) : [];
+    let body;
+    if (!times.length) body = `<div class="none">時刻未登録</div>`;
+    else if (!running) body = `<div class="none">本日は運行なし</div>`;
+    else if (!up.length) body = `<div class="none">本日の運行は<br>終了しました</div>`;
+    else {
+      const diff = toMin(up[0]) - now;
+      body = `<div class="t1">${up[0]}</div><div class="w1">${waitText(diff)}</div>` +
+        (up[1] ? `<div class="t2"><span>次</span> ${up[1]} <span>${toMin(up[1]) - now}分後</span></div>` : `<div class="t2"><span>これが最終です</span></div>`);
+    }
+    const soon = up.length && toMin(up[0]) - now <= 10 ? " soon" : "";
+    return `<article class="card ${r.id}${soon}"><div class="dest">${r.name}</div><div class="body">${body}</div></article>`;
+  }).join("");
+
+  // table
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === current)));
+  const route = data.routes.find(r => r.id === current);
+  const tbl = document.getElementById("table");
+  if (!route) { tbl.innerHTML = ""; return; }
+  tbl.className = "table " + route.id;
+  const times = shownTimes(route);
+  const nextT = running ? times.find(t => toMin(t) >= now) : null;
+  const byHour = {};
+  times.forEach(t => (byHour[Number(t.split(":")[0])] ||= []).push(t));
+  const rows = Object.keys(byHour).map(Number).sort((a, b) => a - b).map(h => `
+    <div class="row"><div class="hour">${h}</div><div class="mins">${byHour[h].map(t => {
+      const cls = t === nextT ? "is-next" : (running && toMin(t) < now ? "past" : "");
+      return `<span class="min ${cls}" title="${t}">${t.split(":")[1]}</span>`;
+    }).join("")}</div></div>`).join("");
+  tbl.innerHTML = `<h2>${route.name}（平日 ${data.fromHour ?? 12}時以降）<span>全${times.length}便 ｜ 左：時　右：分</span></h2>` +
+    (rows || `<div class="empty">時刻が未登録です。</div>`);
+}
+
+load();
+setInterval(render, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+
+// ---- ホーム画面に追加（PWA） ----
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+(function () {
+  const box = document.getElementById("install");
+  const steps = document.getElementById("install-steps");
+  const btn = document.getElementById("install-btn");
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem("yasu-install-dismissed") === "1"; } catch (e) {}
+  if (standalone || dismissed) return;
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  steps.innerHTML = isIOS
+    ? "<ol><li>Safari で開く</li><li>画面下の共有ボタン（□に↑）をタップ</li><li>「ホーム画面に追加」→「追加」</li></ol>"
+    : "<ol><li>ブラウザのメニュー（︙）を開く</li><li>「ホーム画面に追加」または「アプリをインストール」を選ぶ</li></ol>";
+  box.hidden = false;
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; btn.hidden = false; });
+  btn.addEventListener("click", async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    const { outcome } = await deferred.userChoice;
+    deferred = null; btn.hidden = true;
+    if (outcome === "accepted") box.hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { box.hidden = true; });
+  document.getElementById("install-close").addEventListener("click", () => {
+    box.hidden = true;
+    try { localStorage.setItem("yasu-install-dismissed", "1"); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
