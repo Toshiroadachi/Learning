@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-27T03:39:53.572Z",
+ "updated": "2026-11-28T03:21:14.097Z",
  "sources": [
   "BBC News",
   "NPR",
@@ -8,6 +8,358 @@
   "CNBC"
  ],
  "items": [
+  {
+   "id": "x1abac",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Parts of US clean up after Thanksgiving storm lashes East Coast",
+   "summary": "Power is being slowly restored to hundreds of thousands of customers following a round of heavy wind, rain and snow.",
+   "link": "https://www.aljazeera.com/news/2026/11/28/parts-of-us-clean-up-after-thanksgiving-storm-lashes-east-coast?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-28T03:00:00.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "cd16u4",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Bulgarians demand action by French after Marseille match violence",
+   "summary": "Bulgarians protested at the French embassy after violence at a Europa League match hospitalised six Levski Sofia fans.",
+   "link": "https://www.aljazeera.com/video/newsfeed/2026/11/28/bulgarians-demand-action-by-french-after-marseille-match-violence?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-28T02:30:27.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "f76xov",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Hunted beyond borders: Allegations of Tanzanian repression in Kenya",
+   "summary": "The case of a missing activist raises fears for the safety of Tanzanian dissidents.",
+   "link": "https://www.aljazeera.com/news/2026/11/28/hunted-beyond-borders-allegations-of-tanzanian-repression-in-kenya?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-28T02:08:11.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1jhhawf",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Taiwan votes in local elections to choose mayors, other leaders",
+   "summary": "Key mayoral race in Taipei, a stronghold of the opposition Kuomintang, tests the governing Democratic Progressive Party.",
+   "link": "https://www.aljazeera.com/news/2026/11/28/taiwan-votes-in-local-elections-to-choose-mayors-other-leaders?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-28T02:05:27.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "115rqlu",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Israel kills two MSF staff in targeted strike on Gaza clinic",
+   "summary": "An Israeli strike on a clinic operated by Doctors Without Borders (MSF) in Gaza has killed two watchmen.",
+   "link": "https://www.aljazeera.com/video/newsfeed/2026/11/28/israel-kills-two-msf-staff-in-targeted-strike-on-gaza-clinic?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-28T01:55:03.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "luix7t",
+   "source": "BBC News",
+   "category": "Technology",
+   "title": "How gamers are using AI and leaked files to clone Grand Theft Auto 6",
+   "summary": "With an official PC version potentially still months away, fans are getting impatient.",
+   "link": "https://www.bbc.co.uk/news/articles/c64gn8pe5eeqo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/98a4/live/a2c48d10-e97d-11f1-99a1-253766e7ad8b.jpg",
+   "published": "2026-11-28T01:30:50.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "11hgfp3",
+   "source": "Al Jazeera",
+   "category": "World",
+   "title": "Thousands of Puerto Ricans join ‘Day of National Outrage’ protest",
+   "summary": "Anger and frustration erupt over record-high electricity rates, surging cost of living and deteriorating basic services.",
+   "link": "https://www.aljazeera.com/news/2026/11/28/thousands-of-puerto-ricans-join-day-of-national-outrage-protest?traffic_source=rss",
+   "thumb": "",
+   "published": "2026-11-28T01:00:00.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "y2izgi",
+   "source": "BBC News",
+   "category": "World",
+   "title": "'Poison seller' Kenneth Law apologises in court to the families of his victims",
+   "summary": "The Canadian man, who pleaded guilty to 14 counts of aiding and abetting suicide earlier this year, said he was remorseful for his actions.",
+   "link": "https://www.bbc.co.uk/news/articles/cmx2898wq2qjo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/6398/live/0d6eb230-5b6c-11f1-a914-b7de1b16af02.jpg",
+   "published": "2026-11-28T00:56:55.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1g7m633",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Inflation has shoppers hunting for value. That bodes well for Black Friday",
+   "summary": "Even as consumers face macroeconomic headwinds, retailers are expecting robust holiday spending through Black Friday and beyond.",
+   "link": "https://www.cnbc.com/2026/11/27/black-friday-2026-inflation-value-deals.html",
+   "thumb": "",
+   "published": "2026-11-27T22:00:57.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "2hnb6m",
+   "source": "BBC News",
+   "category": "World",
+   "title": "Spanish PM and rivals rally supporters in final pitch for votes",
+   "summary": "Prime Minister Pedro Sánchez wants to defy the polls, and his main rivals accuse him of not telling the truth and of \"betrayal\".",
+   "link": "https://www.bbc.co.uk/news/articles/c8wy5p4gdnwvo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/1bb1/live/dd63ff10-ea99-11f1-a094-5fdc692f3e33.jpg",
+   "published": "2026-11-27T21:55:53.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "wsf25c",
+   "source": "The Guardian",
+   "category": "World",
+   "title": "‘Abusive and insulting to Canadians’: campaign to oust US ambassador presented to parliament",
+   "summary": "Hundreds of thousands of Canadians call for Pete Hoekstra to be declared ‘persona non grata’ A petition signed by nearly 290,000 Canadians calling on Mark Carney’s government to oust Pete Hoekstra as US ambassador to Canada was formally presented to the House of Commons on Thursday, a sign of the strained relations between the neighboring countries. Elizabeth May, a Canadian Green party member, originally opened the petition for signatures in July 2026 after a woman from Calgary sponsored it. The petition requests that the Canadian government declare Hoekstra “persona non grata” due to his…",
+   "link": "https://www.theguardian.com/world/2026/nov/27/pete-hoekstra-canada-us-ambassador-petition",
+   "thumb": "https://i.guim.co.uk/img/media/fdc570eb861d6cc0d756cc291a726de34670d964/418_0_4164_3332/master/4164.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=f9e753676a68320c2d147c2a5561d6a1",
+   "published": "2026-11-27T21:24:10.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "pvg83r",
+   "source": "BBC News",
+   "category": "World",
+   "title": "'We couldn't give up that easily': Marching bands scramble to cover costs after Thanksgiving parade rearranged",
+   "summary": "Stormy weather in New York City prompted organisers to push back the Macy's parade by two days - leaving some musicians stuck.",
+   "link": "https://www.bbc.co.uk/news/articles/ckd71ypy9e8eo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/4438/live/a0415f90-ea78-11f1-a094-5fdc692f3e33.jpg",
+   "published": "2026-11-27T20:06:31.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1361kc2",
+   "source": "BBC News",
+   "category": "World",
+   "title": "Weary of war but with no sign of backing down, Kyiv faces another punishing winter",
+   "summary": "Ukraine settles in for another devastating winter as the questions persists: how will it all end?",
+   "link": "https://www.bbc.co.uk/news/articles/c3pw4yrr8kz9o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/9fca/live/2dd32240-e9b5-11f1-99b6-a35a62fa4264.jpg",
+   "published": "2026-11-27T18:42:50.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1g6xhzi",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Budget airline Norse Atlantic files for bankruptcy in Europe after failing to secure funding",
+   "summary": "Budget carrier Norse Atlantic filed for bankruptcy Friday, saying it failed to secure funding after soaring fuel costs strained the company's operations.",
+   "link": "https://www.cnbc.com/2026/11/27/norse-atlantic-bankruptcy-fuel-costs.html",
+   "thumb": "",
+   "published": "2026-11-27T18:20:32.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "mto1yd",
+   "source": "BBC News",
+   "category": "World",
+   "title": "Zelensky criticises 'strange' Trump-Putin friendship in BBC interview",
+   "summary": "Ukraine's president voices frustration with US and says it is not pushing Russia hard enough in peace talks to end the war.",
+   "link": "https://www.bbc.co.uk/news/articles/c820q9wgrpyyo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/fdee/live/21e805d0-ea60-11f1-99b6-a35a62fa4264.jpg",
+   "published": "2026-11-27T18:00:40.000Z",
+   "fetchedAt": "2026-11-27T03:39:53.572Z"
+  },
+  {
+   "id": "6we9xm",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "Labour row over Rosebank deepens as dozens of MPs warn PM not to block oilfield",
+   "summary": "Warning of ‘lights out for Labour in Scotland’ as Burnham faces choice between warring factions over North Sea drilling project Dozens of Labour MPs in favour of Rosebank are putting pressure on the prime minister not to block the North Sea oilfield, warning that doing so could spell “lights out for Labour in Scotland”. As many as 80 pro-drilling MPs are considering writing their own letter to Andy Burnham after nearly 100 of their colleagues called on the prime minister not to allow the project to proceed . Scottish Labour leader Michael Marra has also reiterated his support for Rosebank,…",
+   "link": "https://www.theguardian.com/politics/2026/nov/27/rosebank-supporting-mps-warn-pm-blocking-the-oilfield-would-mean-lights-out-for-labour-in-scotland",
+   "thumb": "https://i.guim.co.uk/img/media/5cef95b05dbffa1580f40f77587a802800a4c9ca/481_0_4683_3747/master/4683.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=d7732410c824da149c1436e92934863e",
+   "published": "2026-11-27T17:39:10.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "2gbx78",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "British Gas owner seeks urgent government talks over future of storage facility",
+   "summary": "Centrica boss memo to 400 workers at gas plant off Yorkshire coast says utility doing all it can ‘to save your jobs’ The boss of the British Gas owner Centrica has told hundreds of staff at its largest gas storage facility that he was seeking urgent talks with Andy Burnham and would do everything he could to save jobs. Chris O’Shea, the chief executive of Centrica, reportedly told staff at the Rough gas storage facility off the east Yorkshire that the government had rebuffed the company’s plea for short-term support to run the store over the winter. Continue reading...",
+   "link": "https://www.theguardian.com/business/2026/nov/27/british-gas-owner-seeks-urgent-government-talks-gas-storage-faciity-future",
+   "thumb": "https://i.guim.co.uk/img/media/bbdd7d495d57e8223070f0d163c45a8bda076516/168_0_4943_3956/master/4943.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=dd0515256f32b16913fcd14da8cfb145",
+   "published": "2026-11-27T15:56:31.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1wy03dh",
+   "source": "BBC News",
+   "category": "World",
+   "title": "Brazil pushes back on Macron calling its meat 'doped'",
+   "summary": "France's president made the comment while speaking to French farming representatives, months after the EU banned Brazil beef and poultry products.",
+   "link": "https://www.bbc.co.uk/news/articles/c6rrg28npvzeo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/23bb/live/01c67d00-ea73-11f1-a828-d384c0290f6b.jpg",
+   "published": "2026-11-27T15:54:15.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1hbxkd4",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Trump demands probe into 'record setting error' after third-quarter GDP data gets massive revision higher",
+   "summary": "President Donald Trump on Thursday deemed the latest gross domestic product revision a mistake, claiming that it should be \"immediately investigated.\"",
+   "link": "https://www.cnbc.com/2026/11/26/trump-gdp-revision-investigation.html",
+   "thumb": "",
+   "published": "2026-11-27T15:52:00.000Z",
+   "fetchedAt": "2026-11-27T03:39:53.572Z"
+  },
+  {
+   "id": "rtusqg",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "Norse Atlantic Airways files for bankruptcy and cancels all future flights",
+   "summary": "Norwegian airline tells customers not to come to airports after surging fuel costs caused by Iran war ruin finances Norse Atlantic Airways has filed for bankruptcy and cancelled all future flights after surging fuel costs caused by the Iran war ruined its finances. The Norwegian airline said it was entering insolvency and posted a message on its website telling customers not to come to airports – including passengers stranded away from home. Its collapse came a day after it put flights on hold with a warning that its finances were critical. Continue reading...",
+   "link": "https://www.theguardian.com/business/2026/nov/27/norse-atlantic-airways-files-for-bankruptcy-cancels-all-future-flights",
+   "thumb": "https://i.guim.co.uk/img/media/e1f07f0b2a8329b3e1557eed373d0458f8cb7e9a/71_0_3289_2633/master/3289.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=1922b72a5b6543a0da92f5e45741b64a",
+   "published": "2026-11-27T15:40:35.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "13we855",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "‘Punched in the guts’: Poundland staff left reeling as it goes into administration",
+   "summary": "Workers are sad but unsurprised as closures and job losses loom, while 2,000 suppliers will take a big hit Poundland staff fear they’ll be left out in the cold for Christmas. When will workers have a say in their future? “I feel Gordon Brothers punched us in the guts and took us down,” says Kelvin Blake, one of thousands of Poundland workers at risk of redundancy after the budget retailer’s US-based owners rejected at least two solvent bids for it. While administrators at AlixPartners, who were appointed on Wednesday, continue to consider bids for the whole group, which has 600 stores in the…",
+   "link": "https://www.theguardian.com/business/2026/nov/27/poundland-staff-administration-closures-job-losses-suppliers",
+   "thumb": "https://i.guim.co.uk/img/media/d966b57737dece43e5890f33051b6b0f6163400c/817_554_5748_4598/master/5748.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=73b11a33f7fa808082972244add6c476",
+   "published": "2026-11-27T15:00:13.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "174iuci",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "UK’s taste for cow’s milk sours as sales hit record low",
+   "summary": "Environmental and animal welfare concerns, and taste preferences, are behind rising popularity of vegan alternatives Has milk gotta lotta bottle? It may not have as much as it used to, with official data showing Britons are buying less cow’s milk than at any point since records began. Guardian analysis of the government’s family food survey shows the average person bought 1.8 pints (1,024ml) of cow’s milk a week in 2024-25 – the lowest level in the record’s 52-year history and less than half the amount of milk bought in 1974. Continue reading...",
+   "link": "https://www.theguardian.com/food/2026/nov/27/britain-cows-milk-sales-record-low-oat-almond",
+   "thumb": "https://i.guim.co.uk/img/media/2ec208e4382ab770c2192d22683be7bc473ef71a/0_215_3697_2957/master/3697.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=d862da9a2a27d2992d6e5336ffbe806e",
+   "published": "2026-11-27T13:32:07.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1dezafv",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "The S&P 500 is in a correction. Bear markets and recessions don't always follow",
+   "summary": "The November sell-off has so far pushed the S&P 500 into a correction. History shows that a correction doesn't always lead to a bear market, or a recession.",
+   "link": "https://www.cnbc.com/2026/11/27/the-sp-500-is-in-a-correction-bear-markets-and-recessions-dont-always-follow.html",
+   "thumb": "",
+   "published": "2026-11-27T13:21:56.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "pf0943",
+   "source": "NPR",
+   "category": "World",
+   "title": "French cinema star Gérard Depardieu ordered to stand trial for rape and sexual assault",
+   "summary": "The case has become one of the most prominent in France's reckoning with sexual violence, as the #MeToo movement has faced resistance in the country, particularly in the arts.",
+   "link": "https://www.npr.org/2026/11/27/nx-s1-6055559/gerard-depardieu-trial-rape-france",
+   "thumb": "",
+   "published": "2026-11-27T11:49:50.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1neckw8",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Chinese chip stocks notch biggest ever one-day gains as Beijing signals broader market support",
+   "summary": "Chinese stocks rebounded sharply after a rare intraday state media readout cheered investors as top policymakers pledged market liquidity support.",
+   "link": "https://www.cnbc.com/2026/11/27/china-chip-stocks-beijing-market-support.html",
+   "thumb": "",
+   "published": "2026-11-27T10:13:44.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1o50wfw",
+   "source": "BBC News",
+   "category": "Business",
+   "title": "My self-care ritual is a meal at a fancy restaurant - on my own",
+   "summary": "Solo-dining is being embraced as a self-care trend and it's reshaping the restaurant industry.",
+   "link": "https://www.bbc.co.uk/news/articles/cw8dv11dp2yeo?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/4715/live/6ec7a880-ea5e-11f1-99b6-a35a62fa4264.png",
+   "published": "2026-11-27T10:10:36.000Z",
+   "fetchedAt": "2026-11-27T03:39:53.572Z"
+  },
+  {
+   "id": "18x3wwt",
+   "source": "The Guardian",
+   "category": "Business",
+   "title": "Banks may pass on £1.5bn tax rise to customers, warns Bank of England chief",
+   "summary": "Big lenders will aim to ‘protect their earnings’ from temporary increase in corporation tax surcharge, says Andrew Bailey Business live – latest updates The governor of the Bank of England has said he fears banks could attempt to pass on the £1.5bn cost of Labour’s tax increase on their profits . The chancellor, John Healey, used his first budget last month to temporarily increase the bank corporation tax surcharge from 3% to 6% for a 15-month period from January, with the proceeds funding “breathing space” to relieve pressure on household finances. Continue reading...",
+   "link": "https://www.theguardian.com/business/2026/nov/27/bank-tax-rise-customers-bank-of-england-andrew-bailey",
+   "thumb": "https://i.guim.co.uk/img/media/4052a9d7c5a9c1de8842fe2b75cc4143a1c9fa82/830_252_4289_3435/master/4289.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=3fce09a4246c730c56a379165ec92dff",
+   "published": "2026-11-27T10:10:29.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "15t9w7d",
+   "source": "NPR",
+   "category": "Business",
+   "title": "Can luxury save Macy's?",
+   "summary": "This week's celebration of Macy's 100th Thanksgiving parade finds the department store at a turning point. After years of losing sales, the retailer is reimagining itself — as a higher-end destination.",
+   "link": "https://www.npr.org/2026/11/27/nx-s1-6026486/macys-tries-to-reinvent-with-luxury",
+   "thumb": "",
+   "published": "2026-11-27T10:01:00.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "1n15o3s",
+   "source": "NPR",
+   "category": "World",
+   "title": "As UN Secretary General's last day approaches, search for his replacement continues",
+   "summary": "The UN Secretary General's term ends this year, but the big powers at the UN have been unable to agree on a replacement. UN watchers worry that there will be little time to get up to speed.",
+   "link": "https://www.npr.org/2026/11/27/nx-s1-6050907/as-un-secretary-generals-last-day-approaches-search-for-his-replacement-continues",
+   "thumb": "",
+   "published": "2026-11-27T09:46:13.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "130cggg",
+   "source": "NPR",
+   "category": "Business",
+   "title": "The strategy behind those Black Friday deals",
+   "summary": "We get the inside scoop in how a Black Friday discount deal comes together.",
+   "link": "https://www.npr.org/2026/11/27/nx-s1-6054055/the-strategy-behind-those-black-friday-deals",
+   "thumb": "",
+   "published": "2026-11-27T09:46:04.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "13pl9we",
+   "source": "NPR",
+   "category": "World",
+   "title": "Strobe Talbott, former Time magazine reporter and deputy secretary of state, has died",
+   "summary": "Strobe Talbott, a former Time magazine reporter who later served as deputy secretary of state under President Bill Clinton and then headed the Brookings Institution, died Thursday. He was 80.",
+   "link": "https://www.npr.org/2026/11/27/g-s1-155990/strobe-talbott-obit",
+   "thumb": "",
+   "published": "2026-11-27T06:12:45.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
+  {
+   "id": "bs0gu3",
+   "source": "The Guardian",
+   "category": "World",
+   "title": "Mad about mara: the DIY dance movement helping young Nigerians escape the daily grind",
+   "summary": "What started as one artist’s response to being cut out of a music video has exploded, becoming a driving force in Nigeria’s cultural landscape As a student in the central Nigerian city of Ilorin, Lawal Habeeb Kola loved staying in his hostel room to produce beats rather than returning to his family house in Lagos, the more frenetic city of his birth. In 2022, one of his beats became popular on TikTok, and a version featuring ad-libbed vocals from a hypeman sent it viral. He was invited to the music video shoot in Lagos and thought his big break had finally come, but when the video was…",
+   "link": "https://www.theguardian.com/world/2026/nov/27/mad-about-mara-the-diy-dance-movement-helping-young-nigerians-escape-the-daily-grind",
+   "thumb": "https://i.guim.co.uk/img/media/420a704a7b9337bcc84564de8c0db0836d052aac/433_0_5275_4223/master/5275.jpg?width=140&amp;quality=85&amp;auto=format&amp;fit=max&amp;s=558556ddc90089bd8666c299074f9675",
+   "published": "2026-11-27T06:00:56.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
+  },
   {
    "id": "9v6zx1",
    "source": "CNBC",
@@ -97,15 +449,15 @@
    "fetchedAt": "2026-11-27T03:39:53.572Z"
   },
   {
-   "id": "1o50wfw",
+   "id": "1fuw3me",
    "source": "BBC News",
    "category": "Business",
-   "title": "I spend £200 a month on fancy meals by myself - would you dine solo?",
-   "summary": "Solo-dining is being embraced as a self-care trend and it's reshaping the restaurant industry.",
-   "link": "https://www.bbc.co.uk/news/articles/cw8dv11dp2yeo?at_medium=RSS&at_campaign=rss",
-   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/1d8d/live/b5d26cb0-e9cd-11f1-a094-5fdc692f3e33.jpg",
-   "published": "2026-11-27T00:54:45.000Z",
-   "fetchedAt": "2026-11-27T03:39:53.572Z"
+   "title": "From £250 job to £9,000 bill: Inside the rogue trader networks scamming customers at scale",
+   "summary": "Networks of plumbers and electricians are scamming people on a large scale, the BBC reveals.",
+   "link": "https://www.bbc.co.uk/news/articles/c65yme31k7m2o?at_medium=RSS&at_campaign=rss",
+   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/3451/live/fbe22210-e9cb-11f1-99a1-253766e7ad8b.jpg",
+   "published": "2026-11-27T00:58:49.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
   },
   {
    "id": "1ijdtnk",
@@ -171,28 +523,6 @@
    "link": "https://www.bbc.co.uk/news/articles/cqevr4lnd1nxo?at_medium=RSS&at_campaign=rss",
    "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/2c76/live/9f54a560-e956-11f1-a629-63e812fa871f.jpg",
    "published": "2026-11-26T23:08:12.000Z",
-   "fetchedAt": "2026-11-27T03:39:53.572Z"
-  },
-  {
-   "id": "mto1yd",
-   "source": "BBC News",
-   "category": "World",
-   "title": "US too focused on Middle East and not pushing Russia hard enough, Zelensky tells BBC",
-   "summary": "Ukraine's president voices frustration with US and says it is \"strange\" Trump has described Vladimir Putin as a friend.",
-   "link": "https://www.bbc.co.uk/news/articles/c820q9wgrpyyo?at_medium=RSS&at_campaign=rss",
-   "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/20f7/live/d0e75f10-e9e6-11f1-ab41-f1f84c0c758a.jpg",
-   "published": "2026-11-26T22:49:27.000Z",
-   "fetchedAt": "2026-11-27T03:39:53.572Z"
-  },
-  {
-   "id": "1hbxkd4",
-   "source": "CNBC",
-   "category": "Business",
-   "title": "Trump demands probe into ‘record setting error’ after third-quarter GDP data gets massive revision higher",
-   "summary": "President Donald Trump on Thursday deemed the latest gross domestic product revision a mistake, claiming that it should be \"immediately investigated.\"",
-   "link": "https://www.cnbc.com/2026/11/26/trump-gdp-revision-investigation.html",
-   "thumb": "",
-   "published": "2026-11-26T21:13:17.000Z",
    "fetchedAt": "2026-11-27T03:39:53.572Z"
   },
   {
@@ -590,6 +920,17 @@
    "thumb": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/2d4b/live/5e57daf0-e91f-11f1-9108-c5b270b0703d.jpg",
    "published": "2026-11-25T22:18:06.000Z",
    "fetchedAt": "2026-11-26T03:38:14.720Z"
+  },
+  {
+   "id": "agcjjz",
+   "source": "CNBC",
+   "category": "Business",
+   "title": "Liesman: Why Greenspan could bet on productivity — and Warsh needs to hike",
+   "summary": "Alan Greenspan famously held the line on interest rates because he believed in the productivity promise of the internet boom. Why can't Kevin Warsh do the same?",
+   "link": "https://www.cnbc.com/2026/11/25/kevin-warsh-greenspan-fed-rates-ai-inflation.html",
+   "thumb": "",
+   "published": "2026-11-25T21:56:43.000Z",
+   "fetchedAt": "2026-11-28T03:21:14.097Z"
   },
   {
    "id": "pm6ou6",
