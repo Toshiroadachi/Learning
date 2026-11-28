@@ -96,6 +96,7 @@ h1 small { display: block; font-family: var(--font-body); font-weight: 400; font
 .min { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.5rem; min-width: 2.6ch; text-align: center; padding: 2px 8px; border-radius: 8px; }
 .min.past { color: var(--muted); opacity: .45; text-decoration: line-through; font-weight: 400; }
 .min.is-next { background: var(--c); color: var(--accent-fg); }
+.min.off::after { content: "・"; font-size: .7em; vertical-align: super; margin-right: -.6em; }
 .empty { padding: 16px; color: var(--muted); font-size: .92rem; }
 
 .legend { font-size: .8rem; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; margin: 0; }
@@ -132,7 +133,7 @@ h1 small { display: block; font-family: var(--font-body); font-weight: 400; font
     </div>
   </section>
 
-  <p class="legend"><span>色付き＝次のバス</span><span>取り消し線＝発車済み</span><span id="asof"></span></p>
+  <p class="legend"><span>色付き＝次のバス</span><span>取り消し線＝発車済み</span><span>・印＝事業所休業日は運休</span><span id="asof"></span></p>
 </div>
 
 <script>
@@ -157,14 +158,20 @@ async function load() {
 }
 
 // 平日ダイヤが走る日か（土日・運休日はfalse）
-function runsOn(d) {
-  const w = d.getDay();
-  if (w === 0 || w === 6) return false;
-  return !(data.closedDates || []).includes(ymd(d));
-}
-function shownTimes(route) {
+// 平日ダイヤが走る日か（土日はfalse）
+function runsOn(d) { const w = d.getDay(); return w !== 0 && w !== 6; }
+// 事業所の休業日か（* の便が運休）
+const isClosed = d => (data.closedDates || []).includes(ymd(d));
+// "13:10*" の * は「事業所が休みの時は運休」
+const isOff = (route, t) => (route.times || []).includes(t + "*");
+function shownTimes(route, d) {
   const from = (data.fromHour ?? 12) * 60;
-  return (route.times || []).filter(t => toMin(t) >= from).sort((a, b) => toMin(a) - toMin(b));
+  const closed = d && isClosed(d);
+  return (route.times || [])
+    .filter(t => !(closed && t.endsWith("*")))
+    .map(t => t.replace("*", ""))
+    .filter(t => toMin(t) >= from)
+    .sort((a, b) => toMin(a) - toMin(b));
 }
 
 function buildTabs() {
@@ -205,17 +212,19 @@ function render() {
     notice.textContent = "時刻データがまだ登録されていません（timetable.json に追加してください）。";
   } else if (!running) {
     notice.hidden = false;
-    notice.textContent = (d.getDay() === 0 || d.getDay() === 6)
-      ? "今日は土日です。下は平日の時刻表です。"
-      : "今日は運休日として登録されています。下は平日の時刻表です。";
+    notice.textContent = "今日は土日です。下は平日の時刻表です。";
+  } else if (isClosed(d)) {
+    notice.hidden = false;
+    notice.textContent = "今日は事業所の休業日です。休業日に運休する便（・印）を除いて表示しています。";
   } else notice.hidden = true;
 
   // next 2 cards
   document.getElementById("cards").innerHTML = data.routes.map(r => {
-    const times = shownTimes(r);
+    const times = shownTimes(r, running ? d : null);
     const up = running ? times.filter(t => toMin(t) >= now) : [];
     let body;
-    if (!times.length) body = `<div class="none">時刻未登録</div>`;
+    if (!(r.times || []).length) body = `<div class="none">時刻未登録</div>`;
+    else if (!times.length) body = `<div class="none">本日は休業日のため運休</div>`;
     else if (!running) body = `<div class="none">本日は運行なし</div>`;
     else if (!up.length) body = `<div class="none">本日の運行は<br>終了しました</div>`;
     else {
@@ -233,14 +242,15 @@ function render() {
   const tbl = document.getElementById("table");
   if (!route) { tbl.innerHTML = ""; return; }
   tbl.className = "table " + route.id;
-  const times = shownTimes(route);
+  const times = shownTimes(route, running ? d : null);
   const nextT = running ? times.find(t => toMin(t) >= now) : null;
   const byHour = {};
   times.forEach(t => (byHour[Number(t.split(":")[0])] ||= []).push(t));
   const rows = Object.keys(byHour).map(Number).sort((a, b) => a - b).map(h => `
     <div class="row"><div class="hour">${h}</div><div class="mins">${byHour[h].map(t => {
       const cls = t === nextT ? "is-next" : (running && toMin(t) < now ? "past" : "");
-      return `<span class="min ${cls}" title="${t}">${t.split(":")[1]}</span>`;
+      const off = isOff(route, t) ? " off" : "";
+      return `<span class="min ${cls}${off}" title="${t}${off ? "（事業所休業日は運休）" : ""}">${t.split(":")[1]}</span>`;
     }).join("")}</div></div>`).join("");
   tbl.innerHTML = `<h2>${route.name}（平日 ${data.fromHour ?? 12}時以降）<span>全${times.length}便 ｜ 左：時　右：分</span></h2>` +
     (rows || `<div class="empty">時刻が未登録です。</div>`);

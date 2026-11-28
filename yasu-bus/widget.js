@@ -43,8 +43,7 @@ async function loadData() {
 
 function runsOn(data, d) {
   const w = d.getDay();
-  if (w === 0 || w === 6) return false;
-  return !(data.closedDates || []).includes(ymd(d));
+  return w !== 0 && w !== 6;
 }
 
 // 今日のこれから発車する便（Date の配列）
@@ -52,7 +51,10 @@ function upcoming(data, route, now) {
   if (!runsOn(data, now)) return [];
   const from = (data.fromHour ?? 12) * 60;
   const cur = now.getHours() * 60 + now.getMinutes();
+  const closed = (data.closedDates || []).includes(ymd(now));   // 事業所休業日は * の便が運休
   return (route.times || [])
+    .filter(t => !(closed && t.endsWith("*")))
+    .map(t => t.replace("*", ""))
     .filter(t => toMin(t) >= from && toMin(t) >= cur)
     .sort((a, b) => toMin(a) - toMin(b))
     .map(t => { const d = new Date(now); d.setHours(...t.split(":").map(Number), 0, 0); return d; });
@@ -61,6 +63,7 @@ function upcoming(data, route, now) {
 function statusText(data, route, now) {
   if (!(route.times || []).length) return "時刻未登録";
   if (!runsOn(data, now)) return "本日運行なし";
+  if ((data.closedDates || []).includes(ymd(now)) && route.times.every(t => t.endsWith("*"))) return "休業日運休";
   return "本日終了";
 }
 
